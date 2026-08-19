@@ -1,0 +1,26 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Environment variables & secrets
+.env
+credentials/*.json
+!credentials/.gitkeep
+
+# Generated PDFs & temporary files
+generated_pdfs/*.pdf
+!generated_pdfs/.gitkeep
+*.tmp
+*.log
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

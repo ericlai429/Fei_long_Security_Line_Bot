@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>飛龍保全 ｜ 幹部管理後台 (隊長白名單常駐)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
+
+  <!-- Top Navbar -->
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur px-4 sm:px-6 py-3">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-purple-600 flex items-center justify-center shadow-md">
+          <i class="fa-solid fa-shield-halved text-white text-base"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-white leading-tight">飛龍保全 ｜ 幹部後台</h1>
+          <p class="text-[11px] text-purple-300">隊長 Email 白名單常駐 ｜ 限 Admin、排班小姐 (2人)、經理</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- 🌟 精簡專業：Google 雲端試算表即時連線列 (Top-Right Navbar) -->
+        <div class="flex items-center gap-1.5 bg-slate-950 border border-emerald-500/60 rounded-xl px-2.5 py-1 text-xs shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" title="即時連線中"></span>
+          <i class="fa-brands fa-google-drive text-emerald-400 text-sm"></i>
+          <input 
+            type="text" 
+            id="inputSpreadsheetUrlMain" 
+            value="https://docs.google.com/spreadsheets/d/1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s/edit?gid=1503884715#gid=1503884715"
+            placeholder="Google 試算表網址..." 
+            class="bg-transparent text-slate-200 text-xs font-mono w-44 sm:w-56 focus:w-72 transition-all focus:outline-none placeholder-slate-500 truncate"
+            title="Google 試算表網址 (點擊編輯)"
+          >
+          <button 
+            onclick="connectFromMainField()" 
+            class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold px-2 py-0.5 rounded-lg text-[11px] transition flex items-center gap-1 shadow-sm flex-shrink-0"
+            title="即時連線並讀取分頁"
+          >
+            <i class="fa-solid fa-bolt text-[10px]"></i>
+            <span>連線</span>
+          </button>
+        </div>
+
+        <!-- 🎨 Theme Switcher -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] font-bold" id="themeSelectorContainer">
+          <button onclick="setAdminTheme('DARK_GLASS')" class="theme-btn active bg-purple-600 text-white px-2 py-1 rounded-lg transition" data-theme="DARK_GLASS" title="深色玻璃模式">
+            🎛️ 深色
+          </button>
+          <button onclick="setAdminTheme('LIGHT_CLEAN')" class="theme-btn text-slate-400 hover:text-white px-2 py-1 rounded-lg transition" data-theme="LIGHT_CLEAN" title="企業亮色模式">
+            🏢 亮色
+          </button>
+          <button onclick="setAdminTheme('COMPACT_TABLE')" class="theme-btn text-slate-400 hover:text-white px-2 py-1 rounded-lg transition" data-theme="COMPACT_TABLE" title="緊湊表格模式">
+            📊 緊湊
+          </button>
+          <button onclick="setAdminTheme('HIGH_CONTRAST')" class="theme-btn text-slate-400 hover:text-white px-2 py-1 rounded-lg transition" data-theme="HIGH_CONTRAST" title="軍規極簡模式">
+            🌙 極簡
+          </button>
+        </div>
+
+        <!-- 🟢 Admin Heartbeat Pill -->
+        <div id="adminHeartbeatPill" class="flex items-center gap-1 bg-slate-950 border border-emerald-800 text-emerald-300 px-2 py-1 rounded-xl text-[10px] font-bold" title="Admin 心跳連線保持中 (Keep-Login)">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Admin 在線</span>
+        </div>
+
+        <button onclick="openChangeLogModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1 shadow-sm" title="檢視班表異動推播與審計紀錄 (3分鐘延時推播)">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>異動 Log</span>
+        </button>
+
+        <button onclick="openSmartInspectModal()" class="bg-gradient-to-r from-purple-800 to-indigo-800 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl border border-purple-500/60 transition flex items-center gap-1 shadow-md" title="智能分析表頭與姓名日期對齊檢查">
+          <i class="fa-solid fa-brain text-purple-300"></i>
+          <span>診斷</span>
+        </button>
+        <button onclick="openGoogleDriveModal()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1 shadow-sm" title="選擇 Google 雲端共享表單">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>雲端</span>
+        </button>
+        <a href="/pwa?group_id=tsgh_internal&tab=三總保全內部群" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1">
+          <i class="fa-solid fa-mobile-screen"></i>
+          <span>PWA</span>
+        </a>
+        <button onclick="loadGroupList()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm">
+          <i class="fa-solid fa-rotate text-xs" id="reloadIcon"></i>
+          <span>重整</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl w-full mx-auto p-3 sm:p-5 space-y-4 sm:space-y-5 flex-1">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300"></div>
+
+    <!-- ❓ Group ID 查詢圖解教學彈窗 -->
+    <div id="groupIdHelpModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2 text-white font-bold text-base">
+            <i class="fa-solid fa-circle-question text-sky-400 text-lg"></i>
+            <span>小白新人教學：如何查詢 LINE「群組 ID」？</span>
+          </div>
+          <button onclick="closeGroupIdHelp()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-emerald-400 text-xs sm:text-sm flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center justify-center text-[10px]">方法 1</span>
+                <span>最簡單推薦：直接在群組發送指令</span>
+              </span>
+              <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800 font-bold">1秒取得</span>
+            </div>
+            
+            <p class="text-slate-300">1. 把排班機器人邀請加入該群組。<br>2. 在群組內發送指令：</p>
+            
+            <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3 space-y-2">
+              <div class="flex justify-end">
+                <span class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl rounded-tr-none text-xs">/我的ID</span>
+              </div>
+              <div class="flex justify-start">
+                <div class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl rounded-tl-none space-y-1 max-w-[85%]">
+                  <div class="text-[11px] text-slate-400">🤖 飛龍排班機器人：</div>
+                  <div class="font-mono text-sky-300 font-bold text-xs">👥 此 LINE 群組 ID：</div>
+                  <div class="bg-slate-950 p-1.5 rounded border border-slate-700 text-purple-300 font-mono font-bold select-all break-all text-[11px]">
+                    C1a2b3c4d5e6f7890abcdef12345678
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <p class="text-slate-400 text-[11px]">👉 複製機器人回傳的 <code>C...</code> 開頭英數代碼，貼到後台即可！</p>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-1.5">
+            <span class="font-bold text-purple-400 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-purple-950 text-purple-400 border border-purple-800 flex items-center justify-center text-[10px]">方法 2</span>
+              <span>自訂好記的英文代碼 (免查直接填)</span>
+            </span>
+            <p class="text-slate-300 text-[11px]">
+              若目前尚未將機器人加入群組，可先填寫自訂英文代碼（如：<code>tsgh_internal</code>）。
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-1">
+          <button onclick="closeGroupIdHelp()" class="w-full h-10 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl text-xs transition">
+            關閉教學
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📁 Google 雲端表單 共享檔案選擇與連線彈窗 -->
+    <div id="googleDriveModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-5 sm:p-6 space-y-4 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2 text-white font-bold text-base">
+            <i class="fa-brands fa-google-drive text-emerald-400 text-xl"></i>
+            <span>Google 雲端硬碟 ｜ 共享試算表唯讀連線</span>
+          </div>
+          <button onclick="closeGoogleDriveModal()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- 🔐 Google Account One-Click OAuth Sign-In -->
+        <div class="bg-gradient-to-r from-sky-950/70 via-slate-950 to-slate-950 border-2 border-sky-500/80 rounded-2xl p-4 space-y-3 shadow-lg">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-brands fa-google text-sky-400 text-lg"></i>
+              <span class="text-xs sm:text-sm font-bold text-white">Google 帳號授權登入 (唯讀讀取)</span>
+            </div>
+            <span id="googleLoginStatusBadge" class="text-[10px] bg-sky-950 text-sky-300 font-bold px-2 py-0.5 rounded border border-sky-800 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+              <span>幹部專用認證 (唯讀)</span>
+            </span>
+          </div>
+          
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            系統將引導使用幹部 Google 帳號授權唯讀存取，直接讀取您有權限開啟的雲端試算表（絕無修改與寫入權限）：
+          </p>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button 
+              type="button" 
+              onclick="triggerGoogleOAuthLogin()" 
+              class="h-9 px-4 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-md"
+            >
+              <i class="fa-brands fa-google"></i>
+              <span>以 Google 帳號登入授權 (一鍵讀取)</span>
+            </button>
+            <span class="text-[11px] text-slate-400">或輸入/貼上 OAuth Token 快速連線</span>
+          </div>
+        </div>
+
+        <!-- Service Account Email Info (To tell the sheet owner) -->
+        <div class="bg-slate-950 border border-emerald-900/60 rounded-2xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-key"></i>
+              <span>Google 服務授權帳號 (唯讀專用)</span>
+            </span>
+            <span class="text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800">
+              唯讀保證 100% 不會被改
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-300">
+            請將此機器人帳號提供給排班組長，於 Google 試算表設定「<b>檢視者 (唯讀)</b>」共享權限：
+          </p>
+          <div class="flex items-center gap-1.5 bg-slate-900 p-2 rounded-xl border border-slate-700">
+            <input 
+              type="text" 
+              id="serviceAccountEmailInput" 
+              readonly 
+              value="載入中..." 
+              class="flex-1 bg-transparent text-xs text-sky-300 font-mono select-all focus:outline-none"
+            >
+            <button onclick="copyServiceAccountEmail()" class="bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg transition">
+              複製
+            </button>
+          </div>
+        </div>
+
+        <!-- Connect to Google Sheet URL / ID Input -->
+        <div class="space-y-2 text-xs">
+          <label class="block font-bold text-slate-200">
+            輸入或貼上 Google 試算表完整網址 / ID：
+          </label>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="inputSpreadsheetUrl" 
+              placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5.../edit" 
+              class="flex-1 h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
+            >
+            <button 
+              onclick="connectSpreadsheetFromInput()" 
+              class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 rounded-xl text-xs transition flex items-center gap-1 shadow-sm"
+            >
+              <i class="fa-solid fa-link"></i>
+              <span>連線讀取</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 📋 Direct Paste Real Schedule Data from Google Sheets / Excel -->
+        <div class="bg-slate-950 border border-purple-900/60 rounded-2xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-paste text-purple-400"></i>
+              <span>直接複製 Google 試算表 / Excel 真實表格貼上匯入：</span>
+            </span>
+            <span class="text-[10px] bg-purple-950 text-purple-300 font-bold px-2 py-0.5 rounded border border-purple-800">
+              免權限 1秒匯入
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-300">
+            請在您有權限開啟的 Google 試算表中，選取並複製 (Ctrl+C) 表格內容（包含表頭與排班行），直接貼在下方：
+          </p>
+          <textarea 
+            id="directPasteContent" 
+            rows="3" 
+            placeholder="日期	星期	哨點/崗位	早班 (07-19)	晚班 (19-07)	機動支援	備註&#10;2026/08/01	六	急診哨	陳冠冠	賴小隊	張大千	正常勤務"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-purple-500"
+          ></textarea>
+          <div class="flex justify-end gap-2">
+            <button 
+              type="button" 
+              onclick="submitDirectPasteSchedule()" 
+              class="h-8 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-lg text-xs transition flex items-center gap-1.5 shadow-sm"
+            >
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>載入並對齊真實資料</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-1 flex justify-end">
+          <button onclick="closeGoogleDriveModal()" class="h-9 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition">
+            完成
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🧠 智能分析對齊檢查與品質診斷彈窗 (Smart Alignment & Health Inspector Modal) -->
+    <div id="smartInspectModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-purple-700/80 rounded-3xl max-w-2xl w-full p-5 sm:p-6 space-y-4 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2 text-white font-bold text-base">
+            <div class="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center text-white">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+              <div class="text-base font-bold text-white leading-tight">智能排班對齊分析 ＆ 資料品質診斷</div>
+              <div class="text-[11px] text-purple-300">表頭欄位自動映射 ｜ 日期與星期校驗 ｜ 同仁排班衝突偵測</div>
+            </div>
+          </div>
+          <button onclick="closeSmartInspectModal()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Target Tab Selector & Run Button -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-2.5">
+          <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+            <span class="text-xs text-slate-300 font-bold whitespace-nowrap">診斷目標分頁：</span>
+            <input 
+              type="text" 
+              id="inspectTabNameInput" 
+              value="三總保全內部群" 
+              list="tabSuggestions"
+              class="flex-1 h-9 bg-slate-900 border border-slate-700 rounded-lg px-2.5 text-xs text-white placeholder-slate-500 font-bold focus:outline-none focus:border-purple-500"
+            >
+          </div>
+          <button 
+            onclick="runSmartInspection()" 
+            id="runInspectBtn"
+            class="h-9 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md flex-shrink-0"
+          >
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+            <span>執行智能診斷</span>
+          </button>
+        </div>
+
+        <!-- Inspection Result Container -->
+        <div id="inspectionResultContainer" class="space-y-3.5 text-xs">
+          <div class="text-center py-8 text-slate-500 flex flex-col items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-purple-400 text-3xl animate-bounce"></i>
+            <span>點擊上方「執行智能診斷」，即刻深度檢測排班結構！</span>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <button onclick="closeSmartInspectModal()" class="h-9 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition">
+            關閉視窗
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📋 班表異動推播與審計日誌彈窗 (Schedule Change & Push Audit Logs Modal) -->
+    <div id="changeLogModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-amber-800/80 rounded-3xl max-w-3xl w-full p-5 sm:p-6 space-y-4 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2 text-white font-bold text-base">
+            <div class="w-8 h-8 rounded-xl bg-amber-600 flex items-center justify-center text-white">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+              <div class="text-base font-bold text-white leading-tight">班表異動審計日誌 (3分鐘延時推播)</div>
+              <div class="text-[11px] text-amber-300">自動偵測 A 早班(日班)、B 晚班(夜班) 新增/取消 ｜ 靜置 3 分鐘批次推播 LINE</div>
+            </div>
+          </div>
+          <button onclick="closeChangeLogModal()" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Filter & Reload Bar -->
+        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-2xl border border-slate-800 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-bold">過濾分頁：</span>
+            <input 
+              type="text" 
+              id="changeLogTabFilter" 
+              placeholder="全部或輸入分頁名..." 
+              class="h-8 bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            >
+            <button onclick="loadChangeLogs()" class="h-8 px-3 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-lg transition">
+              查詢
+            </button>
+          </div>
+          <span class="text-[11px] text-amber-400 font-mono" id="changeLogSummaryText">載入中...</span>
+        </div>
+
+        <!-- Change Log Table Container -->
+        <div id="changeLogTableContainer" class="space-y-2 text-xs max-h-96 overflow-y-auto pr-1">
+          <div class="text-slate-500 text-center py-8">載入異動日誌中...</div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <button onclick="closeChangeLogModal()" class="h-9 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition">
+            關閉
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📧 常駐顯示：小隊長 E-mail (白名單認證) 總覽面板 -->
+    <section class="bg-gradient-to-r from-purple-950/60 via-slate-900 to-slate-900 border border-purple-800/80 rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-2.5">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-envelope-circle-check text-emerald-400 text-base sm:text-lg"></i>
+          <div>
+            <h2 class="text-xs sm:text-sm font-bold text-white">小隊長 E-mail (白名單認證) 常駐管理</h2>
+            <p class="text-[11px] text-purple-300">內建全半形（＠與。）自動偵測與即時校正</p>
+          </div>
+        </div>
+        <span class="text-[10px] bg-emerald-950 text-emerald-400 font-bold px-2 py-0.5 rounded-lg border border-emerald-800 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>常駐監控</span>
+        </span>
+      </div>
+
+      <!-- Quick Fast Whitelist Status Matrix -->
+      <div id="leaderEmailOverview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div class="text-xs text-slate-500 py-2 col-span-full text-center">載入隊長白名單中...</div>
+      </div>
+    </section>
+
+    <!-- Main Grid: Form (4 cols) & Groups List (8 cols) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+
+      <!-- Left Form (4 cols) -->
+      <div class="lg:col-span-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2" id="formTitle">
+            <i class="fa-solid fa-pen-to-square text-purple-400"></i>
+            <span>群組分頁與隊長設定</span>
+          </h2>
+          <span class="text-[10px] bg-purple-950 text-purple-400 px-2 py-0.5 rounded border border-purple-800 font-bold">幹部權限</span>
+        </div>
+
+        <form id="groupForm" onsubmit="handleFormSubmit(event)" class="space-y-3 text-xs">
+          <!-- Group Name -->
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">
+              小群組名稱 (LINE 群組名) <span class="text-rose-400">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="inputGroupName" 
+              placeholder="如：三總保全內部群、急診哨小隊" 
+              required 
+              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+            >
+          </div>
+
+          <!-- Team Leader Email with Fullwidth Auto-detection -->
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+              <span>小隊長 E-mail (白名單認證)</span>
+              <span id="formEmailWarning" class="hidden text-[10px] text-amber-300 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+                ⚠️ 已自動將全形＠/。轉為半形
+              </span>
+            </label>
+            <div class="space-y-1.5">
+              <input 
+                type="text" 
+                id="inputLeaderEmail" 
+                placeholder="如：隊長信箱 / leader@feilong.com" 
+                oninput="handleEmailInputWithAutoFix(this, 'formEmailWarning')"
+                class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+              >
+              <!-- Save & Verify Save Fast Action Toolbar -->
+              <div class="flex gap-1.5">
+                <button 
+                  type="button" 
+                  onclick="saveCurrentLeaderEmail(false)" 
+                  class="flex-1 h-8 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-purple-300 rounded-lg text-xs font-bold border border-slate-700 transition flex items-center justify-center gap-1"
+                >
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  <span>💾 儲存 (Save)</span>
+                </button>
+                <button 
+                  type="button" 
+                  onclick="saveCurrentLeaderEmail(true)" 
+                  class="flex-1 h-8 bg-emerald-950 hover:bg-emerald-900 active:bg-emerald-800 text-emerald-300 rounded-lg text-xs font-bold border border-emerald-800 transition flex items-center justify-center gap-1"
+                >
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>🔍 核對 Save</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Google Sheet Tab Name -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-slate-300 font-semibold">試算表分頁名稱 <span class="text-rose-400">*</span></label>
+              <button type="button" onclick="fetchAvailableTabs()" class="text-[11px] text-purple-400 hover:underline">
+                <i class="fa-solid fa-arrows-rotate mr-0.5"></i>自動帶入分頁
+              </button>
+            </div>
+            <input 
+              type="text" 
+              id="inputSheetTab" 
+              list="tabSuggestions"
+              placeholder="如：三總保全內部群、第一小隊" 
+              required 
+              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+            >
+            <datalist id="tabSuggestions"></datalist>
+          </div>
+
+          <!-- Group ID with Help Button & Sub PIN (2 Cols) -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-slate-300 font-semibold">群組代碼 / ID <span class="text-rose-400">*</span></label>
+                <button type="button" onclick="openGroupIdHelp()" class="text-[11px] text-sky-400 hover:underline flex items-center gap-0.5 font-bold" title="查詢教學">
+                  <i class="fa-solid fa-circle-question"></i>
+                  <span>Help 教學</span>
+                </button>
+              </div>
+              <input 
+                type="text" 
+                id="inputGroupId" 
+                placeholder="如：tsgh_internal 或 C12345..." 
+                required 
+                class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+              >
+            </div>
+            <div>
+              <label class="block text-slate-300 font-semibold mb-1">小隊輔 PIN 碼 <span class="text-rose-400">*</span></label>
+              <input 
+                type="text" 
+                id="inputPinCode" 
+                maxlength="4" 
+                pattern="\d{3,4}" 
+                placeholder="如：8821" 
+                required 
+                class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm font-mono tracking-widest text-center text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+              >
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pt-2 flex gap-2">
+            <button 
+              type="submit" 
+              class="flex-1 h-11 bg-purple-600 hover:bg-purple-500 active:scale-[0.99] text-white font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5"
+            >
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span id="submitBtnText">儲存整組設定</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="resetForm()" 
+              class="h-11 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition"
+            >
+              重設
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Right Column: Groups Table (7 cols) -->
+      <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list text-emerald-400"></i>
+            <span>已綁定之工作群組</span>
+          </h2>
+          <span class="text-xs text-slate-400 font-mono" id="groupCountBadge">載入中...</span>
+        </div>
+
+        <div class="space-y-3" id="groupsListContainer">
+          <div class="text-center py-10 text-slate-500 text-xs flex flex-col items-center gap-2">
+            <div class="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+            <span>載入中...</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Minimalist Visual Guide -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-2.5">
+      <div class="border-b border-slate-800 pb-2 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-purple-400"></i>
+          <h2 class="text-sm font-bold text-white">4 步驟設定簡圖</h2>
+        </div>
+        <button onclick="openGroupIdHelp()" class="text-xs text-sky-400 hover:underline flex items-center gap-1 font-bold">
+          <i class="fa-solid fa-circle-question"></i>
+          <span>小白如何查群組 ID？點我看圖解教學</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+        <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-3 space-y-1">
+          <div class="font-bold text-sky-400">1. 分頁名稱綁定</div>
+          <p class="text-slate-300 text-[11px]">指定 Google 試算表分頁（如：<code>三總保全內部群</code>）。</p>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-3 space-y-1">
+          <div class="font-bold text-emerald-400">2. 隊長信箱常駐核對</div>
+          <p class="text-slate-300 text-[11px]">後台常駐顯示，點擊 <b>💾 Save</b> 或 <b>🔍 核對 Save</b> 儲存。</p>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-3 space-y-1">
+          <div class="font-bold text-purple-400">3. 輔 PIN 查班</div>
+          <p class="text-slate-300 text-[11px]">LINE 輸入 <code>/班表 輔PIN</code> 或 PWA 雙 PIN 碼解鎖。</p>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-3 space-y-1">
+          <div class="font-bold text-amber-400">4. 每日 08:00 巡檢</div>
+          <p class="text-slate-300 text-[11px]">群組名稱若遭竄改，系統自動推播警報。</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-3 text-center text-[11px] text-slate-500 mt-auto">
+    飛龍保全 ｜ 三總勤務排班系統 ｜ 隊長 Email 白名單常駐控管
+  </footer>
+
+  <script>
+    let currentGroups = [];
+    let editingGroupId = null;
+
+    // Full-width character detection and real-time sanitizer
+    function cleanAndCheckEmail(val) {
+      let hadFullwidth = false;
+      const fullwidthChars = ['＠', '。', '．', '﹒', '　', '＿', '－'];
+      if (fullwidthChars.some(c => val.includes(c))) {
+        hadFullwidth = true;
+      }
+
+      // Convert fullwidth @ to @ and fullwidth dots to .
+      let cleaned = val
+        .replace(/＠/g, '@')
+        .replace(/[。．﹒]/g, '.')
+        .replace(/　/g, '')
+        .replace(/\s+/g, '')
+        .trim();
+
+      // Normalize full-width letters and numbers to half-width
+      cleaned = cleaned.replace(/[\uff01-\uff5e]/g, function(ch) {
+        hadFullwidth = true;
+        return String.fromCharCode(ch.charCodeAt(0) - 0xfee0);
+      });
+
+      return { cleaned, hadFullwidth };
+    }
+
+    function handleEmailInputWithAutoFix(inputElem, warningElemId) {
+      const original = inputElem.value;
+      const { cleaned, hadFullwidth } = cleanAndCheckEmail(original);
+      
+      if (hadFullwidth && original !== cleaned) {
+        inputElem.value = cleaned;
+      }
+
+      const warningEl = document.getElementById(warningElemId);
+      if (warningEl) {
+        if (hadFullwidth) {
+          warningEl.classList.remove('hidden');
+          setTimeout(() => warningEl.classList.add('hidden'), 3500);
+        }
+      }
+    }
+
+    let currentAdminTheme = 'DARK_GLASS';
+
+    function setAdminTheme(theme) {
+      currentAdminTheme = theme;
+      
+      const body = document.body;
+      const navbar = document.querySelector('header');
+      const panelWhitelist = document.querySelector('section');
+      const footer = document.querySelector('footer');
+
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        if (btn.dataset.theme === theme) {
+          btn.className = "theme-btn active bg-purple-600 text-white px-2.5 py-1 rounded-lg transition font-bold shadow-sm";
+        } else {
+          btn.className = "theme-btn text-slate-400 hover:text-white px-2.5 py-1 rounded-lg transition";
+        }
+      });
+
+      if (theme === 'LIGHT_CLEAN') {
+        document.documentElement.classList.remove('dark');
+        body.className = "bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased";
+        if (navbar) navbar.className = "bg-white/95 border-b border-slate-200 sticky top-0 z-50 backdrop-blur px-4 sm:px-6 py-3 shadow-sm";
+        if (panelWhitelist) panelWhitelist.className = "bg-white border border-purple-200 rounded-2xl p-4 shadow-sm space-y-3";
+        if (footer) footer.className = "bg-white border-t border-slate-200 py-3 text-center text-[11px] text-slate-500 mt-auto";
+      } else if (theme === 'HIGH_CONTRAST') {
+        document.documentElement.classList.add('dark');
+        body.className = "bg-black text-white min-h-screen flex flex-col antialiased";
+        if (navbar) navbar.className = "bg-zinc-950 border-b border-zinc-800 sticky top-0 z-50 px-4 sm:px-6 py-3";
+        if (panelWhitelist) panelWhitelist.className = "bg-zinc-950 border border-emerald-500/80 rounded-2xl p-4 shadow-xl space-y-3";
+        if (footer) footer.className = "bg-zinc-950 border-t border-zinc-800 py-3 text-center text-[11px] text-zinc-500 mt-auto";
+      } else {
+        document.documentElement.classList.add('dark');
+        body.className = "bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased";
+        if (navbar) navbar.className = "bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur px-4 sm:px-6 py-3";
+        if (panelWhitelist) panelWhitelist.className = "bg-gradient-to-r from-purple-950/60 via-slate-900 to-slate-900 border border-purple-800/80 rounded-2xl p-4 shadow-xl space-y-3";
+        if (footer) footer.className = "bg-slate-900 border-t border-slate-800 py-3 text-center text-[11px] text-slate-500 mt-auto";
+      }
+
+      loadGroupList();
+    }
+
+    // 🎨 淡色系底色色票 (Pastel color palette for distinct member names)
+    const PASTEL_NAME_PALETTES = [
+      { bg: 'bg-sky-950/60', text: 'text-sky-200', border: 'border-sky-700/60' },
+      { bg: 'bg-emerald-950/60', text: 'text-emerald-200', border: 'border-emerald-700/60' },
+      { bg: 'bg-purple-950/60', text: 'text-purple-200', border: 'border-purple-700/60' },
+      { bg: 'bg-amber-950/60', text: 'text-amber-200', border: 'border-amber-700/60' },
+      { bg: 'bg-rose-950/60', text: 'text-rose-200', border: 'border-rose-700/60' },
+      { bg: 'bg-indigo-950/60', text: 'text-indigo-200', border: 'border-indigo-700/60' },
+      { bg: 'bg-teal-950/60', text: 'text-teal-200', border: 'border-teal-700/60' },
+      { bg: 'bg-cyan-950/60', text: 'text-cyan-200', border: 'border-cyan-700/60' }
+    ];
+
+    function getPastelPalette(name) {
+      if (!name || name === '-') return { bg: 'bg-slate-950/40', text: 'text-slate-400', border: 'border-slate-800' };
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const idx = Math.abs(hash) % PASTEL_NAME_PALETTES.length;
+      return PASTEL_NAME_PALETTES[idx];
+    }
+
+    // 🌟 姓名的「姓」加大 1.2 倍粗體顯示
+    function formatNameWithEnlargedSurname(name) {
+      if (!name || name === '-') return '-';
+      const trimmed = name.trim();
+      if (trimmed.length <= 1) {
+        return `<span class="text-[1.2em] font-extrabold tracking-tight">${trimmed}</span>`;
+      }
+      const surname = trimmed.charAt(0);
+      const givenName = trimmed.slice(1);
+      return `<span class="text-[1.2em] font-extrabold tracking-tight">${surname}</span><span class="font-semibold">${givenName}</span>`;
+    }
+
+    // 🏷️ 格式化同仁標籤 (包含淡色系底色與姓加大1.2倍)
+    function renderMemberPill(name, customClass = '') {
+      if (!name || name === '-') return '<span class="text-slate-500 font-mono">-</span>';
+      const palette = getPastelPalette(name);
+      return `
+        <span class="inline-flex items-center px-2 py-0.5 rounded-lg border text-xs sm:text-sm ${palette.bg} ${palette.text} ${palette.border} ${customClass}">
+          ${formatNameWithEnlargedSurname(name)}
+        </span>
+      `;
+    }
+
+    function openGroupIdHelp() {
+      document.getElementById('groupIdHelpModal').classList.remove('hidden');
+    }
+
+    function closeGroupIdHelp() {
+      document.getElementById('groupIdHelpModal').classList.add('hidden');
+    }
+
+    /* 🧠 Smart Alignment & Health Inspector Functions */
+    function openSmartInspectModal() {
+      document.getElementById('smartInspectModal').classList.remove('hidden');
+      const currentTab = document.getElementById('inputSheetTab').value.trim() || '三總保全內部群';
+      document.getElementById('inspectTabNameInput').value = currentTab;
+      runSmartInspection();
+    }
+
+    function closeSmartInspectModal() {
+      document.getElementById('smartInspectModal').classList.add('hidden');
+    }
+
+    async function runSmartInspection() {
+      const tabName = document.getElementById('inspectTabNameInput').value.trim() || '三總保全內部群';
+      const container = document.getElementById('inspectionResultContainer');
+      const runBtn = document.getElementById('runInspectBtn');
+      
+      runBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>分析中...</span>`;
+      runBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin/schedule/inspect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tab_name: tabName })
+        });
+        if (!res.ok) throw new Error('無法取得診斷報告');
+        const data = await res.json();
+
+        // Render Smart Alignment Inspection Dashboard
+        const score = data.health_score || 0;
+        let scoreBadgeClass = score >= 90 ? 'bg-emerald-950 text-emerald-300 border-emerald-800' : (score >= 60 ? 'bg-amber-950 text-amber-300 border-amber-800' : 'bg-rose-950 text-rose-300 border-rose-800');
+
+        let html = `
+          <!-- 📊 Score Banner -->
+          <div class="bg-gradient-to-r from-slate-950 to-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+            <div class="space-y-1">
+              <div class="text-xs text-slate-400">分頁名稱：<span class="text-sky-300 font-bold font-mono">${data.tab_name}</span> ｜ 檢驗：<span class="text-slate-200 font-bold">${data.total_rows_inspected}</span> 列</div>
+              <div class="text-sm font-extrabold text-white">排班資料品質健康評分</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-3xl font-black font-mono ${score >= 90 ? 'text-emerald-400' : (score >= 60 ? 'text-amber-400' : 'text-rose-400')}">${score}</span>
+              <span class="text-xs px-3 py-1 rounded-xl font-bold border ${scoreBadgeClass}">
+                ${score >= 90 ? '✅ 完美對齊' : (score >= 60 ? '⚠️ 部分微調' : '❌ 需補表頭')}
+              </span>
+            </div>
+          </div>
+
+          <!-- 1. Header Alignment Status -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2.5">
+            <div class="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5 border-b border-slate-900 pb-2">
+              <i class="fa-solid fa-table-columns text-sky-400"></i>
+              <span>表頭欄位自動辨識與對齊：</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              ${Object.entries(data.header_alignment || {}).map(([key, val]) => {
+                const labelMap = { date: '📅 日期欄位', weekday: '🗓️ 星期欄位', post: '📍 哨點/崗位', morning_shift: '☀️ 早班 (07-19)', evening_shift: '🌆 晚班 (19-07)', support: ' 機動支援', notes: '📝 備註' };
+                const isOk = val.is_aligned;
+                return `
+                  <div class="bg-slate-900/90 p-2.5 rounded-xl border ${isOk ? 'border-slate-800' : 'border-rose-900/80'} flex items-center justify-between gap-2">
+                    <span class="text-slate-300 font-medium truncate">${labelMap[key] || key}</span>
+                    ${isOk ? `<span class="text-[11px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded-lg font-bold border border-emerald-800 truncate max-w-[130px]" title="${val.matched_column}">對齊：${val.matched_column}</span>` : '<span class="text-[11px] bg-rose-950 text-rose-300 px-2 py-0.5 rounded-lg font-bold">⚠️ 未對齊</span>'}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- 2. Date & Calendar Sync -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2.5">
+            <div class="font-bold text-white text-xs sm:text-sm flex items-center justify-between border-b border-slate-900 pb-2">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-check text-emerald-400"></i>
+                <span>日期格式與行事曆星期校驗：</span>
+              </span>
+              <span class="text-xs text-sky-300 font-mono font-bold">${data.date_analysis.date_range}</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                <span class="text-slate-400">有效日期天數</span>
+                <b class="text-emerald-400 font-mono text-sm">${data.date_analysis.total_valid_dates} 天</b>
+              </div>
+              <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                <span class="text-slate-400">不重複日期</span>
+                <b class="text-sky-300 font-mono text-sm">${data.date_analysis.unique_dates} 天</b>
+              </div>
+              <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                <span class="text-slate-400">星期校驗狀態</span>
+                <b class="text-purple-300 font-bold text-xs">${data.date_analysis.auto_weekday_fixed ? '已自動校準' : '100% 吻合'}</b>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Guard Duty Roster & Conflicts -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2.5">
+            <div class="font-bold text-white text-xs sm:text-sm flex items-center justify-between border-b border-slate-900 pb-2">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-users text-purple-400"></i>
+                <span>同仁勤務名單（共 ${data.guard_analysis.unique_guards_count} 位）：</span>
+              </span>
+              ${data.guard_analysis.conflicts_count > 0 ? `<span class="text-[11px] bg-rose-950 text-rose-300 font-bold px-2 py-0.5 rounded border border-rose-800">⚠️ ${data.guard_analysis.conflicts_count} 筆衝突</span>` : '<span class="text-[11px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800">✅ 無衝突</span>'}
+            </div>
+
+            <!-- Guard Pills -->
+            <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 bg-slate-900/60 rounded-xl border border-slate-800">
+              ${(data.guard_analysis.guard_roster || []).map(g => renderMemberPill(g)).join('')}
+            </div>
+
+            ${data.guard_analysis.conflicts_count > 0 ? `
+              <div class="bg-rose-950/70 border border-rose-800 p-3 rounded-xl space-y-1 text-xs">
+                <div class="text-rose-300 font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <span>偵測到同日重疊排班警示：</span>
+                </div>
+                <ul class="text-rose-200 list-disc list-inside space-y-0.5">
+                  ${data.guard_analysis.conflicts.map(c => `<li>${c.warning}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- 4. Rare Chinese Characters -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2.5">
+            <div class="font-bold text-white text-xs sm:text-sm flex items-center justify-between border-b border-slate-900 pb-2">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-spell-check text-amber-400"></i>
+                <span>生僻字 ＆ 異體字全字庫防呆檢驗：</span>
+              </span>
+              <span class="text-[10px] bg-purple-950 text-purple-300 font-bold px-2 py-0.5 rounded border border-purple-800">
+                ${(data.rare_char_analysis && data.rare_char_analysis.rare_chars_detected_count > 0) ? `偵測到 ${data.rare_char_analysis.rare_chars_detected_count} 位難字` : '字庫檢驗 100%'}
+              </span>
+            </div>
+
+            ${(data.rare_char_analysis && data.rare_char_analysis.rare_guards && data.rare_char_analysis.rare_guards.length > 0) ? `
+              <div class="space-y-2 text-xs">
+                ${data.rare_char_analysis.rare_guards.map(item => `
+                  <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-white flex items-center gap-2">
+                        <span>同仁：</span>
+                        ${renderMemberPill(item.guard_name)}
+                      </span>
+                      <span class="text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800">
+                        ${item.display_status}
+                      </span>
+                    </div>
+                    <div class="text-slate-300">
+                      ${item.analysis.map(a => `<div>• <b>【${a.char}】</b>：${a.suggestion}</div>`).join('')}
+                    </div>
+                    <div class="text-[11px] text-sky-300 font-mono">
+                      🔍 模糊相容搜尋詞：${item.search_aliases.join('、')}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <div class="text-xs text-emerald-400 bg-emerald-950/40 p-3 rounded-xl border border-emerald-900 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-base text-emerald-400 flex-shrink-0"></i>
+                <div>
+                  <div class="font-bold text-white">字型字庫檢測正常 (Zero Tofu Boxes)</div>
+                  <div class="text-slate-300">全平台 (Web/PWA、LINE Flex、PDF) 皆已載入完整 CJK 擴充字型，生僻字 100% 正常顯示！</div>
+                </div>
+              </div>
+            `}
+          </div>
+
+          <!-- 5. Recommendations -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+            <div class="font-bold text-amber-300 text-xs sm:text-sm flex items-center gap-1.5 border-b border-slate-900 pb-2">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span>智能優化與合理化建議：</span>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-1.5">
+              ${(data.recommendations || []).map(r => `<li class="flex items-start gap-2"><span class="text-sky-400 font-bold">👉</span><span>${r}</span></li>`).join('')}
+            </ul>
+          </div>
+        `;
+
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<div class="bg-rose-950 border border-rose-800 p-4 rounded-xl text-rose-300 font-bold text-center">診斷失敗：${err.message}</div>`;
+      } finally {
+        runBtn.innerHTML = `<i class="fa-solid fa-magnifying-glass-chart"></i><span>執行智能診斷</span>`;
+        runBtn.disabled = false;
+      }
+    }
+
+    /* 📁 Google Drive Shared Files & Tabs Picker Functions */
+    function openGoogleDriveModal() {
+      document.getElementById('googleDriveModal').classList.remove('hidden');
+      loadGoogleDriveStatus();
+    }
+
+    function closeGoogleDriveModal() {
+      document.getElementById('googleDriveModal').classList.add('hidden');
+    }
+
+    function copyServiceAccountEmail() {
+      const emailInput = document.getElementById('serviceAccountEmailInput');
+      emailInput.select();
+      navigator.clipboard.writeText(emailInput.value);
+      showToast('已複製 Google 服務帳號信箱', 'success');
+    }
+
+    /* 🔐 Google OAuth 2.0 Client Trigger */
+    function triggerGoogleOAuthLogin() {
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: '1092837465920-feilong-security.apps.googleusercontent.com',
+          scope: 'https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.readonly',
+          hint: 'ericlai429@gmail.com',
+          callback: async (response) => {
+            if (response.access_token) {
+              showToast('Google 帳號授權成功！正在同步雲端資料...', 'success');
+              await sendOAuthTokenToServer(response.access_token);
+            }
+          },
+        });
+        client.requestAccessToken();
+      } else {
+        // Fallback prompt for token or link
+        const token = prompt('請輸入或貼上 Google OAuth Access Token (或直接點擊「連線讀取」使用已綁定之 ID)：');
+        if (token) {
+          sendOAuthTokenToServer(token);
+        }
+      }
+    }
+
+    async function sendOAuthTokenToServer(token) {
+      try {
+        const res = await fetch('/api/admin/google/oauth-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token, user_email: 'ericlai429@gmail.com' })
+        });
+        if (!res.ok) throw new Error('OAuth 驗證失敗');
+        const data = await res.json();
+        showToast(data.message, 'success');
+        connectSpreadsheetFromInput();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadGoogleDriveStatus() {
+      try {
+        const res = await fetch('/api/admin/google-drive/status');
+        if (!res.ok) throw new Error('無法取得 Google 雲端狀態');
+        const data = await res.json();
+        
+        document.getElementById('serviceAccountEmailInput').value = data.service_account_email || 'feilong-bot@feilong-security.iam.gserviceaccount.com';
+        document.getElementById('inputSpreadsheetUrl').value = data.active_spreadsheet_id || '';
+
+        const container = document.getElementById('sharedFilesList');
+        if (!data.shared_files || data.shared_files.length === 0) {
+          container.innerHTML = '<div class="text-slate-500 text-center py-3">尚無授權共享的試算表</div>';
+          return;
+        }
+
+        let html = '';
+        data.shared_files.forEach(f => {
+          html += `
+            <div class="bg-slate-950 border ${f.is_current ? 'border-emerald-500/80' : 'border-slate-800'} rounded-xl p-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                  <span class="font-bold text-white text-xs sm:text-sm">${f.title}</span>
+                </div>
+                ${f.is_current ? '<span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-800">當前使用中</span>' : ''}
+              </div>
+              <div class="text-[11px] text-slate-400 flex items-center justify-between">
+                <span>擁有者: ${f.owner}</span>
+                <span>ID: <code class="text-sky-300 font-mono">${f.file_id.slice(0, 10)}...</code></span>
+              </div>
+              <!-- Tabs Pill List -->
+              <div class="space-y-1">
+                <div class="text-[10px] text-purple-300 font-bold">可選分頁 (點選直接帶入設定)：</div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${(f.tabs || []).map(tab => `
+                    <button 
+                      type="button" 
+                      onclick="selectSharedTab('${tab}')" 
+                      class="bg-slate-900 hover:bg-purple-900/60 active:scale-95 text-sky-200 text-xs px-2.5 py-1 rounded-lg border border-slate-700 hover:border-purple-500 transition font-medium"
+                    >
+                      📋 ${tab}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function connectSpreadsheetFromInput() {
+      const inputVal = document.getElementById('inputSpreadsheetUrl').value.trim();
+      if (!inputVal) {
+        showToast('請輸入 Google 試算表網址或 ID', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/google-drive/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url_or_id: inputVal })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || '連線失敗');
+        }
+        const data = await res.json();
+        showToast(data.message, 'success');
+        fetchAvailableTabs();
+        loadGoogleDriveStatus();
+      } catch (err) {
+        showToast('連線失敗：' + err.message, 'error');
+      }
+    }
+
+    async function connectFromMainField() {
+      const inputVal = document.getElementById('inputSpreadsheetUrlMain').value.trim();
+      if (!inputVal) {
+        showToast('請輸入 Google 試算表網址或 ID', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/google-drive/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url_or_id: inputVal })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || '連線失敗');
+        }
+        const data = await res.json();
+        showToast(data.message, 'success');
+        fetchAvailableTabs();
+        loadGoogleDriveStatus();
+      } catch (err) {
+        showToast('連線失敗：' + err.message, 'error');
+      }
+    }
+
+    async function submitDirectPasteSchedule() {
+      const text = document.getElementById('directPasteContent').value.trim();
+      const tabName = document.getElementById('inputSheetTab').value.trim() || '三總保全內部群';
+      if (!text) {
+        showToast('請先貼上真實排班表格文字內容', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/schedule/upload-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tab_name: tabName, content: text })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || '匯入失敗');
+        }
+        const data = await res.json();
+        showToast(data.message, 'success');
+        closeGoogleDriveModal();
+        openSmartInspectModal();
+      } catch (err) {
+        showToast('匯入失敗：' + err.message, 'error');
+      }
+    }
+
+    function selectSharedTab(tabName) {
+      document.getElementById('inputSheetTab').value = tabName;
+      if (!document.getElementById('inputGroupName').value) {
+        document.getElementById('inputGroupName').value = tabName;
+      }
+      closeGoogleDriveModal();
+      showToast(`已選取分頁「${tabName}」並帶入設定！`, 'success');
+    }
+
+    async function loadGroupList() {
+      const reloadIcon = document.getElementById('reloadIcon');
+      reloadIcon.classList.add('animate-spin');
+      
+      try {
+        const res = await fetch('/api/admin/groups?t=' + new Date().getTime());
+        if (!res.ok) throw new Error('連線失敗');
+        const data = await res.json();
+        currentGroups = data.groups || [];
+        
+        document.getElementById('groupCountBadge').textContent = `共 ${currentGroups.length} 個群組`;
+        renderLeaderEmailOverview(currentGroups);
+        renderGroupsTable(currentGroups);
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        setTimeout(() => reloadIcon.classList.remove('animate-spin'), 300);
+      }
+    }
+
+    let isExecutiveRevealed = false; // 預設防窺遮蔽模式，點擊切換顯示
+
+    function maskEmail(email) {
+      if (!email || typeof email !== 'string') return '未設定';
+      if (isExecutiveRevealed) return email;
+      const atIdx = email.indexOf('@');
+      if (atIdx <= 1) return '🔒 幹部認證信箱';
+      const user = email.slice(0, atIdx);
+      const domain = email.slice(atIdx);
+      const maskedUser = user.length <= 2 ? user[0] + '***' : user[0] + '***' + user[user.length - 1];
+      return maskedUser + domain;
+    }
+
+    function toggleExecutiveReveal() {
+      isExecutiveRevealed = !isExecutiveRevealed;
+      renderLeaderEmailOverview(currentGroups);
+      renderGroupsTable(currentGroups);
+      showToast(isExecutiveRevealed ? '已切換為：完整顯示模式 (幹部授權)' : '已切換為：隱私防窺遮蔽模式', 'success');
+    }
+
+    function renderLeaderEmailOverview(groups) {
+      const container = document.getElementById('leaderEmailOverview');
+      if (!groups || groups.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-500 py-2 col-span-full">尚無群組</div>`;
+        return;
+      }
+
+      let html = '';
+      groups.forEach((g) => {
+        const email = g.leader_email || '';
+        const isVerified = g.is_email_verified;
+        const displayVal = isExecutiveRevealed ? email : (email ? maskEmail(email) : '');
+        html += `
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-xs text-white truncate">${g.group_name}</span>
+              <div class="flex items-center gap-1">
+                ${email ? (
+                  isVerified ? 
+                    '<span class="text-[10px] bg-emerald-950 text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-800">✅ 已核對</span>' : 
+                    '<span class="text-[10px] bg-amber-950 text-amber-300 font-bold px-1.5 py-0.5 rounded border border-amber-800">⚠️ 待核對</span>'
+                ) : '<span class="text-[10px] bg-slate-900 text-slate-500 px-1.5 py-0.5 rounded">未設信箱</span>'}
+                <button type="button" onclick="toggleExecutiveReveal()" class="text-slate-500 hover:text-slate-300 text-[10px] p-0.5" title="切換隱私遮蔽/顯示">
+                  <i class="fa-solid ${isExecutiveRevealed ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Inline Email Input with Save & Verify Save Buttons -->
+            <div class="space-y-1.5">
+              <input 
+                type="text" 
+                id="overviewEmail_${g.group_id}" 
+                value="${displayVal}" 
+                placeholder="隊長 Email..." 
+                oninput="handleEmailInputWithAutoFix(this, 'overviewWarn_${g.group_id}')"
+                class="w-full h-8 bg-slate-900 border border-slate-700 rounded-lg px-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
+              >
+              <div id="overviewWarn_${g.group_id}" class="hidden text-[10px] text-amber-300 font-bold bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800">
+                ⚠️ 自動校正全形符號
+              </div>
+              <div class="flex gap-1.5">
+                <button 
+                  onclick="saveGroupEmail('${g.group_id}', false)" 
+                  class="flex-1 h-7 bg-slate-800 hover:bg-slate-700 text-purple-300 rounded text-[11px] font-bold border border-slate-700 transition"
+                  title="僅儲存至白名單"
+                >
+                  💾 Save
+                </button>
+                <button 
+                  onclick="saveGroupEmail('${g.group_id}', true)" 
+                  class="flex-1 h-7 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 rounded text-[11px] font-bold border border-emerald-800 transition"
+                  title="核對格式並儲存認證"
+                >
+                  🔍 核對 Save
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderGroupsTable(groups) {
+      const container = document.getElementById('groupsListContainer');
+      if (!groups || groups.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">尚無群組設定，請由左側新增。</div>`;
+        return;
+      }
+
+      const isLight = currentAdminTheme === 'LIGHT_CLEAN';
+
+      if (currentAdminTheme === 'COMPACT_TABLE') {
+        let html = `
+          <div class="overflow-x-auto no-scrollbar">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-bold">
+                  <th class="p-2.5 whitespace-nowrap">群組名稱</th>
+                  <th class="p-2.5 whitespace-nowrap text-sky-400">分頁</th>
+                  <th class="p-2.5 whitespace-nowrap text-emerald-400">隊長 Email</th>
+                  <th class="p-2.5 whitespace-nowrap text-purple-400">輔PIN</th>
+                  <th class="p-2.5 whitespace-nowrap text-right">操作</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800">
+        `;
+        groups.forEach(g => {
+          html += `
+            <tr class="hover:bg-slate-800/50 transition">
+              <td class="p-2.5 font-bold text-white whitespace-nowrap">${g.group_name}<br><span class="text-[10px] text-slate-500 font-mono">${g.group_id}</span></td>
+              <td class="p-2.5 text-sky-300 font-medium whitespace-nowrap">${g.sheet_tab}</td>
+              <td class="p-2.5 font-mono text-emerald-400 whitespace-nowrap text-[11px]">${maskEmail(g.leader_email)}</td>
+              <td class="p-2.5 font-mono font-bold text-purple-300 whitespace-nowrap">${g.pin_code}</td>
+              <td class="p-2.5 text-right whitespace-nowrap space-x-1">
+                <button onclick="editGroup('${g.group_id}')" class="bg-slate-800 hover:bg-slate-700 text-purple-300 px-2 py-1 rounded text-xs">編輯</button>
+                <button onclick="deleteGroup('${g.group_id}', '${g.group_name}')" class="bg-slate-800 hover:bg-rose-900 text-rose-400 px-2 py-1 rounded text-xs">刪除</button>
+              </td>
+            </tr>
+          `;
+        });
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+        return;
+      }
+
+      let html = '';
+      groups.forEach((g) => {
+        const actual = g.group_name || '未設定';
+        const leaderEmail = g.leader_email;
+
+        html += `
+          <div class="${isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'} border rounded-xl p-3.5 space-y-3 transition hover:border-purple-500">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xs sm:text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}">${actual}</span>
+                <span class="text-[10px] text-slate-400 font-mono">(${g.group_id})</span>
+              </div>
+
+              <!-- Buttons -->
+              <div class="flex items-center gap-1.5">
+                <button onclick="editGroup('${g.group_id}')" class="bg-slate-800 hover:bg-slate-700 text-purple-300 text-[11px] px-2.5 py-1 rounded-lg border border-slate-700 transition">
+                  編輯
+                </button>
+                ${leaderEmail ? `
+                  <button onclick="deleteLeaderEmailOnly('${g.group_id}', '${actual}')" title="清除隊長信箱" class="bg-slate-800 hover:bg-amber-900/60 text-amber-400 text-[11px] px-2 py-1 rounded-lg border border-slate-700 transition">
+                    清除Email
+                  </button>
+                ` : ''}
+                <button onclick="deleteGroup('${g.group_id}', '${actual}')" title="刪除群組" class="bg-slate-800 hover:bg-rose-900/60 text-rose-400 text-[11px] px-2 py-1 rounded-lg border border-slate-700 transition">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Chips -->
+            <div class="grid grid-cols-3 gap-1.5 text-[11px]">
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} px-2 py-1.5 rounded-lg border truncate">
+                <span class="text-slate-400">分頁: </span><b class="text-sky-400">${g.sheet_tab}</b>
+              </div>
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} px-2 py-1.5 rounded-lg border">
+                <span class="text-slate-400">輔PIN: </span><b class="text-purple-400 font-mono">${g.pin_code}</b>
+              </div>
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} px-2 py-1.5 rounded-lg border truncate">
+                <span class="text-slate-400">隊長: </span><span class="text-emerald-400 font-mono">${maskEmail(leaderEmail)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    async function saveGroupEmail(groupId, verifyAndSave) {
+      const input = document.getElementById(`overviewEmail_${groupId}`);
+      const raw = input ? input.value.trim() : '';
+      const { cleaned } = cleanAndCheckEmail(raw);
+
+      try {
+        const res = await fetch(`/api/admin/groups/${encodeURIComponent(groupId)}/leader-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleaned, verify_and_save: verifyAndSave })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || '儲存失敗');
+        }
+
+        const data = await res.json();
+        showToast(data.message, 'success');
+        loadGroupList();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function saveCurrentLeaderEmail(verifyAndSave) {
+      const groupId = document.getElementById('inputGroupId').value.trim();
+      const raw = document.getElementById('inputLeaderEmail').value.trim();
+      const { cleaned } = cleanAndCheckEmail(raw);
+
+      if (!groupId) {
+        showToast('請先填寫或選擇群組代碼 / ID', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/groups/${encodeURIComponent(groupId)}/leader-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleaned, verify_and_save: verifyAndSave })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || '儲存失敗');
+        }
+
+        const data = await res.json();
+        showToast(data.message, 'success');
+        loadGroupList();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function editGroup(groupId) {
+      const g = currentGroups.find(x => x.group_id === groupId);
+      if (!g) return;
+
+      editingGroupId = g.group_id;
+      document.getElementById('inputGroupName').value = g.expected_group_name || g.group_name;
+      document.getElementById('inputLeaderEmail').value = g.leader_email || '';
+      document.getElementById('inputSheetTab').value = g.sheet_tab;
+      document.getElementById('inputGroupId').value = g.group_id;
+      document.getElementById('inputGroupId').readOnly = true;
+      document.getElementById('inputPinCode').value = g.pin_code;
+      
+      document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-purple-400"></i><span>修改 [${g.group_name}]</span>`;
+      document.getElementById('submitBtnText').textContent = '更新設定';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      editingGroupId = null;
+      document.getElementById('groupForm').reset();
+      document.getElementById('inputGroupId').readOnly = false;
+      document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-purple-400"></i><span>群組分頁與隊長設定</span>`;
+      document.getElementById('submitBtnText').textContent = '儲存整組設定';
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const groupName = document.getElementById('inputGroupName').value.trim();
+      const rawEmail = document.getElementById('inputLeaderEmail').value.trim();
+      const { cleaned: leaderEmail } = cleanAndCheckEmail(rawEmail);
+      const sheetTab = document.getElementById('inputSheetTab').value.trim();
+      const groupId = document.getElementById('inputGroupId').value.trim();
+      const pinCode = document.getElementById('inputPinCode').value.trim();
+
+      if (!groupName || !sheetTab || !groupId || !pinCode) {
+        showToast('請填寫必填欄位', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            group_id: groupId,
+            group_name: groupName,
+            expected_group_name: groupName,
+            leader_email: leaderEmail,
+            sheet_tab: sheetTab,
+            pin_code: pinCode
+          })
+        });
+
+        if (!res.ok) throw new Error('儲存失敗');
+        showToast(`已儲存「${groupName}」`, 'success');
+        resetForm();
+        loadGroupList();
+      } catch (err) {
+        showToast('儲存失敗：' + err.message, 'error');
+      }
+    }
+
+    async function deleteLeaderEmailOnly(groupId, groupName) {
+      if (!confirm(`確定要清除「${groupName}」的小隊長 Email 嗎？`)) return;
+      try {
+        const res = await fetch(`/api/admin/groups/${encodeURIComponent(groupId)}/leader-email`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('刪除失敗');
+        showToast(`已清除隊長 Email`, 'success');
+        loadGroupList();
+      } catch (err) {
+        showToast('刪除失敗：' + err.message, 'error');
+      }
+    }
+
+    async function deleteGroup(groupId, name) {
+      if (!confirm(`確定要刪除「${name}」嗎？`)) return;
+      try {
+        const res = await fetch(`/api/admin/groups/${encodeURIComponent(groupId)}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('刪除失敗');
+        showToast(`已刪除群組`, 'success');
+        loadGroupList();
+      } catch (err) {
+        showToast('刪除失敗：' + err.message, 'error');
+      }
+    }
+
+    async function fetchAvailableTabs() {
+      try {
+        const res = await fetch('/api/admin/tabs');
+        const data = await res.json();
+        const datalist = document.getElementById('tabSuggestions');
+        datalist.innerHTML = '';
+        (data.tabs || []).forEach(tab => {
+          const opt = document.createElement('option');
+          opt.value = tab;
+          datalist.appendChild(opt);
+        });
+        showToast(`已載入 ${data.tabs.length} 個分頁`, 'success');
+      } catch (err) {
+        showToast('無法讀取分頁', 'error');
+      }
+    }
+
+    /* 📋 Schedule Change Logs Audit Functions */
+    function openChangeLogModal() {
+      document.getElementById('changeLogModal').classList.remove('hidden');
+      loadChangeLogs();
+    }
+
+    function closeChangeLogModal() {
+      document.getElementById('changeLogModal').classList.add('hidden');
+    }
+
+    async function loadChangeLogs() {
+      const tabFilter = document.getElementById('changeLogTabFilter').value.trim();
+      const summaryText = document.getElementById('changeLogSummaryText');
+      const container = document.getElementById('changeLogTableContainer');
+      container.innerHTML = '<div class="text-slate-500 text-center py-4">讀取異動紀錄中...</div>';
+
+      try {
+        let url = '/api/admin/schedule/change-logs?limit=100';
+        if (tabFilter) {
+          url += `&tab_name=${encodeURIComponent(tabFilter)}`;
+        }
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('讀取日誌失敗');
+        const data = await res.json();
+        summaryText.textContent = `共 ${data.total_count} 筆異動紀錄`;
+
+        if (!data.logs || data.logs.length === 0) {
+          container.innerHTML = '<div class="bg-slate-950 p-6 rounded-2xl text-center text-slate-500 border border-slate-800">目前尚無班表異動紀錄（系統持續監控中）</div>';
+          return;
+        }
+
+        let html = `
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="text-slate-400 border-b border-slate-800 bg-slate-950">
+                <th class="p-2.5">時間</th>
+                <th class="p-2.5">分頁</th>
+                <th class="p-2.5">日期/哨點</th>
+                <th class="p-2.5">同仁姓名</th>
+                <th class="p-2.5">班別</th>
+                <th class="p-2.5">異動操作</th>
+                <th class="p-2.5">明細說明</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60">
+        `;
+
+        data.logs.forEach(l => {
+          const isAdd = l.action && l.action.includes('新增');
+          html += `
+            <tr class="hover:bg-slate-900/60 transition">
+              <td class="p-2.5 font-mono text-[11px] text-slate-400 whitespace-nowrap">${l.timestamp}</td>
+              <td class="p-2.5 font-bold text-sky-300 whitespace-nowrap">${l.tab_name}</td>
+              <td class="p-2.5 text-slate-200 whitespace-nowrap">${l.date} ｜ ${l.post}</td>
+              <td class="p-2.5 whitespace-nowrap">${renderMemberPill(l.member_name)}</td>
+              <td class="p-2.5 whitespace-nowrap font-bold ${l.shift_code === 'A' ? 'text-amber-300' : 'text-slate-300'}">${l.shift_type}</td>
+              <td class="p-2.5 whitespace-nowrap">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isAdd ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800'}">
+                  ${isAdd ? '➕ 新增排班' : '❌ 取消排班'}
+                </span>
+              </td>
+              <td class="p-2.5 text-slate-300 text-[11px]">
+                <span class="text-slate-500">${l.old_val}</span> ➔ <span class="text-white font-semibold">${l.new_val}</span>
+              </td>
+            </tr>
+          `;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<div class="bg-rose-950 text-rose-300 p-3 rounded-xl text-center">讀取失敗：${err.message}</div>`;
+      }
+    }
+
+    /* 🟢 Admin Heartbeat Keep-Alive */
+    async function sendAdminHeartbeat() {
+      try {
+        const res = await fetch('/api/admin/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'ericlai429@gmail.com' })
+        });
+        if (res.ok) {
+          const pill = document.getElementById('adminHeartbeatPill');
+          if (pill) {
+            pill.title = `Admin 心跳正常保持登入 (最後確認：${new Date().toLocaleTimeString()})`;
+          }
+        }
+      } catch (err) {
+        console.warn('Heartbeat error:', err);
+      }
+    }
+
+    // Ping heartbeat every 30 seconds
+    setInterval(sendAdminHeartbeat, 30000);
+    sendAdminHeartbeat();
+
+    loadGroupList();
+    fetchAvailableTabs();
+  </script>
+</body>
+</html>
