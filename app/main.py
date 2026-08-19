@@ -448,7 +448,7 @@ def get_live_schedule(
     year: Optional[int] = None,
     month: Optional[int] = None
 ):
-    # 🔒 安全邊界驗證：一般連線者僅開放讀取 [上個月、本月、下個月]
+    # 🔒 安全邊界驗證：一般連線者僅開放 [上個月、本月]；下個月 (115.09) 僅限 Admin (主PIN: 789) 查看
     base_year = 2026
     base_month = 8
     req_year = year or base_year
@@ -459,6 +459,12 @@ def get_live_schedule(
         raise HTTPException(
             status_code=403,
             detail="安全邊界限制：一般連線者僅開放讀取 上個月、本月 與 下個月 之勤務排班資料！"
+        )
+
+    if month_diff > 0 and master_pin != "789":
+        raise HTTPException(
+            status_code=403,
+            detail="🔒 權限限制：下個月份 (115.09 預排) 僅限 Admin 管理員解鎖查看！"
         )
 
     target_tab = tab or group.get("sheet_tab", "三總保全內部群")

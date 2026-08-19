@@ -747,6 +747,22 @@
     function renderFullScheduleTable(data) {
       const container = document.getElementById('scheduleContainer');
       if (!data || !data.rows || data.rows.length === 0) {
+        if (selectedMonth === 9 || (selectedYear === 2026 && selectedMonth > 8)) {
+          container.innerHTML = `
+            <div class="text-center py-12 space-y-4">
+              <div class="w-14 h-14 rounded-2xl bg-purple-950/80 border border-purple-800 text-purple-400 flex items-center justify-center mx-auto text-2xl shadow-lg">
+                <i class="fa-solid fa-calendar-plus"></i>
+              </div>
+              <div class="space-y-1.5">
+                <h3 class="text-base font-bold text-purple-300">【115.09 預排中】九月份排班表編排中</h3>
+                <p class="text-xs text-slate-400 max-w-md mx-auto">
+                  管理員已成功解鎖預覽！目前 Google 雲端尚未建立 115.09 試算表，一旦排班人員發布檔案，系統將自動即時同步。
+                </p>
+              </div>
+            </div>
+          `;
+          return;
+        }
         container.innerHTML = '<div class="text-center py-8 text-slate-500">尚無排班資料</div>';
         return;
       }
