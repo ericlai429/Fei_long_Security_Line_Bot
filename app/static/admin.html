@@ -543,23 +543,38 @@
             </div>
           </div>
 
-          <!-- Google Sheet Tab Name -->
-          <div>
-            <div class="flex items-center justify-between mb-1">
+          <!-- Google Sheet Tab Name with Direct Quick-Select Badges -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
               <label class="text-slate-200 font-bold text-sm">試算表分頁名稱 <span class="text-rose-400">*</span></label>
-              <button type="button" onclick="fetchAvailableTabs()" class="text-[11px] text-purple-400 hover:underline">
-                <i class="fa-solid fa-arrows-rotate mr-0.5"></i>自動帶入分頁
+              <button type="button" onclick="autoFillNextRealTab()" class="text-xs text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1 cursor-pointer bg-sky-950/80 px-2 py-0.5 rounded border border-sky-800">
+                <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                <span>一鍵智能帶入</span>
               </button>
             </div>
             <input 
               type="text" 
               id="inputSheetTab" 
               list="tabSuggestions"
-              placeholder="如：三總保全內部群、第一小隊" 
+              placeholder="點擊下方真實分頁標籤即可一鍵帶入" 
               required 
-              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition font-medium"
             >
             <datalist id="tabSuggestions"></datalist>
+            
+            <!-- Real Tab Quick Select Badges (一鍵點選直接填入) -->
+            <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span class="text-[11px] text-slate-400 font-bold">快速點選：</span>
+              <button type="button" onclick="pickTabDirectly('4.三總工務所')" class="h-6 px-2 bg-slate-900 hover:bg-sky-900/60 active:scale-95 text-sky-300 text-xs font-bold rounded-md border border-slate-700 hover:border-sky-500 transition cursor-pointer">
+                📋 4.三總工務所
+              </button>
+              <button type="button" onclick="pickTabDirectly('5.三總重症大樓')" class="h-6 px-2 bg-slate-900 hover:bg-purple-900/60 active:scale-95 text-purple-300 text-xs font-bold rounded-md border border-slate-700 hover:border-purple-500 transition cursor-pointer">
+                📋 5.三總重症大樓
+              </button>
+              <button type="button" onclick="pickTabDirectly('三總保全內部群')" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-emerald-300 text-xs font-bold rounded-md border border-slate-700 hover:border-emerald-500 transition cursor-pointer">
+                📋 三總保全內部群
+              </button>
+            </div>
           </div>
 
           <!-- Group ID with Help Button & Sub PIN (2 Cols) -->
@@ -1521,6 +1536,30 @@
           submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存並加入群組清單</span>';
         }
       }
+    }
+
+        // 🪄 真實分頁一鍵點選與智能輪替帶入
+    const realTSGHTabs = ["4.三總工務所", "5.三總重症大樓", "三總保全內部群"];
+    let tabCycleIndex = 0;
+
+    function pickTabDirectly(tabName) {
+      const tabInput = document.getElementById('inputSheetTab');
+      const groupInput = document.getElementById('inputGroupName');
+      if (tabInput) {
+        tabInput.value = tabName;
+        tabInput.classList.add('ring-2', 'ring-sky-500');
+        setTimeout(() => tabInput.classList.remove('ring-2', 'ring-sky-500'), 800);
+      }
+      if (groupInput && !groupInput.value) {
+        groupInput.value = tabName;
+      }
+      showToast(`✅ 已帶入分頁「${tabName}」！`, 'success');
+    }
+
+    function autoFillNextRealTab() {
+      const chosen = realTSGHTabs[tabCycleIndex % realTSGHTabs.length];
+      tabCycleIndex++;
+      pickTabDirectly(chosen);
     }
 
     function selectSharedTab(tabName) {
