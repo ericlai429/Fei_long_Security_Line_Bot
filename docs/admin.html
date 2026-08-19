@@ -1142,30 +1142,30 @@
       if (token) localStorage.setItem('saved_oauth_token', token);
       if (refreshToken) localStorage.setItem('saved_refresh_token', refreshToken);
 
-      // 🌟 第 1 階段：立即變更按鈕為「驗證轉圈」
+      // 🌟 第 1 階段：充裕轉圈驗證動畫（停留 1.5 秒，清晰看見系統在處理）
       if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm text-white"></i><span class="text-white font-bold">正在驗證並保存金鑰...</span>';
-        btn.className = "h-10 px-5 bg-purple-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-xl scale-98";
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm text-amber-300"></i><span class="text-white font-bold">正在驗證並保存金鑰至雲端資料庫...</span>';
+        btn.className = "h-10 px-5 bg-purple-800 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-xl border border-purple-500";
         btn.disabled = true;
       }
 
-      // 🌟 第 2 階段：0.4 秒後無縫變更為「立體翡翠綠成功徽章」
+      // 🌟 第 2 階段：1.5 秒後優雅轉為「翡翠綠成功徽章」（停留 5 秒，充份閱讀與確認）
       setTimeout(() => {
         if (btn) {
           btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-200 text-base animate-bounce"></i><span class="text-white font-black">✅ 金鑰已成功儲存！24/7 永續連線中</span>';
-          btn.className = "h-10 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.5)] border border-emerald-400";
+          btn.className = "h-10 px-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.6)] border-2 border-emerald-300";
         }
         showToast('🎉 雙金鑰已成功寫入系統金鑰庫！Google 雲端排班自動更新已啟動！', 'success');
 
-        // 🌟 第 3 階段：3 秒後平滑復原
+        // 🌟 第 3 階段：5 秒後平滑復原
         setTimeout(() => {
           if (btn) {
             btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存雙金鑰並啟動 24/7 永續連線</span>';
             btn.className = "h-10 px-5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-lg cursor-pointer";
             btn.disabled = false;
           }
-        }, 3200);
-      }, 400);
+        }, 5000);
+      }, 1500);
 
       // 同步發送至伺服器
       sendOAuthTokenToServer(token, refreshToken);
