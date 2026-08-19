@@ -336,6 +336,33 @@ def inspect_schedule_alignment(payload: ScheduleInspectPayload):
     inspection_result = schedule_inspector.inspect_schedule_data(raw_data, tab_name=tab_name)
     return inspection_result
 
+# --- Admin Live Handshake & Real-Time Sync API ---
+class LiveSyncPayload(BaseModel):
+    tab_name: str
+    rows: List[List[str]]
+    user_email: Optional[str] = "ericlai429@gmail.com"
+
+@app.post("/api/admin/schedule/sync-live-data")
+def sync_admin_live_data(payload: LiveSyncPayload):
+    tab_name = payload.tab_name.strip()
+    rows = payload.rows
+    if not rows or len(rows) == 0:
+        raise HTTPException(status_code=400, detail="排班內容不能為空")
+
+    # 1. Update sheets_service memory cache
+    sheets_service.load_direct_table_data(tab_name, rows)
+
+    # 2. Save live snapshot in database
+    db.save_schedule_snapshot(tab_name, rows)
+
+    logger.info(f"Admin ({payload.user_email}) synced {len(rows)} live rows for tab [{tab_name}]")
+    return {
+        "status": "success",
+        "message": f"成功同步 Admin 最新雲端試算表 [{tab_name}] (共 {len(rows)} 列)",
+        "tab_name": tab_name,
+        "rows_count": len(rows)
+    }
+
 # --- Schedule Change Audit Logs & Admin Keep-Alive Heartbeat APIs ---
 @app.get("/api/admin/schedule/change-logs")
 def get_schedule_change_logs(tab_name: Optional[str] = None, query: Optional[str] = None, limit: int = 100):

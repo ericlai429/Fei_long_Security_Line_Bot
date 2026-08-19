@@ -194,6 +194,21 @@ class SheetsService:
                             return rows
             except Exception as ex:
                 logger.debug(f"Direct CSV fetch failed: {ex}")
+        # 4. Direct Google Apps Script Web App Bridge (100% unrestricted live data)
+        gas_url = getattr(self, "apps_script_url", "") or os.getenv("GOOGLE_APPS_SCRIPT_URL", "")
+        if gas_url:
+            import urllib.request
+            import urllib.parse
+            try:
+                target_url = f"{gas_url}?tab={urllib.parse.quote(tab_name)}"
+                req = urllib.request.Request(target_url, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    data = json.loads(resp.read().decode('utf-8'))
+                    if isinstance(data, list) and len(data) > 0:
+                        logger.info(f"Successfully fetched {len(data)} rows via Google Apps Script Bridge for [{tab_name}]")
+                        return [[str(c) for c in row] for row in data]
+            except Exception as ex:
+                logger.debug(f"GAS Bridge fetch failed: {ex}")
 
         # 🌟 讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表快照
         from app.database import db
