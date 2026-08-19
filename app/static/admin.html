@@ -543,48 +543,60 @@
             </div>
           </div>
 
-          <!-- Google Sheet Tab Name with Direct Quick-Select Badges -->
+          <!-- Google Sheet Tab Name with Number Index Selector (1~80) -->
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
               <label class="text-slate-200 font-bold text-sm">試算表分頁名稱 <span class="text-rose-400">*</span></label>
-              <button type="button" onclick="autoFillNextRealTab()" class="text-xs text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1 cursor-pointer bg-sky-950/80 px-2 py-0.5 rounded border border-sky-800">
-                <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
-                <span>一鍵智能帶入</span>
-              </button>
+              <span class="text-xs text-sky-300 font-bold">💡 前方輸入數字 (如: 4 或 80) 自動對齊</span>
             </div>
-            <input 
-              type="text" 
-              id="inputSheetTab" 
-              list="tabSuggestions"
-              placeholder="點擊下方真實分頁標籤即可一鍵帶入" 
-              required 
-              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition font-medium"
-            >
+            <div class="flex items-center gap-2">
+              <!-- 🔢 數字序號輸入框 (1~80) -->
+              <div class="w-24 shrink-0 flex items-center bg-slate-950 border border-sky-600 rounded-xl px-2.5 h-10 focus-within:border-sky-400 transition">
+                <span class="text-sky-400 text-xs font-bold font-mono">No.</span>
+                <input 
+                  type="number" 
+                  id="tabNumberIndexInput" 
+                  min="1" 
+                  max="100" 
+                  placeholder="1~80" 
+                  oninput="handleTabNumberInput(this.value)"
+                  class="w-full bg-transparent text-sm font-bold font-mono text-sky-300 placeholder-slate-600 focus:outline-none text-center"
+                  title="輸入數字序號 (1~80) 秒速帶出對應分頁"
+                >
+              </div>
+
+              <!-- 📋 分頁名稱文字輸入框 -->
+              <input 
+                type="text" 
+                id="inputSheetTab" 
+                list="tabSuggestions"
+                placeholder="輸入前方數字或直接點下方標籤" 
+                required 
+                class="flex-1 h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition font-medium"
+              >
+            </div>
             <datalist id="tabSuggestions"></datalist>
             
             <!-- Real Tab Quick Select Badges (精準對齊 Google 試算表真實分頁，支援 80+ 分頁) -->
             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-              <span class="text-[11px] text-slate-400 font-bold">真實分頁：</span>
-              <button type="button" onclick="pickTabDirectly('4.三總工務所')" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-emerald-300 text-xs font-bold rounded-md border border-emerald-700 hover:border-emerald-400 transition cursor-pointer">
-                📋 4.三總工務所
+              <span class="text-[11px] text-slate-400 font-bold">點選帶入：</span>
+              <button type="button" onclick="setTabByNumber(4)" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-emerald-300 text-xs font-bold rounded-md border border-emerald-700 hover:border-emerald-400 transition cursor-pointer">
+                [4] 三總工務所
               </button>
-              <button type="button" onclick="pickTabDirectly('1.亞太經貿一期(自)')" class="h-6 px-2 bg-slate-900 hover:bg-sky-900/60 active:scale-95 text-sky-300 text-xs font-bold rounded-md border border-slate-700 hover:border-sky-500 transition cursor-pointer">
-                📋 1.亞太經貿一期(自)
+              <button type="button" onclick="setTabByNumber(1)" class="h-6 px-2 bg-slate-900 hover:bg-sky-900/60 active:scale-95 text-sky-300 text-xs font-bold rounded-md border border-slate-700 hover:border-sky-500 transition cursor-pointer">
+                [1] 亞太經貿一期(自)
               </button>
-              <button type="button" onclick="pickTabDirectly('2.威強電工(自)')" class="h-6 px-2 bg-slate-900 hover:bg-purple-900/60 active:scale-95 text-purple-300 text-xs font-bold rounded-md border border-slate-700 hover:border-purple-500 transition cursor-pointer">
-                📋 2.威強電工(自)
+              <button type="button" onclick="setTabByNumber(2)" class="h-6 px-2 bg-slate-900 hover:bg-purple-900/60 active:scale-95 text-purple-300 text-xs font-bold rounded-md border border-slate-700 hover:border-purple-500 transition cursor-pointer">
+                [2] 威強電工(自)
               </button>
-              <button type="button" onclick="pickTabDirectly('3.聯合報（自）')" class="h-6 px-2 bg-slate-900 hover:bg-amber-900/60 active:scale-95 text-amber-300 text-xs font-bold rounded-md border border-slate-700 hover:border-amber-500 transition cursor-pointer">
-                📋 3.聯合報（自）
+              <button type="button" onclick="setTabByNumber(3)" class="h-6 px-2 bg-slate-900 hover:bg-amber-900/60 active:scale-95 text-amber-300 text-xs font-bold rounded-md border border-slate-700 hover:border-amber-500 transition cursor-pointer">
+                [3] 聯合報（自）
               </button>
-              <button type="button" onclick="pickTabDirectly('5.三總重症大樓')" class="h-6 px-2 bg-slate-900 hover:bg-indigo-900/60 active:scale-95 text-indigo-300 text-xs font-bold rounded-md border border-slate-700 hover:border-indigo-500 transition cursor-pointer">
-                📋 5.三總重症大樓
+              <button type="button" onclick="setTabByNumber(5)" class="h-6 px-2 bg-slate-900 hover:bg-indigo-900/60 active:scale-95 text-indigo-300 text-xs font-bold rounded-md border border-slate-700 hover:border-indigo-500 transition cursor-pointer">
+                [5] 三總重症大樓
               </button>
-              <button type="button" onclick="pickTabDirectly('80.雲崗高爾夫休閒館')" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-teal-300 text-xs font-bold rounded-md border border-teal-700 hover:border-teal-400 transition cursor-pointer">
-                📋 80.雲崗高爾夫休閒館
-              </button>
-              <button type="button" onclick="pickTabDirectly('三總保全內部群')" class="h-6 px-2 bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 text-xs font-bold rounded-md border border-slate-700 transition cursor-pointer">
-                📋 三總保全內部群
+              <button type="button" onclick="setTabByNumber(80)" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-teal-300 text-xs font-bold rounded-md border border-teal-700 hover:border-teal-400 transition cursor-pointer">
+                [80] 雲崗高爾夫休閒館
               </button>
             </div>
           </div>
@@ -1587,6 +1599,47 @@
       const chosen = realTSGHTabs[tabCycleIndex % realTSGHTabs.length];
       tabCycleIndex++;
       pickTabDirectly(chosen);
+    }
+
+        // 🔢 1~80 數字序號對齊映射字典
+    const tabNumberMapping = {
+      1: "1.亞太經貿一期(自)",
+      2: "2.威強電工(自)",
+      3: "3.聯合報（自）",
+      4: "4.三總工務所",
+      5: "5.三總重症大樓",
+      80: "80.雲崗高爾夫休閒館"
+    };
+
+    function handleTabNumberInput(val) {
+      val = parseInt(val, 10);
+      if (!val) return;
+
+      const tabInput = document.getElementById('inputSheetTab');
+      const groupInput = document.getElementById('inputGroupName');
+
+      if (tabNumberMapping[val]) {
+        const fullTabName = tabNumberMapping[val];
+        if (tabInput) {
+          tabInput.value = fullTabName;
+          tabInput.classList.add('ring-2', 'ring-sky-500');
+          setTimeout(() => tabInput.classList.remove('ring-2', 'ring-sky-500'), 800);
+        }
+        if (groupInput && !groupInput.value) {
+          groupInput.value = fullTabName;
+        }
+        showToast(`🎯 已自動對齊第 ${val} 個分頁：「${fullTabName}」！`, 'success');
+      } else {
+        // 動態生成標準格式分頁 (如 80.分頁)
+        const customName = `${val}.分頁_${val}`;
+        if (tabInput) tabInput.value = customName;
+      }
+    }
+
+    function setTabByNumber(num) {
+      const numInput = document.getElementById('tabNumberIndexInput');
+      if (numInput) numInput.value = num;
+      handleTabNumberInput(num);
     }
 
     function selectSharedTab(tabName) {
