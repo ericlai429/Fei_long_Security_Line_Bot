@@ -191,7 +191,7 @@ class SheetsService:
             import json
             for candidate in [tab_name, tab_name.strip(), f" {tab_name.strip()}"]:
                 try:
-                    encoded_range = urllib.parse.quote(f"{candidate}!A1:Z100")
+                    encoded_range = urllib.parse.quote(f"{candidate}!A1:AZ100")
                     api_url = f"https://sheets.googleapis.com/v4/spreadsheets/{target_spreadsheet_id}/values/{encoded_range}"
                     req = urllib.request.Request(api_url, headers={
                         'Authorization': f'Bearer {self.user_access_token}',
