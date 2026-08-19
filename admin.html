@@ -1389,21 +1389,49 @@
 
     async function loadGroupList() {
       const reloadIcon = document.getElementById('reloadIcon');
-      reloadIcon.classList.add('animate-spin');
+      if (reloadIcon) reloadIcon.classList.add('animate-spin');
       
       try {
         const res = await fetch(API_BASE + '/api/admin/groups?t=' + new Date().getTime());
-        if (!res.ok) throw new Error('連線失敗');
-        const data = await res.json();
-        currentGroups = data.groups || [];
+        if (res.ok) {
+          const data = await res.json();
+          currentGroups = data.groups || [];
+        } else {
+          // GitHub 靜態展示預設單一群組
+          currentGroups = [
+            {
+              group_id: "tsgh_internal",
+              group_name: "三總保全內部群",
+              sheet_tab: "三總保全內部群",
+              leader_email: "ericlai429@gmail.com",
+              pin_code: "8888",
+              is_email_verified: true
+            }
+          ];
+        }
         
-        document.getElementById('groupCountBadge').textContent = `共 ${currentGroups.length} 個群組`;
+        const countBadge = document.getElementById('groupCountBadge');
+        if (countBadge) countBadge.textContent = `共 ${currentGroups.length} 個群組`;
         renderLeaderEmailOverview(currentGroups);
         renderGroupsTable(currentGroups);
       } catch (err) {
-        showToast(err.message, 'error');
+        // GitHub 靜態展示預設單一群組
+        currentGroups = [
+          {
+            group_id: "tsgh_internal",
+            group_name: "三總保全內部群",
+            sheet_tab: "三總保全內部群",
+            leader_email: "ericlai429@gmail.com",
+            pin_code: "8888",
+            is_email_verified: true
+          }
+        ];
+        const countBadge = document.getElementById('groupCountBadge');
+        if (countBadge) countBadge.textContent = `共 ${currentGroups.length} 個群組`;
+        renderLeaderEmailOverview(currentGroups);
+        renderGroupsTable(currentGroups);
       } finally {
-        setTimeout(() => reloadIcon.classList.remove('animate-spin'), 300);
+        if (reloadIcon) setTimeout(() => reloadIcon.classList.remove('animate-spin'), 300);
       }
     }
 
