@@ -211,6 +211,40 @@
           </div>
         </div>
 
+        <!-- 📥 Excel (.xlsx) Multi-Tab Auto-Loader -->
+        <div class="bg-gradient-to-r from-emerald-950/60 via-slate-950 to-slate-950 border border-emerald-800/80 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-file-excel text-emerald-400 text-lg"></i>
+              <span class="text-xs sm:text-sm font-bold text-white">匯入整本 Excel (.xlsx) 排班檔（一鍵讀取所有分頁）</span>
+            </div>
+            <span class="text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800">
+              全分頁一次同步
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            在 Google 試算表中點擊「<b>檔案 ➔ 下載 ➔ Microsoft Excel (.xlsx)</b>」，選擇下載的檔案，系統自動一次性解析「<b>4.三總工務所</b>」、「<b>5.三總重症大樓</b>」等所有分頁！
+          </p>
+          <div class="flex items-center gap-2">
+            <input 
+              type="file" 
+              id="excelFileInput" 
+              accept=".xlsx,.xls"
+              onchange="handleExcelUpload(event)"
+              class="hidden"
+            >
+            <button 
+              type="button" 
+              onclick="document.getElementById('excelFileInput').click()" 
+              class="h-9 px-4 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-md"
+            >
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>選擇下載的 Excel 檔案匯入</span>
+            </button>
+            <span id="excelUploadStatus" class="text-xs text-emerald-400 font-bold"></span>
+          </div>
+        </div>
+
         <!-- Service Account Email Info (To tell the sheet owner) -->
         <div class="bg-slate-950 border border-emerald-900/60 rounded-2xl p-3.5 space-y-2">
           <div class="flex items-center justify-between">
@@ -1009,6 +1043,36 @@
         showToast(data.message, 'success');
         connectSpreadsheetFromInput();
       } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function handleExcelUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const statusSpan = document.getElementById('excelUploadStatus');
+      statusSpan.textContent = '⏳ 正在解析 Excel 各工作表...';
+      
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/admin/schedule/upload-excel', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Excel 匯入失敗');
+        }
+        const data = await res.json();
+        statusSpan.textContent = `✅ 成功匯入 ${data.loaded_sheets.length} 個分頁！`;
+        showToast(data.message, 'success');
+        fetchAvailableTabs();
+        loadGroupList();
+      } catch (err) {
+        statusSpan.textContent = `❌ ${err.message}`;
         showToast(err.message, 'error');
       }
     }

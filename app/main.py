@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
-from fastapi import FastAPI, Request, Header, HTTPException, Response, Query
+from fastapi import FastAPI, Request, Header, HTTPException, Response, Query, UploadFile, File
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -322,6 +322,38 @@ def upload_direct_schedule_data(payload: DirectScheduleUploadPayload):
         "tab_name": tab_name,
         "loaded_rows": count,
         "inspection": inspection
+    }
+
+@app.post("/api/admin/schedule/upload-excel")
+async def upload_excel_schedule(file: UploadFile = File(...)):
+    import openpyxl
+    import io
+    content = await file.read()
+    try:
+        wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"無法解析 Excel 檔案: {e}")
+
+    loaded_summary = []
+    for sheetname in wb.sheetnames:
+        ws = wb[sheetname]
+        rows = []
+        for r in ws.iter_rows(values_only=True):
+            if any(cell is not None and str(cell).strip() for cell in r):
+                rows.append([str(c).strip() if c is not None else "" for c in r])
+        if len(rows) >= 2:
+            sheets_service.load_direct_table_data(sheetname, rows)
+            db.save_schedule_snapshot(sheetname, rows)
+            loaded_summary.append(f"{sheetname} ({len(rows)} 列)")
+
+    if not loaded_summary:
+        raise HTTPException(status_code=400, detail="Excel 檔案中未找到有效的排班工作表")
+
+    return {
+        "status": "success",
+        "message": f"成功載入 Excel 中的 {len(loaded_summary)} 個工作表！",
+        "loaded_sheets": loaded_summary,
+        "available_tabs": sheets_service.list_tabs()
     }
 
 # --- Smart Schedule Alignment & Inspection API ---
