@@ -2,7 +2,7 @@ import os
 import uuid
 import logging
 import re
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, Request, Header, HTTPException, Response, Query
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
