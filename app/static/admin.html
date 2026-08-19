@@ -216,7 +216,9 @@
             <input 
               type="text" 
               id="directOAuthTokenInput" 
-              placeholder="在此貼上 ya29.a0..." 
+              oninput="handleTokenInput(this.value)"
+              onpaste="setTimeout(() => handleTokenInput(this.value), 50)"
+              placeholder="在此貼上 ya29.a0... (貼上即自動儲存與連線)" 
               class="flex-1 h-10 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs text-sky-300 placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
             >
             <button 
@@ -1059,6 +1061,18 @@
         if (token) {
           sendOAuthTokenToServer(token);
         }
+      }
+    }
+
+    let tokenInputTimer = null;
+    function handleTokenInput(val) {
+      val = (val || '').trim();
+      if (val.startsWith('ya29.') || val.length > 20) {
+        clearTimeout(tokenInputTimer);
+        tokenInputTimer = setTimeout(async () => {
+          showToast('已偵測到 Token，正在自動儲存並連線...', 'info');
+          await sendOAuthTokenToServer(val);
+        }, 300);
       }
     }
 
