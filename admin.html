@@ -562,16 +562,25 @@
             >
             <datalist id="tabSuggestions"></datalist>
             
-            <!-- Real Tab Quick Select Badges (一鍵點選直接填入) -->
+            <!-- Real Tab Quick Select Badges (精準對齊 Google 試算表真實分頁) -->
             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-              <span class="text-[11px] text-slate-400 font-bold">快速點選：</span>
-              <button type="button" onclick="pickTabDirectly('4.三總工務所')" class="h-6 px-2 bg-slate-900 hover:bg-sky-900/60 active:scale-95 text-sky-300 text-xs font-bold rounded-md border border-slate-700 hover:border-sky-500 transition cursor-pointer">
+              <span class="text-[11px] text-slate-400 font-bold">真實分頁：</span>
+              <button type="button" onclick="pickTabDirectly('4.三總工務所')" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-emerald-300 text-xs font-bold rounded-md border border-emerald-700 hover:border-emerald-400 transition cursor-pointer">
                 📋 4.三總工務所
               </button>
-              <button type="button" onclick="pickTabDirectly('5.三總重症大樓')" class="h-6 px-2 bg-slate-900 hover:bg-purple-900/60 active:scale-95 text-purple-300 text-xs font-bold rounded-md border border-slate-700 hover:border-purple-500 transition cursor-pointer">
+              <button type="button" onclick="pickTabDirectly('1.亞太經貿一期(自)')" class="h-6 px-2 bg-slate-900 hover:bg-sky-900/60 active:scale-95 text-sky-300 text-xs font-bold rounded-md border border-slate-700 hover:border-sky-500 transition cursor-pointer">
+                📋 1.亞太經貿一期(自)
+              </button>
+              <button type="button" onclick="pickTabDirectly('2.威強電工(自)')" class="h-6 px-2 bg-slate-900 hover:bg-purple-900/60 active:scale-95 text-purple-300 text-xs font-bold rounded-md border border-slate-700 hover:border-purple-500 transition cursor-pointer">
+                📋 2.威強電工(自)
+              </button>
+              <button type="button" onclick="pickTabDirectly('3.聯合報（自）')" class="h-6 px-2 bg-slate-900 hover:bg-amber-900/60 active:scale-95 text-amber-300 text-xs font-bold rounded-md border border-slate-700 hover:border-amber-500 transition cursor-pointer">
+                📋 3.聯合報（自）
+              </button>
+              <button type="button" onclick="pickTabDirectly('5.三總重症大樓')" class="h-6 px-2 bg-slate-900 hover:bg-indigo-900/60 active:scale-95 text-indigo-300 text-xs font-bold rounded-md border border-slate-700 hover:border-indigo-500 transition cursor-pointer">
                 📋 5.三總重症大樓
               </button>
-              <button type="button" onclick="pickTabDirectly('三總保全內部群')" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-emerald-300 text-xs font-bold rounded-md border border-slate-700 hover:border-emerald-500 transition cursor-pointer">
+              <button type="button" onclick="pickTabDirectly('三總保全內部群')" class="h-6 px-2 bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 text-xs font-bold rounded-md border border-slate-700 transition cursor-pointer">
                 📋 三總保全內部群
               </button>
             </div>
@@ -705,10 +714,17 @@
               type="text" 
               id="modalSheetTab" 
               list="tabSuggestions"
-              placeholder="如：4.三總工務所、5.三總重症大樓" 
+              placeholder="點選下方真實分頁或自訂" 
               required 
               class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-medium"
             >
+            <div class="flex flex-wrap items-center gap-1 pt-1">
+              <button type="button" onclick="document.getElementById('modalSheetTab').value='4.三總工務所'" class="text-[11px] bg-slate-900 hover:bg-emerald-900/80 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800 font-bold">📋 4.三總工務所</button>
+              <button type="button" onclick="document.getElementById('modalSheetTab').value='1.亞太經貿一期(自)'" class="text-[11px] bg-slate-900 hover:bg-sky-900/80 text-sky-300 px-2 py-0.5 rounded border border-slate-700 font-bold">📋 1.亞太經貿一期(自)</button>
+              <button type="button" onclick="document.getElementById('modalSheetTab').value='2.威強電工(自)'" class="text-[11px] bg-slate-900 hover:bg-purple-900/80 text-purple-300 px-2 py-0.5 rounded border border-slate-700 font-bold">📋 2.威強電工(自)</button>
+              <button type="button" onclick="document.getElementById('modalSheetTab').value='3.聯合報（自）'" class="text-[11px] bg-slate-900 hover:bg-amber-900/80 text-amber-300 px-2 py-0.5 rounded border border-slate-700 font-bold">📋 3.聯合報（自）</button>
+              <button type="button" onclick="document.getElementById('modalSheetTab').value='5.三總重症大樓'" class="text-[11px] bg-slate-900 hover:bg-indigo-900/80 text-indigo-300 px-2 py-0.5 rounded border border-slate-700 font-bold">📋 5.三總重症大樓</button>
+            </div>
           </div>
 
           <!-- Group ID & Sub PIN (2 Cols) -->
@@ -1587,7 +1603,14 @@
     }
 
         // 🪄 真實分頁一鍵點選與智能輪替帶入
-    const realTSGHTabs = ["4.三總工務所", "5.三總重症大樓", "三總保全內部群"];
+    const realTSGHTabs = [
+      "4.三總工務所",
+      "1.亞太經貿一期(自)",
+      "2.威強電工(自)",
+      "3.聯合報（自）",
+      "5.三總重症大樓",
+      "三總保全內部群"
+    ];
     let tabCycleIndex = 0;
 
     function pickTabDirectly(tabName) {
@@ -2012,6 +2035,9 @@
     async function fetchAvailableTabs() {
       const realTSGHTabs = [
         "4.三總工務所",
+        "1.亞太經貿一期(自)",
+        "2.威強電工(自)",
+        "3.聯合報（自）",
         "5.三總重症大樓",
         "三總保全內部群"
       ];

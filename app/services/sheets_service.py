@@ -161,7 +161,14 @@ class SheetsService:
                 return [ws.title for ws in sh.worksheets()]
             except Exception as e:
                 logger.error(f"Error reading tabs from Google Sheets: {e}")
-        return ["4.三總工務所", "5.三總重症大樓", "三總保全內部群"]
+        return [
+            "4.三總工務所",
+            "1.亞太經貿一期(自)",
+            "2.威強電工(自)",
+            "3.聯合報（自）",
+            "5.三總重症大樓",
+            "三總保全內部群"
+        ]
 
     def get_spreadsheet_id_for_month(self, year: int = 2026, month: int = 8) -> str:
         map_file = os.path.join("data", "monthly_spreadsheets.json")
