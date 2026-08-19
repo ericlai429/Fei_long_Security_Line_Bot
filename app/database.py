@@ -105,7 +105,15 @@ class Database:
                 return "排班小姐"
             if user_id in roles.get("managers", []):
                 return "保全經理"
-            return "一般成員"
+    def add_authorized_role(self, user_id: str, role: str):
+        with _lock:
+            roles = self.data.setdefault("roles", {})
+            key = "admins" if role == "admin" else ("schedule_officers" if role in ["officer", "排班小姐"] else "managers")
+            if key not in roles:
+                roles[key] = []
+            if user_id not in roles[key]:
+                roles[key].append(user_id)
+            self._save_unsafe()
 
     def list_authorized_roles(self) -> Dict[str, List[str]]:
         with _lock:

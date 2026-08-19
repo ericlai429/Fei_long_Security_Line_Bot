@@ -71,6 +71,11 @@ class TestTSGHSecuritySystem(unittest.TestCase):
         self.assertTrue(allowed_admin)
 
     def test_03_sheets_parsing(self):
+        sample_rows = [
+            ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)", "機動支援", "備註"],
+            ["2026/08/01", "六", "急診哨", "賴冠堃", "黃大煊", "張大千", "正常勤務"]
+        ]
+        sheets_service.load_direct_table_data("三總保全內部群", sample_rows)
         parsed = sheets_service.get_parsed_schedule("三總保全內部群")
         self.assertIn("columns", parsed)
         self.assertIn("rows", parsed)
@@ -84,6 +89,7 @@ class TestTSGHSecuritySystem(unittest.TestCase):
         self.assertTrue(os.path.getsize(pdf_res["file_path"]) > 1000)
 
     def test_05_admin_commands(self):
+        db.add_authorized_role("test_user_chen", "admin")
         resp_id = admin_service.handle_admin_command("test_user_chen", "/我的ID")
         self.assertIn("test_user_chen", resp_id)
 
