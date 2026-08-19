@@ -268,6 +268,18 @@ def connect_google_spreadsheet(payload: GoogleDriveConnectPayload):
     }
 
 # --- Google User OAuth & Direct Real Data Upload APIs ---
+class GoogleApiKeyPayload(BaseModel):
+    api_key: str
+
+@app.post("/api/admin/google/api-key")
+def set_google_api_key(payload: GoogleApiKeyPayload):
+    key = payload.api_key.strip()
+    sheets_service.google_api_key = key
+    from app.database import db
+    db.data["google_api_key"] = key
+    db._save_unsafe()
+    return {"status": "success", "message": "✅ Google API 金鑰已成功儲存！"}
+
 class GoogleOAuthPayload(BaseModel):
     token: Optional[str] = ""
     refresh_token: Optional[str] = ""

@@ -314,6 +314,43 @@
           </button>
         </div>
 
+        <!-- 🔑 專屬：Google API 金鑰 (API Key) 一鍵填入與直連區 -->
+        <div class="bg-gradient-to-r from-amber-950/70 via-slate-950 to-slate-950 border-2 border-amber-500/90 rounded-2xl p-4 space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between">
+            <span class="text-xs sm:text-sm font-extrabold text-amber-300 flex items-center gap-2">
+              <i class="fa-solid fa-key text-amber-400 text-base"></i>
+              <span>Google API 金鑰 (API Key: AIzaSy...) 一鍵貼上</span>
+            </span>
+            <span class="text-[10px] bg-amber-950 text-amber-300 font-bold px-2 py-0.5 rounded border border-amber-800">
+              專用快速通道
+            </span>
+          </div>
+          
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            請將您在 Google Cloud 產生的 <code>AIzaSy...</code> 金鑰直接貼在下方，系統立即自動常駐儲存並直接抓取試算表所有分頁：
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-2">
+            <div class="relative flex-1">
+              <input 
+                type="text" 
+                id="googleApiKeyInput" 
+                placeholder="貼上 AIzaSy..." 
+                class="w-full h-11 bg-slate-900 border border-amber-600/80 rounded-xl px-3.5 text-xs text-amber-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono font-bold"
+              >
+            </div>
+            <button 
+              type="button" 
+              id="saveApiKeyBtn"
+              onclick="saveAndConnectGoogleApiKey()" 
+              class="h-11 px-5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-xl flex-shrink-0 cursor-pointer"
+            >
+              <i class="fa-solid fa-bolt-lightning text-white"></i>
+              <span id="saveApiKeyBtnText">儲存金鑰並抓取 1~80 全分頁</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 🔐 Google Account One-Click OAuth Sign-In -->
         <div class="bg-gradient-to-r from-sky-950/70 via-slate-950 to-slate-950 border-2 border-sky-500/80 rounded-2xl p-4 space-y-3 shadow-lg">
           <div class="flex items-center justify-between">
@@ -1845,9 +1882,77 @@
       fetchAvailableTabs();
     }
 
+        // 🔑 專屬：儲存 Google API Key 並立即調用 Sheets REST API v4 抓取全部分頁
+    async function saveAndConnectGoogleApiKey() {
+      const input = document.getElementById('googleApiKeyInput');
+      const btn = document.getElementById('saveApiKeyBtn');
+      const btnText = document.getElementById('saveApiKeyBtnText');
+      const key = input ? input.value.trim() : '';
+
+      if (!key) {
+        showToast('⚠️ 請先貼上 Google API 金鑰 (AIzaSy...)！', 'error');
+        if (input) input.focus();
+        return;
+      }
+
+      // 1. 本地常駐保存 (LocalStorage)
+      localStorage.setItem('google_api_key', key);
+      localStorage.setItem('saved_oauth_token', key);
+
+      // 2. 按鈕轉圈動畫
+      if (btn) {
+        btn.disabled = true;
+        if (btnText) btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>連線 Google 雲端抓取中...';
+      }
+
+      showToast('⏳ 正在使用此 API 金鑰連線 Google 試算表抓取全分頁...', 'info');
+
+      // 3. 直接呼叫 Google Sheets REST API v4
+      const spreadsheetId = '1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s';
+      try {
+        const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title&key=${encodeURIComponent(key)}`;
+        const res = await fetch(apiUrl);
+        if (res.ok) {
+          const data = await res.json();
+          const sheetTitles = (data.sheets || []).map(s => s.properties.title);
+          if (sheetTitles.length > 0) {
+            applyFetchedSheetTitles(sheetTitles);
+            showToast(`🎉 成功透過 API 金鑰抓取到 ${sheetTitles.length} 個真實分頁！已全數對齊 1~80 序號！`, 'success');
+            if (btnText) btnText.textContent = '✅ 金鑰已綁定成功！';
+            setTimeout(() => {
+              if (btnText) btnText.textContent = '儲存金鑰並抓取 1~80 全分頁';
+              if (btn) btn.disabled = false;
+            }, 3000);
+
+            // 背景同步後端
+            try {
+              fetch(API_BASE + '/api/admin/google/api-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_key: key })
+              }).catch(() => {});
+            } catch(e) {}
+            return;
+          }
+        } else {
+          const errData = await res.json();
+          const errMsg = errData.error ? errData.error.message : 'Google API 連線失敗';
+          showToast(`⚠️ Google API 拒絕：${errMsg}`, 'error');
+        }
+      } catch (err) {
+        showToast(`⚠️ 連線異常：${err.message}`, 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = '儲存金鑰並抓取 1~80 全分頁';
+      }
+    }
+
     function openGoogleDriveModal() {
       document.getElementById('googleDriveModal').classList.remove('hidden');
       // 自動回填本地已存金鑰
+      const savedApiKey = localStorage.getItem('google_api_key');
+      const apiKeyInput = document.getElementById('googleApiKeyInput');
+      if (apiKeyInput && savedApiKey && !apiKeyInput.value) apiKeyInput.value = savedApiKey;
       const savedToken = localStorage.getItem('saved_oauth_token');
       const savedRefresh = localStorage.getItem('saved_refresh_token');
       const tokenInput = document.getElementById('directOAuthTokenInput');
