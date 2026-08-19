@@ -265,6 +265,20 @@
           </div>
         </div>
 
+        <!-- 📂 雲端共享試算表清單 (Shared Files Container) -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between border-b border-slate-900 pb-2">
+            <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-folder-open text-sky-400"></i>
+              <span>已授權之 Google 雲端試算表與分頁</span>
+            </span>
+            <span class="text-[10px] text-slate-500">點選分頁即可直接綁定</span>
+          </div>
+          <div id="sharedFilesList" class="space-y-2 text-xs">
+            <div class="text-slate-500 text-center py-3">載入雲端試算表列表中...</div>
+          </div>
+        </div>
+
         <!-- Service Account Email Info (To tell the sheet owner) -->
         <div class="bg-slate-950 border border-emerald-900/60 rounded-2xl p-3.5 space-y-2">
           <div class="flex items-center justify-between">
@@ -1233,13 +1247,17 @@
         if (!res.ok) throw new Error('無法取得 Google 雲端狀態');
         const data = await res.json();
         
-        document.getElementById('serviceAccountEmailInput').value = data.service_account_email || 'feilong-bot@feilong-security.iam.gserviceaccount.com';
-        document.getElementById('inputSpreadsheetUrl').value = data.active_spreadsheet_id || '';
+        const saInput = document.getElementById('serviceAccountEmailInput');
+        if (saInput) saInput.value = data.service_account_email || 'feilong-bot@feilong-security.iam.gserviceaccount.com';
+        const urlInput = document.getElementById('inputSpreadsheetUrl');
+        if (urlInput && data.active_spreadsheet_id) urlInput.value = data.active_spreadsheet_id;
 
         const container = document.getElementById('sharedFilesList');
-        if (!data.shared_files || data.shared_files.length === 0) {
-          container.innerHTML = '<div class="text-slate-500 text-center py-3">尚無授權共享的試算表</div>';
-          return;
+        if (container) {
+          if (!data.shared_files || data.shared_files.length === 0) {
+            container.innerHTML = '<div class="text-slate-500 text-center py-3 text-xs">尚無授權共享的試算表</div>';
+            return;
+          }
         }
 
         let html = '';
