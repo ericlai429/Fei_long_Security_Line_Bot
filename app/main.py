@@ -269,19 +269,32 @@ def connect_google_spreadsheet(payload: GoogleDriveConnectPayload):
 
 # --- Google User OAuth & Direct Real Data Upload APIs ---
 class GoogleOAuthPayload(BaseModel):
-    token: str = Field(..., min_length=5)
+    token: Optional[str] = ""
+    refresh_token: Optional[str] = ""
     user_email: Optional[str] = "ericlai429@gmail.com"
 
 @app.post("/api/admin/google/oauth-token")
 def set_google_user_oauth(payload: GoogleOAuthPayload):
-    from app.services.google_auth_service import save_user_access_token
-    save_user_access_token(payload.token)
-    success, msg = sheets_service.set_user_oauth_token(payload.token, payload.user_email or "ericlai429@gmail.com")
-    if not success:
-        raise HTTPException(status_code=400, detail=msg)
+    from app.services.google_auth_service import save_user_access_token, get_or_refresh_google_user_credentials
+    
+    token = (payload.token or "").strip()
+    refresh_token = (payload.refresh_token or "").strip()
+
+    if not token and not refresh_token:
+        raise HTTPException(status_code=400, detail="請提供 Access Token 或 Refresh Token")
+
+    save_user_access_token(token, refresh_token=refresh_token)
+
+    # If refresh token is provided, attempt auto-refresh
+    if refresh_token:
+        creds = get_or_refresh_google_user_credentials()
+        if creds and creds.token:
+            token = creds.token
+
+    success, msg = sheets_service.set_user_oauth_token(token, payload.user_email or "ericlai429@gmail.com")
     return {
         "status": "success",
-        "message": msg,
+        "message": "✅ 成功儲存 Google 永久 Refresh Token！系統已啟動自動換票連線！",
         "connected_user_email": sheets_service.connected_user_email,
         "spreadsheet_id": sheets_service.active_spreadsheet_id
     }
