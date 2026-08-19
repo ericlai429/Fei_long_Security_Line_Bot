@@ -28,8 +28,8 @@ class Database:
                     "groups": {
                         "test_sandbox": {
                             "group_id": "test_sandbox",
-                            "group_name": "陳冠冠(測試視窗)",
-                            "expected_group_name": "陳冠冠(測試視窗)",
+                            "group_name": "三總測試群",
+                            "expected_group_name": "三總測試群",
                             "sheet_tab": "三總保全內部群",
                             "leader_email": "ericlai429@gmail.com",
                             "is_email_verified": True,

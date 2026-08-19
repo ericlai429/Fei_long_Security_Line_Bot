@@ -65,7 +65,7 @@ class LineService:
         if isinstance(event.source, UserSource):
             user_id = event.source.user_id
             group_id = user_id
-            group_name = "陳冠冠(測試視窗)" if user_id in settings.admin_id_list or "test" in user_id else f"個人測試_{user_id[-4:]}"
+            group_name = "個人測試視窗" if user_id in settings.admin_id_list or "test" in user_id else f"個人測試_{user_id[-4:]}"
         elif isinstance(event.source, GroupSource):
             user_id = getattr(event.source, 'user_id', None) or ""
             group_id = event.source.group_id
@@ -187,7 +187,7 @@ class LineService:
         # 3. Individual Shift: /我的班表
         if text.startswith("/我的班表"):
             parts = text.split()
-            target_name = parts[1] if len(parts) > 1 else "陳冠冠"
+            target_name = parts[1] if len(parts) > 1 else ""
             if not db.is_group_unlocked(group_id):
                 self.send_text_reply(reply_token, "🔒 請先輸入 <code>/班表 [輔PIN碼]</code> 解鎖群組權限後再查詢。")
                 return
