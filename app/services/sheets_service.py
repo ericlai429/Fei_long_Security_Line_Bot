@@ -195,7 +195,13 @@ class SheetsService:
             except Exception as ex:
                 logger.debug(f"Direct CSV fetch failed: {ex}")
 
-        # 絕不造假：若尚未取得真實 Google 資料，回傳空清單，等待真實資料匯入
+        # 🌟 讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表快照
+        from app.database import db
+        snapshot = db.get_schedule_snapshot(tab_name)
+        if snapshot and len(snapshot) > 0:
+            logger.info(f"Loaded {len(snapshot)} live rows from Admin keep-loaded snapshot for [{tab_name}]")
+            return snapshot
+
         return []
 
     def get_parsed_schedule(self, tab_name: str) -> Dict[str, Any]:

@@ -267,6 +267,26 @@
     async function fetchFullSchedule() {
       const container = document.getElementById('scheduleContainer');
 
+      // 🌟 0. 優先讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表
+      try {
+        const endpoints = ['/api/schedule/live', 'http://127.0.0.1:8088/api/schedule/live'];
+        for (const ep of endpoints) {
+          try {
+            const apiRes = await fetch(`${ep}?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}&master_pin=789&sub_pin=8888&t=${new Date().getTime()}`, {
+              cache: 'no-store'
+            });
+            if (apiRes.ok) {
+              const apiData = await apiRes.json();
+              if (apiData.rows && apiData.rows.length > 0) {
+                rawScheduleData = apiData;
+                renderFullScheduleTable(rawScheduleData);
+                return;
+              }
+            }
+          } catch(err) {}
+        }
+      } catch(e) {}
+
       // 1. Check local storage
       const savedCustom = localStorage.getItem('feilong_custom_schedule');
       if (savedCustom) {
