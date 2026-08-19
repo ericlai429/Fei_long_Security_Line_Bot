@@ -740,8 +740,13 @@
             <tbody class="divide-y divide-slate-800/90">
       `;
 
+      const now = new Date();
+      const todayShort = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+      const todayFull = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+
       data.rows.forEach(r => {
-        let dateStr = (r['日期'] || '-').trim();
+        let rawDate = (r['日期'] || '-').trim();
+        let dateStr = rawDate;
         if (dateStr.length > 5 && dateStr.includes('/')) {
           const parts = dateStr.split('/');
           if (parts.length === 3) dateStr = `${parts[1]}/${parts[2]}`;
@@ -751,25 +756,36 @@
         const early = r['早班 (07-19)'] || r['早班'] || '-';
         const late = r['晚班 (19-07)'] || r['晚班'] || '-';
 
-        // 🎨 星期六/日專屬醒目配色區分
-        let weekBadgeClass = 'bg-slate-800/90 text-slate-300 border-slate-700';
-        let rowClass = 'hover:bg-slate-800/40';
+        // 🌟 判斷是否為「今天」
+        const isToday = (selectedYear === now.getFullYear() && selectedMonth === (now.getMonth() + 1)) &&
+                        (dateStr === todayShort || rawDate === todayFull || rawDate.includes(todayShort));
 
-        if (weekStr === '六' || weekStr === 'Sat' || weekStr.includes('六')) {
+        // 🎨 星期六/日 ＆ 今日暖色系醒目配色
+        let weekBadgeClass = 'bg-slate-800/90 text-slate-300 border-slate-700';
+        let rowClass = 'hover:bg-slate-800/40 border-b border-slate-800/80';
+        let dateDisplayHtml = `<span class="font-mono font-extrabold text-slate-100">${dateStr}</span>`;
+        let weekDisplayHtml = `<span class="px-1.5 py-0.5 rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
+
+        if (isToday) {
+          // 🔥 今天的日期：底色 High Light 暖色系琥珀金光
+          rowClass = 'bg-gradient-to-r from-amber-500/25 via-amber-500/35 to-amber-500/25 border-y-2 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] ring-1 ring-amber-400/60 font-black';
+          dateDisplayHtml = `<span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs sm:text-sm font-mono shadow-md animate-pulse">🔥 ${dateStr}</span>`;
+          weekDisplayHtml = `<span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] shadow-md">${weekStr}</span>`;
+        } else if (weekStr === '六' || weekStr === 'Sat' || weekStr.includes('六')) {
           weekBadgeClass = 'bg-teal-950 text-teal-300 border-teal-500 font-black shadow-sm';
-          rowClass = 'bg-teal-950/25 hover:bg-teal-900/40';
+          rowClass = 'bg-teal-950/25 hover:bg-teal-900/40 border-b border-slate-800/80';
+          weekDisplayHtml = `<span class="px-1.5 py-0.5 rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
         } else if (weekStr === '日' || weekStr === 'Sun' || weekStr.includes('日')) {
           weekBadgeClass = 'bg-rose-950 text-rose-300 border-rose-500 font-black shadow-sm';
-          rowClass = 'bg-rose-950/25 hover:bg-rose-900/40';
+          rowClass = 'bg-rose-950/25 hover:bg-rose-900/40 border-b border-slate-800/80';
+          weekDisplayHtml = `<span class="px-1.5 py-0.5 rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
         }
 
         const isHistorical = !(selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH);
         html += `
-          <tr class="${rowClass} transition border-b border-slate-800/80">
-            <td class="w-[17%] py-2.5 px-1 font-mono font-extrabold text-slate-100 whitespace-nowrap text-center text-xs sm:text-sm">${dateStr}</td>
-            <td class="w-[11%] py-2.5 px-0.5 whitespace-nowrap text-center">
-              <span class="px-1.5 py-0.5 rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>
-            </td>
+          <tr class="${rowClass} transition">
+            <td class="w-[17%] py-2.5 px-1 whitespace-nowrap text-center text-xs sm:text-sm">${dateDisplayHtml}</td>
+            <td class="w-[11%] py-2.5 px-0.5 whitespace-nowrap text-center">${weekDisplayHtml}</td>
             <td class="w-[36%] py-2 px-1 whitespace-nowrap text-center font-medium">${formatName(early, isHistorical)}</td>
             <td class="w-[36%] py-2 px-1 whitespace-nowrap text-center font-medium">${formatName(late, isHistorical)}</td>
           </tr>
