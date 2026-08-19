@@ -1064,6 +1064,13 @@
     /* 📁 Google Drive Shared Files & Tabs Picker Functions */
     function openGoogleDriveModal() {
       document.getElementById('googleDriveModal').classList.remove('hidden');
+      // 自動回填本地已存金鑰
+      const savedToken = localStorage.getItem('saved_oauth_token');
+      const savedRefresh = localStorage.getItem('saved_refresh_token');
+      const tokenInput = document.getElementById('directOAuthTokenInput');
+      const refreshInput = document.getElementById('directRefreshTokenInput');
+      if (tokenInput && savedToken && !tokenInput.value) tokenInput.value = savedToken;
+      if (refreshInput && savedRefresh && !refreshInput.value) refreshInput.value = savedRefresh;
       loadGoogleDriveStatus();
     }
 
@@ -1116,47 +1123,52 @@
 
     async function saveDirectOAuthToken() {
       const btn = document.getElementById('saveTokensBtn');
-      const originalBtnHtml = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存雙金鑰並啟動 24/7 永續連線</span>';
       const tokenInput = document.getElementById('directOAuthTokenInput');
       const refreshInput = document.getElementById('directRefreshTokenInput');
       const token = tokenInput ? tokenInput.value.trim() : '';
       const refreshToken = refreshInput ? refreshInput.value.trim() : '';
 
       if (!token && !refreshToken) {
-        showToast('請在上方輸入 Access Token 或 Refresh Token！', 'error');
-        if (btn) {
-          btn.classList.add('ring-2', 'ring-rose-500');
-          setTimeout(() => btn.classList.remove('ring-2', 'ring-rose-500'), 1500);
+        showToast('⚠️ 請在上方欄位貼上 Access Token (ya29...) 或 Refresh Token (1//0...)！', 'error');
+        if (refreshInput) {
+          refreshInput.focus();
+          refreshInput.classList.add('ring-2', 'ring-rose-500');
+          setTimeout(() => refreshInput.classList.remove('ring-2', 'ring-rose-500'), 2000);
         }
         return;
       }
 
-      // 1. 即刻啟動載入轉圈動畫
-      if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin text-sm"></i><span>正在驗證並保存金鑰...</span>';
-        btn.disabled = true;
-      }
-
-      // 2. 本地持久緩存保護
+      // 立即在前端儲存至持久儲存庫 (LocalStorage)
       if (token) localStorage.setItem('saved_oauth_token', token);
       if (refreshToken) localStorage.setItem('saved_refresh_token', refreshToken);
 
-      // 3. 發送至後端
-      sendOAuthTokenToServer(token, refreshToken);
+      // 🌟 第 1 階段：立即變更按鈕為「驗證轉圈」
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm text-white"></i><span class="text-white font-bold">正在驗證並保存金鑰...</span>';
+        btn.className = "h-10 px-5 bg-purple-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-xl scale-98";
+        btn.disabled = true;
+      }
 
-      // 4. 立即切換為綠色成功徽章狀態
+      // 🌟 第 2 階段：0.4 秒後無縫變更為「立體翡翠綠成功徽章」
       setTimeout(() => {
         if (btn) {
-          btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-200 text-sm animate-bounce"></i><span>✅ 金鑰已成功儲存！24/7 永續連線中</span>';
-          btn.className = "h-10 px-5 bg-emerald-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-xl";
-          
-          setTimeout(() => {
-            btn.innerHTML = originalBtnHtml;
+          btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-200 text-base animate-bounce"></i><span class="text-white font-black">✅ 金鑰已成功儲存！24/7 永續連線中</span>';
+          btn.className = "h-10 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.5)] border border-emerald-400";
+        }
+        showToast('🎉 雙金鑰已成功寫入系統金鑰庫！Google 雲端排班自動更新已啟動！', 'success');
+
+        // 🌟 第 3 階段：3 秒後平滑復原
+        setTimeout(() => {
+          if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存雙金鑰並啟動 24/7 永續連線</span>';
             btn.className = "h-10 px-5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-lg cursor-pointer";
             btn.disabled = false;
-          }, 3500);
-        }
-      }, 500);
+          }
+        }, 3200);
+      }, 400);
+
+      // 同步發送至伺服器
+      sendOAuthTokenToServer(token, refreshToken);
     }
 
     async function sendOAuthTokenToServer(token, refreshToken = '') {

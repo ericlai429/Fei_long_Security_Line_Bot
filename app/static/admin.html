@@ -1061,6 +1061,13 @@
     /* 📁 Google Drive Shared Files & Tabs Picker Functions */
     function openGoogleDriveModal() {
       document.getElementById('googleDriveModal').classList.remove('hidden');
+      // 自動回填本地已存金鑰
+      const savedToken = localStorage.getItem('saved_oauth_token');
+      const savedRefresh = localStorage.getItem('saved_refresh_token');
+      const tokenInput = document.getElementById('directOAuthTokenInput');
+      const refreshInput = document.getElementById('directRefreshTokenInput');
+      if (tokenInput && savedToken && !tokenInput.value) tokenInput.value = savedToken;
+      if (refreshInput && savedRefresh && !refreshInput.value) refreshInput.value = savedRefresh;
       loadGoogleDriveStatus();
     }
 
