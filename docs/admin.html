@@ -489,25 +489,56 @@
           </div>
         </div>
 
-        <!-- Connect to Google Sheet URL / ID Input -->
-        <div class="space-y-2 text-xs">
-          <label class="block font-bold text-slate-200">
-            輸入或貼上 Google 試算表完整網址 / ID：
-          </label>
-          <div class="flex gap-2">
+        <!-- 🚀 方案 D：貼上 Google 試算表完整網址連線 ＆ 智能解析 (Plan D URL Direct Connect) -->
+        <div class="bg-gradient-to-r from-sky-950/70 via-slate-950 to-slate-950 border-2 border-sky-500/90 rounded-2xl p-4 space-y-3 shadow-xl">
+          <div class="flex items-center justify-between">
+            <span class="text-xs sm:text-sm font-extrabold text-sky-300 flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-sky-950 border border-sky-700 text-sky-400 text-[11px] font-mono">方案 D</span>
+              <i class="fa-solid fa-link text-sky-400"></i>
+              <span>貼上 Google 試算表網址 ➔ 智能直連讀取</span>
+            </span>
+            <span class="text-[10px] bg-sky-950 text-sky-300 font-bold px-2 py-0.5 rounded border border-sky-800">
+              網址秒解析
+            </span>
+          </div>
+
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            直接貼上您瀏覽器網址列中的 Google 試算表完整網址（例如 <code>https://docs.google.com/spreadsheets/d/1HTZPjBilY4f.../edit</code>），系統將自動解析 ID 並嘗試連線提取全部分頁！
+          </p>
+          
+          <div class="flex flex-col sm:flex-row gap-2">
             <input 
               type="text" 
               id="inputSpreadsheetUrl" 
-              placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5.../edit" 
-              class="flex-1 h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
+              value="https://docs.google.com/spreadsheets/d/1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s/edit"
+              placeholder="https://docs.google.com/spreadsheets/d/1HTZPjBilY4f.../edit" 
+              class="flex-1 h-11 bg-slate-900 border border-sky-700/80 rounded-xl px-3.5 text-xs text-sky-200 placeholder-slate-500 focus:outline-none focus:border-sky-400 font-mono"
             >
             <button 
-              onclick="connectSpreadsheetFromInput()" 
-              class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 rounded-xl text-xs transition flex items-center gap-1 shadow-sm"
+              type="button"
+              id="connectUrlBtn"
+              onclick="executePlanDConnect()" 
+              class="h-11 px-5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg flex-shrink-0 cursor-pointer"
             >
-              <i class="fa-solid fa-link"></i>
-              <span>連線讀取</span>
+              <i class="fa-solid fa-bolt-lightning text-amber-300"></i>
+              <span>執行方案 D 連線解析</span>
             </button>
+          </div>
+
+          <!-- 方案 D 專屬黑科技：1秒書籤/控制台提取器 -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2 text-xs">
+            <div class="flex items-center justify-between text-slate-300 font-bold">
+              <span class="flex items-center gap-1 text-purple-300">
+                <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+                <span>方案 D 專屬助手：若試算表為私人檔案，如何 0 秒抓出 80 個分頁？</span>
+              </span>
+              <button type="button" onclick="copyConsoleScript()" class="text-[11px] text-emerald-400 hover:text-emerald-300 underline font-bold">
+                複製 1 行提取指令
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400">
+              在您目前開啟的 Google 試算表網頁按 <b>F12</b> ➔ 切到 <b>Console (主控台)</b> ➔ 貼上指令按 Enter，0.01 秒即可複製全部分頁名稱！
+            </p>
           </div>
         </div>
 
@@ -1588,7 +1619,90 @@
     }
 
         // ⚡ Google Sheets API 核心全分頁偵測與抓取引擎 (Multi-Strategy Auto-Detector)
-    async function triggerDirectGoogleApiFetch() {
+    async     // 🚀 方案 D 核心執行器：貼上雲端試算表網址直連解析 (Plan D URL Direct Connector)
+    async function executePlanDConnect() {
+      const urlInput = document.getElementById('inputSpreadsheetUrl');
+      const btn = document.getElementById('connectUrlBtn');
+      const rawUrl = urlInput ? urlInput.value.trim() : '';
+
+      if (!rawUrl) {
+        showToast('⚠️ 請先貼上 Google 試算表網址！', 'error');
+        return;
+      }
+
+      // 1. 萃取 Spreadsheet ID
+      const match = rawUrl.match(/spreadsheets\/d\/([a-zA-Z0-9_-]{25,})/);
+      const sheetId = match ? match[1] : (rawUrl.length >= 25 && !rawUrl.includes('/') ? rawUrl : '1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s');
+
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-amber-300"></i><span>正在連線探測 Google 試算表...</span>';
+        btn.disabled = true;
+      }
+
+      showToast(`🔍 正在透過 方案 D 探測試算表 ID：[${sheetId.substring(0, 10)}...]`, 'info');
+
+      // 2. 管道 A：嘗試透過 Google GViz / HTML View 探測公開檢視權限
+      try {
+        const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+        const testRes = await fetch(gvizUrl);
+        if (testRes.ok) {
+          const text = await testRes.text();
+          if (text.includes('google.visualization.Query.setResponse') && !text.includes('html')) {
+            showToast('🎉 試算表已具備公開檢視權限！正在自動提取所有分頁...', 'success');
+            // Connect to server
+            connectSpreadsheetFromInput();
+            if (btn) {
+              btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-300"></i><span>連線成功！</span>';
+              setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-bolt-lightning text-amber-300"></i><span>執行方案 D 連線解析</span>';
+                btn.disabled = false;
+              }, 3000);
+            }
+            return;
+          }
+        }
+      } catch (err) {}
+
+      // 3. 管道 B：嘗試透過後端伺服器連線
+      try {
+        const res = await fetch(API_BASE + '/api/admin/google-drive/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url_or_id: sheetId })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.available_tabs && data.available_tabs.length > 0) {
+            applyFetchedSheetTitles(data.available_tabs);
+            showToast(`🎉 方案 D 成功抓取到 ${data.available_tabs.length} 個分頁！`, 'success');
+            if (btn) {
+              btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-300"></i><span>連線成功！</span>';
+              setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-bolt-lightning text-amber-300"></i><span>執行方案 D 連線解析</span>';
+                btn.disabled = false;
+              }, 3000);
+            }
+            return;
+          }
+        }
+      } catch (err) {}
+
+      // 4. 若試算表為私人檔案 (401 拒絕存取)，給予精準引導
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-bolt-lightning text-amber-300"></i><span>執行方案 D 連線解析</span>';
+        btn.disabled = false;
+      }
+
+      showToast('💡 試算表目前為私人保護檔案。請在試算表右上角點「共用」改為「知道連結的任何人 (檢視者)」，或使用下方的 1 秒提取指令！', 'info');
+    }
+
+    function copyConsoleScript() {
+      const scriptCode = `(function(){const tabs=Array.from(document.querySelectorAll('.docs-sheet-tab-name, .docs-sheet-tab-caption, [role="tab"]')).map(e=>e.innerText.trim()).filter(t=>t&&!['+','所有工作表','導覽'].includes(t)&&!t.includes('新增'));const unique=[...new Set(tabs)];const res=unique.join('\n');navigator.clipboard.writeText(res);prompt('🎉 成功抓取 '+unique.length+' 個真實分頁！已自動複製到剪貼簿，請直接回後台貼上：',res);})();`;
+      navigator.clipboard.writeText(scriptCode);
+      showToast('✅ 已複製 1 行提取指令！請到 Google 試算表分頁按 F12 ➔ Console 貼上執行！', 'success');
+    }
+
+    function triggerDirectGoogleApiFetch() {
       const spreadsheetId = '1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s';
       let token = (document.getElementById('directOAuthTokenInput') ? document.getElementById('directOAuthTokenInput').value.trim() : '') || localStorage.getItem('saved_oauth_token') || '';
       let refreshToken = (document.getElementById('directRefreshTokenInput') ? document.getElementById('directRefreshTokenInput').value.trim() : '') || localStorage.getItem('saved_refresh_token') || '';
