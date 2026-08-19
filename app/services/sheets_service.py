@@ -157,6 +157,24 @@ class SheetsService:
         if tab_name in self.custom_sheet_data:
             return self.custom_sheet_data[tab_name]
 
+        # 1.5 Auto-authenticate with User OAuth credentials (24/7 background sync)
+        try:
+            from app.services.google_auth_service import get_or_refresh_google_user_credentials
+            user_creds = get_or_refresh_google_user_credentials()
+            if user_creds:
+                user_client = gspread.authorize(user_creds)
+                sh = user_client.open_by_key(self.active_spreadsheet_id)
+                try:
+                    ws = sh.worksheet(tab_name)
+                except gspread.WorksheetNotFound:
+                    ws = sh.get_worksheet(0)
+                rows = ws.get_all_values()
+                if rows and len(rows) > 0:
+                    logger.info(f"Successfully fetched {len(rows)} live rows via User OAuth credentials for [{tab_name}]")
+                    return rows
+        except Exception as e:
+            logger.debug(f"User OAuth client fetch note: {e}")
+
         # 2. Live Google Sheets with Client
         if self.client and self.active_spreadsheet_id:
             try:
