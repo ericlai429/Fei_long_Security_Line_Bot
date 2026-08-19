@@ -38,6 +38,47 @@ def get_or_refresh_google_user_credentials():
 
     return None
 
+def auto_scan_drive_monthly_spreadsheets(token_str: str):
+    import urllib.request
+    import urllib.parse
+    try:
+        query = urllib.parse.quote("name contains '115.' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false")
+        url = f"https://www.googleapis.com/drive/v3/files?q={query}&fields=files(id,name)&pageSize=50"
+        req = urllib.request.Request(url, headers={'Authorization': f'Bearer {token_str.strip()}'})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            files = data.get('files', [])
+            if files:
+                logger.info(f"Drive auto-scan found {len(files)} monthly spreadsheets in Drive!")
+                map_file = os.path.join("data", "monthly_spreadsheets.json")
+                cfg = {}
+                if os.path.exists(map_file):
+                    with open(map_file, "r", encoding="utf-8") as mf:
+                        cfg = json.load(mf)
+                if "months" not in cfg:
+                    cfg["months"] = {}
+
+                for f in files:
+                    fname = f.get('name', '').strip()
+                    fid = f.get('id', '').strip()
+                    # e.g. 115.07 or 115.07案場班表
+                    for m in range(1, 13):
+                        key = f"115.{m:02d}"
+                        if key in fname:
+                            if key not in cfg["months"]:
+                                cfg["months"][key] = {"name": f"{key} (2026年{m}月)", "spreadsheet_id": fid, "year": 2026, "month": m}
+                            else:
+                                cfg["months"][key]["spreadsheet_id"] = fid
+                            logger.info(f"Auto-mapped {key} -> {fid}")
+
+                with open(map_file, "w", encoding="utf-8") as out:
+                    json.dump(cfg, out, ensure_ascii=False, indent=2)
+                docs_map = os.path.join("docs", "monthly_spreadsheets.json")
+                with open(docs_map, "w", encoding="utf-8") as out2:
+                    json.dump(cfg, out2, ensure_ascii=False, indent=2)
+    except Exception as ex:
+        logger.debug(f"Drive auto-scan note: {ex}")
+
 def save_user_access_token(token_str: str, refresh_token: str = ""):
     os.makedirs("data", exist_ok=True)
     token_dict = {
@@ -51,3 +92,5 @@ def save_user_access_token(token_str: str, refresh_token: str = ""):
     with open(TOKEN_PATH, "w", encoding="utf-8") as f:
         json.dump(token_dict, f, ensure_ascii=False, indent=2)
     logger.info(f"Saved Google user token to {TOKEN_PATH}")
+    # Run auto-scan asynchronously
+    auto_scan_drive_monthly_spreadsheets(token_str)
