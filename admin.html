@@ -493,7 +493,7 @@
         <form id="groupForm" onsubmit="handleFormSubmit(event)" class="space-y-2 text-xs">
           <!-- Group Name -->
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">
+            <label class="block text-slate-200 font-bold text-sm mb-1">
               小群組名稱 (LINE 群組名) <span class="text-rose-400">*</span>
             </label>
             <input 
@@ -501,13 +501,13 @@
               id="inputGroupName" 
               placeholder="如：三總保全內部群、急診哨小隊" 
               required 
-              class="w-full h-8.5 bg-slate-950 border border-slate-700 rounded-lg px-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
             >
           </div>
 
           <!-- Team Leader Email with Fullwidth Auto-detection -->
           <div>
-            <label class="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+            <label class="block text-slate-200 font-bold text-sm mb-1 flex items-center justify-between">
               <span>小隊長 E-mail (白名單認證)</span>
               <span id="formEmailWarning" class="hidden text-[10px] text-amber-300 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
                 ⚠️ 已自動將全形＠/。轉為半形
@@ -519,7 +519,7 @@
                 id="inputLeaderEmail" 
                 placeholder="如：隊長信箱 / leader@feilong.com" 
                 oninput="handleEmailInputWithAutoFix(this, 'formEmailWarning')"
-                class="w-full h-8.5 bg-slate-950 border border-slate-700 rounded-lg px-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+                class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
               >
               <!-- Save & Verify Save Fast Action Toolbar -->
               <div class="flex gap-1.5">
@@ -546,7 +546,7 @@
           <!-- Google Sheet Tab Name -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="text-slate-300 font-semibold">試算表分頁名稱 <span class="text-rose-400">*</span></label>
+              <label class="text-slate-200 font-bold text-sm">試算表分頁名稱 <span class="text-rose-400">*</span></label>
               <button type="button" onclick="fetchAvailableTabs()" class="text-[11px] text-purple-400 hover:underline">
                 <i class="fa-solid fa-arrows-rotate mr-0.5"></i>自動帶入分頁
               </button>
@@ -557,7 +557,7 @@
               list="tabSuggestions"
               placeholder="如：三總保全內部群、第一小隊" 
               required 
-              class="w-full h-8.5 bg-slate-950 border border-slate-700 rounded-lg px-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
             >
             <datalist id="tabSuggestions"></datalist>
           </div>
@@ -566,7 +566,7 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <div class="flex items-center justify-between mb-1">
-                <label class="text-slate-300 font-semibold">群組代碼 / ID <span class="text-rose-400">*</span></label>
+                <label class="text-slate-200 font-bold text-sm">群組代碼 / ID <span class="text-rose-400">*</span></label>
                 <button type="button" onclick="openGroupIdHelp()" class="text-[11px] text-sky-400 hover:underline flex items-center gap-0.5 font-bold" title="查詢教學">
                   <i class="fa-solid fa-circle-question"></i>
                   <span>Help 教學</span>
@@ -577,13 +577,13 @@
                 id="inputGroupId" 
                 placeholder="如：tsgh_internal 或 C12345..." 
                 required 
-                class="w-full h-8.5 bg-slate-950 border border-slate-700 rounded-lg px-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+                class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
               >
             </div>
             <div>
-              <label class="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+              <label class="block text-slate-200 font-bold text-sm mb-1 flex items-center justify-between">
                 <span>小隊輔 PIN 碼 <span class="text-rose-400">*</span></span>
-                <span class="text-[10px] text-sky-400 font-bold">輔助Pin碼_請詢問分組隊長</span>
+                <span class="text-xs text-sky-400 font-bold font-bold">輔助Pin碼_請詢問分組隊長</span>
               </label>
               <input 
                 type="text" 
@@ -592,7 +592,7 @@
                 pattern="\d{3,4}" 
                 placeholder="如：8821" 
                 required 
-                class="w-full h-8.5 bg-slate-950 border border-slate-700 rounded-lg px-2.5 text-xs font-mono tracking-widest text-center text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition font-bold"
+                class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm font-mono tracking-widest text-center text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition font-bold"
               >
             </div>
           </div>
@@ -657,7 +657,7 @@
             </div>
             <div>
               <div class="text-base font-bold text-white leading-tight">手動加入新工作群組</div>
-              <div class="text-[11px] text-emerald-300">智慧格式偵測 ｜ 綁定試算表分頁 ｜ 隊長認證</div>
+              <div class="text-xs text-emerald-300 font-bold">智慧格式偵測 ｜ 綁定試算表分頁 ｜ 隊長認證</div>
             </div>
           </div>
           <button onclick="closeNewGroupModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
@@ -684,7 +684,7 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="text-slate-300 font-bold">試算表對應分頁 <span class="text-rose-400">*</span></label>
-              <span class="text-[10px] text-sky-400">可選取下拉現有分頁</span>
+              <span class="text-xs text-sky-400 font-bold">可選取下拉現有分頁</span>
             </div>
             <input 
               type="text" 
@@ -1787,24 +1787,24 @@
               </div>
             </div>
 
-            <!-- Chips Information Matrix -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-2.5 rounded-xl border flex flex-col justify-center">
-                <span class="text-[10px] text-slate-400 font-bold mb-0.5">試算表分頁</span>
-                <b class="text-sky-400 font-mono truncate text-xs">📋 ${g.sheet_tab}</b>
+            <!-- Chips Information Matrix (Clear & High Contrast Typography) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-3 rounded-xl border flex flex-col justify-center">
+                <span class="text-xs text-slate-300 font-bold mb-1">📋 試算表分頁</span>
+                <b class="text-sky-300 font-bold font-mono truncate text-sm">${g.sheet_tab}</b>
               </div>
-              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-2.5 rounded-xl border flex flex-col justify-center">
-                <span class="text-[10px] text-slate-400 font-bold mb-0.5">小隊輔 PIN 碼</span>
-                <b class="text-purple-400 font-mono text-sm tracking-widest">🔑 ${g.pin_code}</b>
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-3 rounded-xl border flex flex-col justify-center">
+                <span class="text-xs text-purple-300 font-bold mb-1">🔑 小隊輔 PIN 碼</span>
+                <b class="text-purple-300 font-mono text-base tracking-widest font-black">${g.pin_code}</b>
               </div>
-              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-2.5 rounded-xl border flex flex-col justify-center">
-                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold mb-0.5">
-                  <span>小隊長 E-mail</span>
-                  <button type="button" onclick="toggleExecutiveReveal()" class="text-slate-500 hover:text-slate-300">
-                    <i class="fa-solid ${isExecutiveRevealed ? 'fa-eye' : 'fa-eye-slash'}"></i>
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-3 rounded-xl border flex flex-col justify-center">
+                <div class="flex items-center justify-between text-xs text-emerald-300 font-bold mb-1">
+                  <span>✉️ 小隊長 E-mail</span>
+                  <button type="button" onclick="toggleExecutiveReveal()" class="text-slate-400 hover:text-slate-200 p-0.5">
+                    <i class="fa-solid ${isExecutiveRevealed ? 'fa-eye' : 'fa-eye-slash'} text-xs"></i>
                   </button>
                 </div>
-                <span class="text-emerald-400 font-mono truncate font-bold text-xs">${maskEmail(leaderEmail)}</span>
+                <span class="text-emerald-300 font-mono truncate font-bold text-sm">${maskEmail(leaderEmail)}</span>
               </div>
             </div>
           </div>
