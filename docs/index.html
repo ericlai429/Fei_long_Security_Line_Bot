@@ -101,6 +101,95 @@
 
   
 
+  <!-- 🗝️ Admin Login / Master PIN Setup Modal (管理員專屬彈窗) -->
+  <div id="adminAuthModal" class="hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500/80 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2 text-white font-bold text-base">
+          <div class="w-7 h-7 rounded-lg bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-400">
+            <i class="fa-solid fa-key text-xs"></i>
+          </div>
+          <span id="adminModalTitle">Admin 管理員驗證</span>
+        </div>
+        <button type="button" onclick="closeAdminAuthModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleAdminLogin(event)" class="space-y-3.5">
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-300">管理員帳號 (Admin Email)</label>
+          <input 
+            type="email" 
+            id="adminEmailInput"
+            value="ericlai429@gmail.com" 
+            class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
+          >
+        </div>
+
+        <!-- 模式切換：首次設定新密碼 vs 登入驗證 -->
+        <div id="pinSetupFields" class="space-y-3">
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label id="pinLabel" class="text-xs font-bold text-amber-400 flex items-center gap-1">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span id="pinLabelText">首次登入：請設定您的專屬 Master PIN 碼</span>
+              </label>
+              <span id="pinModeBadge" class="text-[10px] bg-amber-950 text-amber-300 font-bold px-2 py-0.5 rounded border border-amber-800">首次設定</span>
+            </div>
+            <input 
+              type="password" 
+              id="adminMasterPinInput" 
+              placeholder="請輸入新 Master PIN 碼 (如 4~8 位數)" 
+              class="w-full h-11 bg-slate-950 border border-amber-700/80 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
+            >
+          </div>
+
+          <div id="confirmPinGroup" class="space-y-1">
+            <label class="text-xs font-bold text-slate-300">再次確認新 Master PIN 碼</label>
+            <input 
+              type="password" 
+              id="adminConfirmPinInput" 
+              placeholder="請再次輸入相同的新 PIN 碼" 
+              class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
+            >
+          </div>
+        </div>
+
+        <div id="adminAuthError" class="hidden text-[11px] text-rose-400 bg-rose-950/60 p-2.5 rounded-xl border border-rose-800"></div>
+        <div id="adminAuthSuccess" class="hidden text-[11px] text-emerald-300 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-700"></div>
+
+        <button 
+          type="submit" 
+          id="adminSubmitBtn"
+          class="w-full h-11 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-[0.98] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2"
+        >
+          <i class="fa-solid fa-lock-open text-xs"></i>
+          <span id="adminSubmitBtnText">儲存專屬密碼並登入</span>
+        </button>
+
+        <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+          <button type="button" onclick="togglePinMode()" class="text-slate-400 hover:text-amber-300 transition underline" id="toggleModeBtn">
+            已有密碼？切換為直接登入
+          </button>
+          <button type="button" onclick="triggerPinReset()" class="text-slate-400 hover:text-rose-400 transition">
+            重置 PIN 碼
+          </button>
+        </div>
+
+        <div id="adminQuickLinks" class="hidden pt-2 border-t border-slate-800 flex flex-col gap-2">
+          <a 
+            href="./admin.html" 
+            class="w-full h-10 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/60 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+          >
+            <i class="fa-solid fa-sliders"></i>
+            <span>進入完整管理後台系統 (admin.html)</span>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- 🖨️ Printable Header for Official PDF -->
   <div class="print-header p-4 text-center border-b-2 border-black mb-4">
     <h1 class="text-2xl font-bold">飛龍保全股份有限公司 ｜ 三軍總醫院勤務排班總表</h1>
