@@ -27,6 +27,17 @@ class SheetsService:
         self._init_client()
 
     def _init_client(self):
+        token_file = os.path.join("data", "google_user_token.json")
+        if os.path.exists(token_file):
+            try:
+                with open(token_file, "r", encoding="utf-8") as tf:
+                    tdata = json.load(tf)
+                    self.user_access_token = tdata.get("token", "")
+                    if self.user_access_token:
+                        logger.info("Loaded persisted Google User OAuth Access Token from disk!")
+            except Exception as ex:
+                logger.debug(f"Note loading token: {ex}")
+
         creds_file = settings.GOOGLE_SERVICE_ACCOUNT_FILE
         if os.path.exists(creds_file):
             try:
@@ -153,9 +164,31 @@ class SheetsService:
         return ["三總保全內部群", "4.三總工務所", "5.三總重症大樓", "急診與中控小隊", "門診與機動小隊", "8月份總班表"]
 
     def get_raw_sheet_data(self, tab_name: str) -> List[List[str]]:
-        # 1. Custom loaded direct real data
+        # 0. Custom loaded direct real data
         if tab_name in self.custom_sheet_data:
             return self.custom_sheet_data[tab_name]
+
+        # 1. Direct Google Sheets REST API v4 with user OAuth access token
+        if self.user_access_token and self.active_spreadsheet_id:
+            import urllib.request
+            import urllib.parse
+            import json
+            for candidate in [tab_name, tab_name.strip(), f" {tab_name.strip()}"]:
+                try:
+                    encoded_range = urllib.parse.quote(f"{candidate}!A1:Z100")
+                    api_url = f"https://sheets.googleapis.com/v4/spreadsheets/{self.active_spreadsheet_id}/values/{encoded_range}"
+                    req = urllib.request.Request(api_url, headers={
+                        'Authorization': f'Bearer {self.user_access_token}',
+                        'User-Agent': 'Mozilla/5.0'
+                    })
+                    with urllib.request.urlopen(req, timeout=5) as resp:
+                        data = json.loads(resp.read().decode('utf-8'))
+                        values = data.get('values', [])
+                        if values and len(values) > 0:
+                            logger.info(f"Successfully fetched {len(values)} live rows via Google Sheets API v4 for [{tab_name}] (matched: {candidate})")
+                            return values
+                except Exception as ex:
+                    logger.debug(f"Candidate {candidate} note: {ex}")
 
         # 1.5 Auto-authenticate with User OAuth credentials (24/7 background sync)
         try:
