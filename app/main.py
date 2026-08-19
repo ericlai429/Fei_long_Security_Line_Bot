@@ -448,16 +448,21 @@ def get_live_schedule(
     year: Optional[int] = None,
     month: Optional[int] = None
 ):
-    group = db.get_group(group_id)
-    if not group:
-        group = db.upsert_group(group_id, group_name="三總保全內部群")
+    # 🔒 安全邊界驗證：一般連線者僅開放讀取 [上個月、本月、下個月]
+    base_year = 2026
+    base_month = 8
+    req_year = year or base_year
+    req_month = month or base_month
 
-    if master_pin and sub_pin:
-        if not db.verify_dual_pin(group_id, master_pin, sub_pin):
-            raise HTTPException(status_code=401, detail="主 PIN 碼或輔 PIN 碼不符合！")
+    month_diff = (req_year - base_year) * 12 + (req_month - base_month)
+    if month_diff < -1 or month_diff > 1:
+        raise HTTPException(
+            status_code=403,
+            detail="安全邊界限制：一般連線者僅開放讀取 上個月、本月 與 下個月 之勤務排班資料！"
+        )
 
     target_tab = tab or group.get("sheet_tab", "三總保全內部群")
-    schedule = sheets_service.get_parsed_schedule(target_tab, year=year, month=month)
+    schedule = sheets_service.get_parsed_schedule(target_tab, year=req_year, month=req_month)
 
     return JSONResponse(
         content={
