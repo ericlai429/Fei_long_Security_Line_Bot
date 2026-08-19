@@ -153,7 +153,7 @@ class SheetsService:
         return True, f"已設定試算表 ID: {sheet_id}", tabs
 
     def list_tabs(self) -> List[str]:
-        # 1. Dynamically read all loaded sheets (supporting 1~100+ tabs)
+        # Strictly authentic tabs loaded from user spreadsheet or real verified tabs
         if self.custom_sheet_data:
             return list(self.custom_sheet_data.keys())
         if self.client and self.active_spreadsheet_id:

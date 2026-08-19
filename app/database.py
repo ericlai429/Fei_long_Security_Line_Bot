@@ -457,5 +457,17 @@ class Database:
                 return False
             return str(saved_pin).strip() == str(input_pin).strip()
 
+    def get_schedule_snapshot(self, tab_name: str) -> List[List[str]]:
+        with _lock:
+            snapshots = self.data.get("schedule_snapshots", {})
+            return snapshots.get(tab_name, [])
+
+    def save_schedule_snapshot(self, tab_name: str, rows: List[List[str]]):
+        with _lock:
+            if "schedule_snapshots" not in self.data:
+                self.data["schedule_snapshots"] = {}
+            self.data["schedule_snapshots"][tab_name] = rows
+            self._save_unsafe()
+
 db = Database()
 
