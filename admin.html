@@ -19,9 +19,9 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
 
-  <!-- Top Navbar (Perfect Margin Alignment & Zero Overflow) -->
-  <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-50 backdrop-blur">
-    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
+  <!-- Top Navbar (Exact Pixel-Perfect Right Border Alignment) -->
+  <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-50 backdrop-blur w-full">
+    <div class="max-w-5xl w-full mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
       <!-- Brand & Title (Single Line) -->
       <div class="flex items-center gap-2 shrink-0">
         <div class="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center shadow-md shrink-0 text-white">
@@ -40,34 +40,34 @@
         </div>
       </div>
 
-      <!-- Action Toolbar (Strictly Aligned with Right Border) -->
-      <div class="flex items-center gap-1.5 shrink-0">
+      <!-- Action Toolbar (Strictly Aligned Inside Right Edge) -->
+      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
         <!-- 雲端設定 -->
-        <button onclick="openGoogleDriveModal()" class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="Google 雲端試算表連線設定">
+        <button onclick="openGoogleDriveModal()" class="h-8 px-2 sm:px-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="Google 雲端試算表連線設定">
           <i class="fa-brands fa-google-drive text-xs"></i>
-          <span class="hidden sm:inline">雲端</span>
+          <span class="hidden md:inline">雲端</span>
         </button>
 
         <!-- 異動 Log -->
-        <button onclick="openChangeLogModal()" class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="班表異動審計日誌 (3分鐘延時推播)">
+        <button onclick="openChangeLogModal()" class="h-8 px-2 sm:px-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="班表異動審計日誌 (3分鐘延時推播)">
           <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-          <span class="hidden sm:inline">Log</span>
+          <span class="hidden md:inline">Log</span>
         </button>
 
         <!-- 智能診斷 -->
-        <button onclick="openSmartInspectModal()" class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 text-purple-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="智能分析排班對齊檢查">
+        <button onclick="openSmartInspectModal()" class="h-8 px-2 sm:px-2.5 bg-slate-800 hover:bg-slate-700 text-purple-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="智能分析排班對齊檢查">
           <i class="fa-solid fa-brain text-xs"></i>
-          <span class="hidden sm:inline">診斷</span>
+          <span class="hidden md:inline">診斷</span>
         </button>
 
         <!-- PWA 班表入口 -->
-        <a href="./index.html" class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shrink-0 cursor-pointer" title="前往員工排班表 (PWA)">
+        <a href="./index.html" class="h-8 px-2 sm:px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shrink-0 cursor-pointer" title="前往員工排班表 (PWA)">
           <i class="fa-solid fa-mobile-screen text-xs"></i>
-          <span class="hidden sm:inline">班表</span>
+          <span class="hidden md:inline">班表</span>
         </a>
 
         <!-- 重整按鈕 -->
-        <button onclick="loadGroupList()" class="h-8 px-3 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="重新載入名冊與設定">
+        <button onclick="loadGroupList()" class="h-8 px-2.5 sm:px-3 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="重新載入名冊與設定">
           <i class="fa-solid fa-rotate text-xs" id="reloadIcon"></i>
           <span class="hidden sm:inline">重整</span>
         </button>
@@ -75,8 +75,8 @@
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="max-w-6xl w-full mx-auto p-3 sm:p-4 space-y-3.5 flex-1">
+  <!-- Main Container (Strictly Matches Header max-w-5xl and px-4) -->
+  <main class="max-w-5xl w-full mx-auto px-4 py-4 space-y-3.5 flex-1">
 
     <!-- Toast Notification -->
     <div id="toast" class="hidden fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300"></div>
