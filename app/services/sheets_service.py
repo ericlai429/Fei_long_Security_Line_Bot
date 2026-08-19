@@ -339,7 +339,7 @@ class SheetsService:
                         elif shift_val in ['機', '支', 'C']:
                             daily_schedule[day_num]['support'].append(display_name)
 
-            standard_columns = ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)", "機動支援", "備註"]
+            standard_columns = ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"]
             standard_rows = []
             today = date.today()
             curr_year = today.year
@@ -353,9 +353,7 @@ class SheetsService:
                     "星期": info.get('weekday', ''),
                     "哨點/崗位": tab_name.strip(),
                     "早班 (07-19)": "、".join(info['day']) if info['day'] else "—",
-                    "晚班 (19-07)": "、".join(info['night']) if info['night'] else "—",
-                    "機動支援": "、".join(info['support']) if info['support'] else "—",
-                    "備註": "正常勤務"
+                    "晚班 (19-07)": "、".join(info['night']) if info['night'] else "—"
                 })
 
             return {
