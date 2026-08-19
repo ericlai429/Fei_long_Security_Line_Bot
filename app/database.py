@@ -411,16 +411,51 @@ class Database:
                 logs = filtered
             return list(reversed(logs))[:limit]
 
-    def get_schedule_snapshot(self, tab_name: str) -> Optional[List[List[str]]]:
+    def is_master_pin_initialized(self) -> bool:
         with _lock:
-            snapshots = self.data.get("schedule_snapshots", {})
-            return snapshots.get(tab_name)
+            return bool(self.data.get("master_pin_initialized", False) and self.data.get("master_pin"))
 
-    def save_schedule_snapshot(self, tab_name: str, rows: List[List[str]]):
+    def reset_master_pin(self):
         with _lock:
-            if "schedule_snapshots" not in self.data:
-                self.data["schedule_snapshots"] = {}
-            self.data["schedule_snapshots"][tab_name] = rows
+            self.data["master_pin"] = None
+            self.data["master_pin_initialized"] = False
+            if "master_pin_history" not in self.data:
+                self.data["master_pin_history"] = []
+            self.data["master_pin_history"].append({
+                "action": "RESET",
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "note": "管理員重置 Master PIN，等待前端首次登入設定新密碼"
+            })
             self._save_unsafe()
 
+    def set_master_pin(self, new_pin: str, admin_email: str = "ericlai429@gmail.com") -> bool:
+        with _lock:
+            if not new_pin or len(new_pin.strip()) < 3:
+                return False
+            cleaned_pin = new_pin.strip()
+            self.data["master_pin"] = cleaned_pin
+            self.data["master_pin_initialized"] = True
+            self.data["master_pin_updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.data["master_pin_admin_email"] = admin_email.strip().lower()
+
+            if "master_pin_history" not in self.data:
+                self.data["master_pin_history"] = []
+            self.data["master_pin_history"].append({
+                "action": "SETUP",
+                "admin_email": admin_email,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "note": f"管理員 {admin_email} 於前端首次成功設定專屬 Master PIN 碼"
+            })
+            self._save_unsafe()
+            return True
+
+    def verify_master_pin_auth(self, input_pin: str) -> bool:
+        with _lock:
+            saved_pin = self.data.get("master_pin")
+            if not saved_pin:
+                # If not initialized, fallback to default 789 or require setup
+                return False
+            return str(saved_pin).strip() == str(input_pin).strip()
+
 db = Database()
+

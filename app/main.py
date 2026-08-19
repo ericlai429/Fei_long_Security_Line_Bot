@@ -528,6 +528,49 @@ async def set_monthly_sheet_id(request: Request):
 
     return {"status": "success", "month": key, "spreadsheet_id": sheet_id}
 
+# --- Master PIN Reset & Setup Endpoints ---
+@app.get("/api/admin/master-pin/status")
+def get_master_pin_status():
+    return {
+        "is_initialized": db.is_master_pin_initialized(),
+        "admin_email": db.data.get("master_pin_admin_email", "ericlai429@gmail.com"),
+        "updated_at": db.data.get("master_pin_updated_at")
+    }
+
+@app.post("/api/admin/master-pin/setup")
+async def setup_master_pin(request: Request):
+    body = await request.json()
+    new_pin = str(body.get("new_pin", "")).strip()
+    admin_email = str(body.get("admin_email", "ericlai429@gmail.com")).strip()
+    if not new_pin or len(new_pin) < 3:
+        raise HTTPException(status_code=400, detail="PIN 碼長度至少需 3 位數！")
+    
+    success = db.set_master_pin(new_pin, admin_email=admin_email)
+    if not success:
+        raise HTTPException(status_code=400, detail="設定 PIN 碼失敗")
+    return {"status": "success", "message": f"管理員 {admin_email} 專屬 Master PIN 碼設定成功並已永久儲存！"}
+
+@app.post("/api/admin/master-pin/verify")
+async def verify_admin_master_pin(request: Request):
+    body = await request.json()
+    pin = str(body.get("pin", "")).strip()
+    
+    if not db.is_master_pin_initialized():
+        # 未初始化時，若輸入 789 則視為初始預設通過
+        if pin == "789":
+            return {"status": "success", "message": "預設 PIN 碼通過 (請盡快設定自訂 PIN 碼)"}
+        return {"status": "need_setup", "message": "尚未設定專屬 Master PIN 碼，請進行首次設定"}
+
+    if db.verify_master_pin_auth(pin):
+        return {"status": "success", "message": "管理員驗證成功！"}
+    else:
+        raise HTTPException(status_code=401, detail="Master PIN 碼不正確！")
+
+@app.post("/api/admin/master-pin/reset")
+def reset_admin_master_pin():
+    db.reset_master_pin()
+    return {"status": "success", "message": "Master PIN 碼已成功重置，等待前端首次登入設定！"}
+
 @app.get("/api/pdf/generate")
 def generate_pdf(group_id: str = "tsgh_internal", tab: Optional[str] = None):
     group = db.get_group(group_id)

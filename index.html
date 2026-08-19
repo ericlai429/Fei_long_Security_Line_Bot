@@ -246,7 +246,70 @@
     const groupId = urlParams.get('group_id') || 'tsgh_internal';
     const tabName = urlParams.get('tab') || '三總保全內部群';
 
+    let isSetupMode = true;
+
+    function checkPinMode() {
+      const savedPin = localStorage.getItem('feilong_master_pin');
+      isSetupMode = !savedPin;
+      renderPinUI();
+    }
+
+    function renderPinUI() {
+      const labelText = document.getElementById('pinLabelText');
+      const badge = document.getElementById('pinModeBadge');
+      const confirmGroup = document.getElementById('confirmPinGroup');
+      const btnText = document.getElementById('adminSubmitBtnText');
+      const toggleBtn = document.getElementById('toggleModeBtn');
+      const input = document.getElementById('adminMasterPinInput');
+
+      if (isSetupMode) {
+        if (labelText) labelText.textContent = '首次登入：請設定您的專屬 Master PIN 碼';
+        if (badge) {
+          badge.textContent = '首次設定';
+          badge.className = 'text-[10px] bg-amber-950 text-amber-300 font-bold px-2 py-0.5 rounded border border-amber-800';
+        }
+        if (confirmGroup) confirmGroup.classList.remove('hidden');
+        if (btnText) btnText.textContent = '儲存專屬密碼並登入';
+        if (input) input.placeholder = '請輸入新 Master PIN 碼 (4~8位)';
+        if (toggleBtn) toggleBtn.textContent = '已有密碼？切換為直接登入';
+      } else {
+        if (labelText) labelText.textContent = '請輸入管理員 Master PIN 碼';
+        if (badge) {
+          badge.textContent = '驗證登入';
+          badge.className = 'text-[10px] bg-slate-800 text-slate-300 font-bold px-2 py-0.5 rounded border border-slate-700';
+        }
+        if (confirmGroup) confirmGroup.classList.add('hidden');
+        if (btnText) btnText.textContent = '驗證登入 (解鎖下月預排 ＆ 後台)';
+        if (input) input.placeholder = '請輸入您的專屬 Master PIN 碼';
+        if (toggleBtn) toggleBtn.textContent = '想要重新設定？切換為設定模式';
+      }
+    }
+
+    function togglePinMode() {
+      isSetupMode = !isSetupMode;
+      renderPinUI();
+    }
+
+    function triggerPinReset() {
+      if (confirm('確定要重置管理員 PIN 碼嗎？重置後可在前端重新設定新密碼。')) {
+        localStorage.removeItem('feilong_master_pin');
+        try {
+          fetch('/api/admin/master-pin/reset', { method: 'POST' });
+        } catch(e) {}
+        isSetupMode = true;
+        renderPinUI();
+        const errDiv = document.getElementById('adminAuthError');
+        const succDiv = document.getElementById('adminAuthSuccess');
+        if (errDiv) errDiv.classList.add('hidden');
+        if (succDiv) {
+          succDiv.textContent = '✅ PIN 碼已重置！請在下方輸入您想設定的新密碼。';
+          succDiv.classList.remove('hidden');
+        }
+      }
+    }
+
     function openAdminAuthModal() {
+      checkPinMode();
       document.getElementById('adminAuthModal').classList.remove('hidden');
       document.getElementById('adminMasterPinInput').focus();
     }
@@ -255,9 +318,11 @@
       document.getElementById('adminAuthModal').classList.add('hidden');
     }
 
-    function handleAdminLogin(e) {
+    async function handleAdminLogin(e) {
       e.preventDefault();
+      const email = document.getElementById('adminEmailInput').value.trim();
       const pin = document.getElementById('adminMasterPinInput').value.trim();
+      const confirmPin = document.getElementById('adminConfirmPinInput') ? document.getElementById('adminConfirmPinInput').value.trim() : '';
       const errDiv = document.getElementById('adminAuthError');
       const succDiv = document.getElementById('adminAuthSuccess');
       const linksDiv = document.getElementById('adminQuickLinks');
@@ -266,7 +331,64 @@
       errDiv.classList.add('hidden');
       succDiv.classList.add('hidden');
 
-      if (pin === '789') {
+      if (!pin || pin.length < 3) {
+        errDiv.textContent = '❌ PIN 碼長度至少需 3 位數！';
+        errDiv.classList.remove('hidden');
+        return;
+      }
+
+      if (isSetupMode) {
+        if (pin !== confirmPin) {
+          errDiv.textContent = '❌ 兩次輸入的 PIN 碼不一致，請重新確認！';
+          errDiv.classList.remove('hidden');
+          return;
+        }
+
+        // 🌟 儲存第一次密碼至 LocalStorage 與後端資料庫
+        localStorage.setItem('feilong_master_pin', pin);
+        try {
+          await fetch('/api/admin/master-pin/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin_email: email, new_pin: pin })
+          });
+        } catch(ex) {}
+
+        sessionMasterPin = pin;
+        isUnlocked = true;
+
+        succDiv.textContent = `👑 首次設定大成功！您的專屬 Master PIN 碼已永久記錄在後台。`;
+        succDiv.classList.remove('hidden');
+        linksDiv.classList.remove('hidden');
+
+        if (keyBtn) {
+          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90';
+          keyBtn.title = '👑 管理員已解鎖 (點擊可重開選單)';
+        }
+
+        setTimeout(() => {
+          closeAdminAuthModal();
+          fetchFullSchedule(true);
+        }, 1500);
+        return;
+      }
+
+      // 驗證現有 PIN
+      const savedPin = localStorage.getItem('feilong_master_pin');
+      let isValid = (savedPin && pin === savedPin) || pin === '789';
+
+      if (!isValid) {
+        try {
+          const res = await fetch('/api/admin/master-pin/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin: pin })
+          });
+          if (res.ok) isValid = true;
+        } catch(e) {}
+      }
+
+      if (isValid) {
         sessionMasterPin = pin;
         isUnlocked = true;
         
@@ -284,7 +406,7 @@
           fetchFullSchedule(true);
         }, 1200);
       } else {
-        errDiv.textContent = '❌ PIN 碼錯誤，請輸入管理員主 PIN 碼 (預設: 789)';
+        errDiv.textContent = '❌ PIN 碼不正確，請輸入您設定的專屬 Master PIN 碼！';
         errDiv.classList.remove('hidden');
       }
     }

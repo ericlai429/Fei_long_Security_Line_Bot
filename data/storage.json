@@ -890,5 +890,14 @@
       ]
     ]
   },
-  "schedule_change_logs": []
+  "schedule_change_logs": [],
+  "master_pin": null,
+  "master_pin_initialized": false,
+  "master_pin_history": [
+    {
+      "action": "RESET",
+      "timestamp": "2026-08-20 00:23:11",
+      "note": "管理員重置 Master PIN，等待前端首次登入設定新密碼"
+    }
+  ]
 }
