@@ -29,3 +29,7 @@ Thumbs.db
 data/google_user_token.json
 data/test_script_*.js
 *.token
+
+# Runtime dumps & test scripts
+data/*dump*.json
+scratch_*.js
