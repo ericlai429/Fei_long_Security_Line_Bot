@@ -338,8 +338,8 @@ def inspect_schedule_alignment(payload: ScheduleInspectPayload):
 
 # --- Schedule Change Audit Logs & Admin Keep-Alive Heartbeat APIs ---
 @app.get("/api/admin/schedule/change-logs")
-def get_schedule_change_logs(tab_name: Optional[str] = None, limit: int = 50):
-    logs = db.get_schedule_change_logs(limit=limit, tab_name=tab_name)
+def get_schedule_change_logs(tab_name: Optional[str] = None, query: Optional[str] = None, limit: int = 100):
+    logs = db.get_schedule_change_logs(limit=limit, tab_name=tab_name, query=query)
     return {
         "status": "success",
         "total_count": len(logs),

@@ -388,11 +388,19 @@ class Database:
                 self.data["schedule_change_logs"] = self.data["schedule_change_logs"][-500:]
             self._save_unsafe()
 
-    def get_schedule_change_logs(self, limit: int = 100, tab_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_schedule_change_logs(self, limit: int = 100, tab_name: Optional[str] = None, query: Optional[str] = None) -> List[Dict[str, Any]]:
+        from app.services.rare_char_helper import rare_char_harmonizer
         with _lock:
             logs = self.data.get("schedule_change_logs", [])
-            if tab_name:
-                logs = [l for l in logs if l.get("tab_name") == tab_name]
+            q = (query or tab_name or "").strip().lower()
+            if q:
+                variants = rare_char_harmonizer.get_search_variants(q)
+                filtered = []
+                for l in logs:
+                    text_corpus = f"{l.get('tab_name', '')} {l.get('member_name', '')} {l.get('post', '')} {l.get('shift_type', '')} {l.get('action', '')} {l.get('date', '')}".lower()
+                    if any(v in text_corpus for v in variants):
+                        filtered.append(l)
+                logs = filtered
             return list(reversed(logs))[:limit]
 
     def get_schedule_snapshot(self, tab_name: str) -> Optional[List[List[str]]]:

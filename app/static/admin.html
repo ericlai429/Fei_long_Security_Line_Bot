@@ -377,16 +377,18 @@
 
         <!-- Filter & Reload Bar -->
         <div class="flex items-center justify-between bg-slate-950 p-3 rounded-2xl border border-slate-800 text-xs">
-          <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-bold">過濾分頁：</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-slate-400 font-bold">🔍 關鍵字查詢：</span>
             <input 
               type="text" 
               id="changeLogTabFilter" 
-              placeholder="全部或輸入分頁名..." 
-              class="h-8 bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+              placeholder="輸入同仁姓名(如：賴)、分頁、哨點或班別..." 
+              onkeydown="if(event.key==='Enter') loadChangeLogs()"
+              class="h-8 bg-slate-900 border border-slate-700 rounded-lg px-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 w-64 sm:w-80 font-medium"
             >
-            <button onclick="loadChangeLogs()" class="h-8 px-3 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-lg transition">
-              查詢
+            <button onclick="loadChangeLogs()" class="h-8 px-3.5 bg-amber-700 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-lg transition flex items-center gap-1 shadow-sm">
+              <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
+              <span>查詢</span>
             </button>
           </div>
           <span class="text-[11px] text-amber-400 font-mono" id="changeLogSummaryText">載入中...</span>
@@ -1525,7 +1527,7 @@
       try {
         let url = '/api/admin/schedule/change-logs?limit=100';
         if (tabFilter) {
-          url += `&tab_name=${encodeURIComponent(tabFilter)}`;
+          url += `&query=${encodeURIComponent(tabFilter)}`;
         }
         const res = await fetch(url);
         if (!res.ok) throw new Error('讀取日誌失敗');
