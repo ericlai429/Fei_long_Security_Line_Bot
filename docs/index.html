@@ -123,8 +123,18 @@
           <i class="fa-solid fa-shield-halved text-sm"></i>
         </div>
         <div>
-          <h1 class="text-sm sm:text-base font-bold text-white leading-tight">飛龍保全 ｜ 三總全哨排班總表</h1>
-          <p class="text-[11px] text-purple-300" id="currentTabLabel">全哨人員對應 PDF 直出</p>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-bold text-white leading-tight">飛龍保全 ｜ 三總排班總表</h1>
+            <!-- 🟢 即時連線呼吸燈號 -->
+            <div id="connectionStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/80 transition">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span id="connectionStatusText">連線握手中...</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-purple-300" id="currentTabLabel">全哨人員對應班表</p>
         </div>
       </div>
 
@@ -160,6 +170,42 @@
   <script>
     let rawScheduleData = null;
     let isUnlocked = false;
+
+    // 💡 呼吸燈連線狀態管理
+    function setConnectionStatus(status, text) {
+      const badge = document.getElementById('connectionStatusBadge');
+      const textElem = document.getElementById('connectionStatusText');
+      if (!badge || !textElem) return;
+
+      textElem.textContent = text;
+
+      if (status === 'connected') {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition';
+        badge.innerHTML = `
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>${text}</span>
+        `;
+      } else if (status === 'connecting') {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/80 transition';
+        badge.innerHTML = `
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+          </span>
+          <span>${text}</span>
+        `;
+      } else {
+        // Failed
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/90 text-rose-300 border border-rose-700 shadow-[0_0_10px_rgba(244,63,94,0.3)] transition';
+        badge.innerHTML = `
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+          <span>${text}</span>
+        `;
+      }
+    }
     let sessionMasterPin = '789';
     let sessionSubPin = '8888';
 
@@ -291,6 +337,7 @@
       }
       const container = document.getElementById('scheduleContainer');
 
+      setConnectionStatus('connecting', '雲端握手中...');
       // 🌟 0. 優先讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表
       try {
         const endpoints = ['/api/schedule/live', 'http://127.0.0.1:8088/api/schedule/live'];
@@ -303,6 +350,7 @@
               const apiData = await apiRes.json();
               if (apiData.rows && apiData.rows.length > 0) {
                 rawScheduleData = apiData;
+                setConnectionStatus('connected', '即時連線正常');
                 renderFullScheduleTable(rawScheduleData);
                 return;
               }
