@@ -584,8 +584,9 @@
       }
     }
 
-    // 🔤 人員名稱格式化：加大50% (17px 粗黑體)；若是上個月/歷史資料，不出現電話撥出與浮窗提示
-    function formatName(nameStr, isHistorical = false) {
+    // 🔤 人員名稱格式化：加大50% (17px 粗黑體)
+    // 🔒 資安防護：前天及更早之排班，電話不浮窗顯示 (Admin 登入解鎖者無此限制)
+    function formatName(nameStr, isHistorical = false, hidePhone = false) {
       if (!nameStr || nameStr === '-' || nameStr === '—') return '<span class="text-slate-600 font-bold">—</span>';
       
       const items = nameStr.split(/[、,]+/).filter(Boolean);
@@ -597,8 +598,9 @@
         
         if (!cleanName) return item;
 
-        if (isHistorical) {
-          return `<span class="inline-block px-2 py-0.5 rounded-lg bg-slate-800/50 text-slate-200 text-[16px] sm:text-[17px] font-black tracking-wide whitespace-nowrap">${cleanName}</span>`;
+        // 若為歷史月份 或 前天及更早 (且非 Admin 解鎖狀態)，純文字大字唯讀，不顯示電話與浮窗
+        if (isHistorical || (hidePhone && !isUnlocked)) {
+          return `<span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-lg bg-slate-800/50 text-slate-200 text-[16px] sm:text-[17px] font-black tracking-wide whitespace-nowrap">${cleanName}</span>`;
         }
 
         if (phone) {
@@ -842,12 +844,22 @@
         }
 
         const isHistorical = !(selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH);
+
+        // 🔒 前天與更早之排班判定 (今天 = now.getDate(), 昨天 = now.getDate() - 1, 前天 = now.getDate() - 2)
+        let rowDayNum = 0;
+        if (dateStr.includes('/')) {
+          const parts = dateStr.split('/');
+          rowDayNum = parseInt(parts[parts.length - 1], 10) || 0;
+        }
+        // 若當前月份且日期 <= 今天 - 2 (前天或更早)，啟動電話隱藏保護
+        const isBeforeYesterday = (selectedYear === now.getFullYear() && selectedMonth === (now.getMonth() + 1)) && (rowDayNum > 0 && rowDayNum <= (now.getDate() - 2));
+
         html += `
           <tr class="${rowClass} transition">
             <td class="w-[17%] py-2.5 px-1 whitespace-nowrap text-center text-xs sm:text-sm">${dateDisplayHtml}</td>
             <td class="w-[11%] py-2.5 px-0.5 whitespace-nowrap text-center">${weekDisplayHtml}</td>
-            <td class="w-[36%] py-2 px-1 whitespace-nowrap text-center font-medium">${formatName(early, isHistorical)}</td>
-            <td class="w-[36%] py-2 px-1 whitespace-nowrap text-center font-medium">${formatName(late, isHistorical)}</td>
+            <td class="w-[36%] py-2 px-1 whitespace-nowrap text-center font-medium">${formatName(early, isHistorical, isBeforeYesterday)}</td>
+            <td class="w-[36%] py-2 px-1 whitespace-nowrap text-center font-medium">${formatName(late, isHistorical, isBeforeYesterday)}</td>
           </tr>
         `;
       });
