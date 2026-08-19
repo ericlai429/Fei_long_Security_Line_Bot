@@ -23,14 +23,25 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased select-none">
 
   <!-- 🔒 Double PIN Authentication Modal -->
-  <div id="authModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl">
-      <div class="text-center space-y-1.5">
-        <div class="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/40 text-purple-400 flex items-center justify-center mx-auto text-xl">
-          <i class="fa-solid fa-shield-halved"></i>
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-400 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <span class="text-sm font-bold text-white">三總全哨排班安全驗證</span>
         </div>
-        <h2 class="text-base font-bold text-white">三總全哨排班安全驗證</h2>
-        <p class="text-xs text-slate-400">請輸入雙 PIN 碼解鎖全哨排班 PDF</p>
+        <!-- 🗝️ 黑色小 Key (Admin 快捷設定入口) -->
+        <button 
+          type="button" 
+          onclick="openAdminAuthModal()" 
+          title="管理員設定與登入"
+          class="h-8 px-2.5 rounded-lg bg-slate-950 border border-amber-500/80 text-amber-400 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-950 transition shadow-inner"
+        >
+          <i class="fa-solid fa-key text-[10px]"></i>
+          <span>Admin</span>
+        </button>
       </div>
 
       <form id="pinAuthForm" onsubmit="handlePinUnlock(event)" class="space-y-4">
@@ -40,8 +51,7 @@
             type="password" 
             id="inputMasterPin" 
             inputmode="numeric"
-            maxlength="3"
-            value="789"
+            maxlength="8"
             required 
             placeholder="請輸入主 PIN 碼" 
             class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-base font-mono tracking-widest text-white text-center font-bold focus:outline-none focus:border-purple-500"
@@ -74,6 +84,17 @@
           <i class="fa-solid fa-lock-open"></i>
           <span>解鎖查看全哨排班</span>
         </button>
+
+        <div class="pt-2 border-t border-slate-800 text-center">
+          <button 
+            type="button" 
+            onclick="openAdminAuthModal()" 
+            class="text-xs text-amber-400 hover:text-amber-300 underline font-bold flex items-center gap-1.5 mx-auto"
+          >
+            <i class="fa-solid fa-key text-[10px]"></i>
+            <span>管理員 (Admin) 首次登入 / 更換 PIN 碼</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>
