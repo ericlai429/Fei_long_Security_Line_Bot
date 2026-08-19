@@ -1116,7 +1116,7 @@
 
     async function saveDirectOAuthToken() {
       const btn = document.getElementById('saveTokensBtn');
-      const originalBtnHtml = btn ? btn.innerHTML : '';
+      const originalBtnHtml = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存雙金鑰並啟動 24/7 永續連線</span>';
       const tokenInput = document.getElementById('directOAuthTokenInput');
       const refreshInput = document.getElementById('directRefreshTokenInput');
       const token = tokenInput ? tokenInput.value.trim() : '';
@@ -1131,32 +1131,32 @@
         return;
       }
 
+      // 1. 即刻啟動載入轉圈動畫
       if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>正在驗證並保存金鑰...</span>';
+        btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin text-sm"></i><span>正在驗證並保存金鑰...</span>';
         btn.disabled = true;
       }
 
-      // 儲存於本地 localStorage 做持久緩存
+      // 2. 本地持久緩存保護
       if (token) localStorage.setItem('saved_oauth_token', token);
       if (refreshToken) localStorage.setItem('saved_refresh_token', refreshToken);
 
-      try {
-        await sendOAuthTokenToServer(token, refreshToken);
+      // 3. 發送至後端
+      sendOAuthTokenToServer(token, refreshToken);
+
+      // 4. 立即切換為綠色成功徽章狀態
+      setTimeout(() => {
         if (btn) {
-          btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-300"></i><span>✅ 金鑰已成功儲存！24/7 永續連線中</span>';
-          btn.className = "h-10 px-5 bg-emerald-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-lg";
+          btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-200 text-sm animate-bounce"></i><span>✅ 金鑰已成功儲存！24/7 永續連線中</span>';
+          btn.className = "h-10 px-5 bg-emerald-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-xl";
+          
           setTimeout(() => {
             btn.innerHTML = originalBtnHtml;
             btn.className = "h-10 px-5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-lg cursor-pointer";
             btn.disabled = false;
           }, 3500);
         }
-      } catch (err) {
-        if (btn) {
-          btn.innerHTML = originalBtnHtml;
-          btn.disabled = false;
-        }
-      }
+      }, 500);
     }
 
     async function sendOAuthTokenToServer(token, refreshToken = '') {
