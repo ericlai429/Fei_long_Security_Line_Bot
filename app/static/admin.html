@@ -2183,15 +2183,19 @@
 
     let tabNumberDebounceTimer = null;
 
-        // 📚 動態 1~80 真實分頁字典管理器
+        // 📚 動態 1~80 真實分頁字典管理器 (保證內建真實分頁永遠存在且即時融合自訂名冊)
     function getPersistedTabsMapping() {
+      const merged = { ...tabNumberMapping };
       const stored = localStorage.getItem('feilong_custom_tabs_mapping');
       if (stored) {
         try {
-          return JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          if (parsed && typeof parsed === 'object') {
+            Object.assign(merged, parsed);
+          }
         } catch(e) {}
       }
-      return tabNumberMapping;
+      return merged;
     }
 
     function saveBatchTabsList() {
@@ -2252,17 +2256,29 @@
       const groupInput = document.getElementById('inputGroupName');
 
       const activeMap = getPersistedTabsMapping();
-      const fullTabName = activeMap[val] || `${val}.案場分頁_${val}`;
+      const isKnown = Boolean(activeMap[val] || activeMap[String(val)]);
+      const fullTabName = activeMap[val] || activeMap[String(val)] || `${val}.案場_${val}`;
       
+      // 1. 強制更新分頁名稱輸入框
       if (tabInput) {
         tabInput.value = fullTabName;
         tabInput.classList.add('ring-2', 'ring-sky-500');
-        setTimeout(() => tabInput.classList.remove('ring-2', 'ring-sky-500'), 1000);
+        setTimeout(() => tabInput.classList.remove('ring-2', 'ring-sky-500'), 800);
       }
-      if (groupInput && !groupInput.value) {
-        groupInput.value = fullTabName.replace(/^\d+\./, '');
+
+      // 2. 強制同步更新群組名稱 (去掉開頭的數字點號)
+      if (groupInput) {
+        const cleanGroupName = fullTabName.replace(/^\d+[.\s、_]+/, '').trim();
+        groupInput.value = cleanGroupName;
+        groupInput.classList.add('ring-2', 'ring-purple-500');
+        setTimeout(() => groupInput.classList.remove('ring-2', 'ring-purple-500'), 800);
       }
-      showToast(`🎯 已快速對齊第 ${val} 個分頁：「${fullTabName}」！`, 'success');
+
+      if (isKnown) {
+        showToast(`🎯 已精準對齊第 ${val} 個分頁：「${fullTabName}」！`, 'success');
+      } else {
+        showToast(`💡 已帶入序號 [${val}] 分頁與群組設定！`, 'info');
+      }
     }
 
     function setTabByNumber(num) {
