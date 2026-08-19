@@ -143,16 +143,15 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <!-- 🗝️ 黑色金屬小 Key (Admin 專屬入口，醒目黑曜石金邊) -->
+        <!-- 🗝️ 黑色金屬小 Key (純小鑰匙圖示，極簡不溢出) -->
         <button 
           type="button" 
           id="secretAdminKeyBtn"
           onclick="openAdminAuthModal()" 
-          title="Admin 管理員金鑰入口"
-          class="h-9 px-3 rounded-xl bg-slate-950 border border-amber-500 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5 shadow-md active:scale-90 cursor-pointer"
+          title="Admin 管理員金鑰"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
         >
-          <i class="fa-solid fa-key text-xs text-amber-400"></i>
-          <span class="text-[11px] font-bold tracking-tight">Admin</span>
+          <i class="fa-solid fa-key text-xs"></i>
         </button>
 
         <button 
@@ -501,7 +500,7 @@
         if (linksDiv) linksDiv.style.display = 'flex';
 
         if (keyBtn) {
-          keyBtn.className = 'h-9 px-3 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center gap-1.5 active:scale-90';
+          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90 shrink-0';
           keyBtn.title = '👑 管理員已解鎖 (點擊可重開選單)';
         }
 
@@ -538,7 +537,7 @@
         if (linksDiv) linksDiv.style.display = 'flex';
 
         if (keyBtn) {
-          keyBtn.className = 'h-9 px-3 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center gap-1.5 active:scale-90';
+          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90 shrink-0';
           keyBtn.title = '👑 管理員已解鎖 (點擊可重開選單)';
         }
 
