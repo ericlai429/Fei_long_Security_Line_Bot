@@ -1066,24 +1066,33 @@
 
     async function saveDirectOAuthToken() {
       const tokenInput = document.getElementById('directOAuthTokenInput');
+      const refreshInput = document.getElementById('directRefreshTokenInput');
       const token = tokenInput ? tokenInput.value.trim() : '';
-      if (!token) {
-        showToast('請先在輸入框貼上 Google OAuth Access Token (ya29...)！', 'error');
+      const refreshToken = refreshInput ? refreshInput.value.trim() : '';
+
+      if (!token && !refreshToken) {
+        showToast('請在上方輸入 Access Token 或 Refresh Token！', 'error');
         return;
       }
-      await sendOAuthTokenToServer(token);
+
+      await sendOAuthTokenToServer(token, refreshToken);
     }
 
-    async function sendOAuthTokenToServer(token) {
+    async function sendOAuthTokenToServer(token, refreshToken = '') {
       try {
+        const payload = {
+          token: token || '',
+          refresh_token: refreshToken || '',
+          user_email: 'admin_session'
+        };
         const res = await fetch(API_BASE + '/api/admin/google/oauth-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token, user_email: 'admin_session' })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('OAuth 驗證失敗');
         const data = await res.json();
-        showToast(data.message, 'success');
+        showToast(data.message || '金鑰儲存成功！', 'success');
         connectSpreadsheetFromInput();
       } catch (err) {
         showToast(err.message, 'error');
