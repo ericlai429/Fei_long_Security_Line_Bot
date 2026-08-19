@@ -112,11 +112,7 @@
     </div>
   </div>
 
-  <!-- 🖨️ Printable Header for Official PDF -->
-  <div class="print-header p-4 text-center border-b-2 border-black mb-4">
-    <h1 class="text-2xl font-bold">飛龍保全股份有限公司 ｜ 三軍總醫院勤務排班總表</h1>
-    <p class="text-sm mt-1">分頁名稱：<span id="printTabName">4.三總工務所</span> ｜ 匯出時間：<span id="printTime"></span></p>
-  </div>
+
 
   <!-- Main Pure View -->
   <header class="no-print bg-slate-900/95 border-b border-slate-800 p-3 sm:p-4 sticky top-0 z-20 backdrop-blur-md">
@@ -230,7 +226,7 @@
   </main>
 
   <footer class="no-print text-center py-4 text-xs text-slate-600 border-t border-slate-900 mt-auto">
-    飛龍保全 ｜ 三軍總醫院保全勤務 ｜ 支援一鍵直出繁體中文 PDF 報表
+    飛龍保全 ｜ 三軍總醫院保全勤務
   </footer>
 
   <script>
@@ -721,18 +717,13 @@
         return;
       }
 
-      document.getElementById('printTabName').textContent = data.tab_name || currentTabName;
-      document.getElementById('printTime').textContent = new Date().toLocaleString();
-
+      
       let html = `
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3 no-print">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-table-list text-emerald-400"></i>
             <span class="text-sm font-bold text-white">全哨人員勤務清單 (共 ${data.rows.length} 列勤務)</span>
           </div>
-          <button onclick="downloadOrPrintPdf()" class="text-xs text-emerald-400 hover:underline font-bold flex items-center gap-1">
-            <i class="fa-solid fa-print"></i>直接列印/存為PDF
-          </button>
         </div>
 
         <div class="overflow-x-auto -mx-2 sm:mx-0">
@@ -793,9 +784,7 @@
       container.innerHTML = html;
     }
 
-    function downloadOrPrintPdf() {
-      window.print();
-    }
+
 
     document.addEventListener('DOMContentLoaded', () => {
       updateMonthDisplay();
