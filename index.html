@@ -17,6 +17,26 @@
       .print-header { display: block !important; }
     }
     .print-header { display: none; }
+      /* 🟢 翡翠深呼吸燈特效：明滅週期延長至 2.6秒，滅燈階段深沉持久，亮燈階段翡翠發光 */
+    @keyframes deepBreathingGlow {
+      0%, 100% {
+        opacity: 0.15;
+        transform: scale(0.85);
+        box-shadow: 0 0 0 rgba(16, 185, 129, 0);
+      }
+      30%, 65% {
+        opacity: 1;
+        transform: scale(1.15);
+        box-shadow: 0 0 16px rgba(52, 211, 153, 0.9), 0 0 28px rgba(16, 185, 129, 0.6);
+      }
+      80% {
+        opacity: 0.25;
+        transform: scale(0.9);
+      }
+    }
+    .deep-pulse-dot {
+      animation: deepBreathingGlow 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
@@ -142,13 +162,12 @@
           <div class="flex items-center gap-1.5 whitespace-nowrap">
             <!-- 🟨 黃框：內縮精簡字「飛龍三總班表」 -->
             <h1 class="text-sm sm:text-base font-black text-white leading-tight tracking-tight whitespace-nowrap">飛龍三總班表</h1>
-            <!-- 🟥 紅框：呼吸燈號「連線偵測」 -->
-            <div id="connectionStatusBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition">
-              <span class="relative flex h-1.5 w-1.5">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            <!-- 🟥 紅框：呼吸燈號「連線偵測」 (深邃明滅 2.6s 呼吸燈) -->
+            <div id="connectionStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-950/90 text-emerald-300 border border-emerald-500/80 shadow-[0_0_14px_rgba(16,185,129,0.35)] transition">
+              <span class="relative flex h-2.5 w-2.5 items-center justify-center">
+                <span class="deep-pulse-dot w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
               </span>
-              <span id="connectionStatusText">連線偵測</span>
+              <span id="connectionStatusText" class="tracking-tight">連線偵測</span>
             </div>
           </div>
           <p class="text-[10px] text-purple-300 font-bold" id="currentTabLabel">4.三總工務所</p>
@@ -274,13 +293,12 @@
       textElem.textContent = text;
 
       if (status === 'connected') {
-        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition';
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-950/90 text-emerald-300 border border-emerald-500/80 shadow-[0_0_14px_rgba(16,185,129,0.35)] transition';
         badge.innerHTML = `
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          <span class="relative flex h-2.5 w-2.5 items-center justify-center">
+            <span class="deep-pulse-dot w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
           </span>
-          <span>${text}</span>
+          <span class="tracking-tight">${text}</span>
         `;
       } else if (status === 'connecting') {
         badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/80 transition';
