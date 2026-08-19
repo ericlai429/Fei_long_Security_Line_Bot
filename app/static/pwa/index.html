@@ -440,21 +440,37 @@
 
       data.rows.forEach(r => {
         const dateStr = r['日期'] || '-';
-        const weekStr = r['星期'] || '';
+        const weekStr = (r['星期'] || '').trim();
         const postStr = r['哨點/崗位'] || r['哨點'] || r['崗位'] || '-';
         const early = r['早班 (07-19)'] || r['早班'] || '-';
         const late = r['晚班 (19-07)'] || r['晚班'] || '-';
         const support = r['機動支援'] || r['機動'] || '-';
         const note = r['備註'] || '';
 
+        // 🎨 星期六/日專屬醒目配色區分
+        let weekBadgeClass = 'bg-slate-800/80 text-slate-300 border-slate-700';
+        let rowClass = 'hover:bg-slate-800/40';
+
+        if (weekStr === '六' || weekStr === 'Sat' || weekStr.includes('六')) {
+          // 🌿 星期六：青翠湖水綠 (週末第一天)
+          weekBadgeClass = 'bg-teal-950 text-teal-300 border-teal-600 font-extrabold shadow-sm';
+          rowClass = 'bg-teal-950/20 hover:bg-teal-900/35';
+        } else if (weekStr === '日' || weekStr === 'Sun' || weekStr.includes('日')) {
+          // 🌸 星期日：醒目玫瑰紅 (經典休假日)
+          weekBadgeClass = 'bg-rose-950 text-rose-300 border-rose-600 font-extrabold shadow-sm';
+          rowClass = 'bg-rose-950/20 hover:bg-rose-900/35';
+        }
+
         html += `
-          <tr class="hover:bg-slate-800/40 transition">
+          <tr class="${rowClass} transition border-b border-slate-800/80">
             <td class="p-2.5 font-mono font-bold text-white whitespace-nowrap">${dateStr}</td>
-            <td class="p-2.5 whitespace-nowrap"><span class="bg-sky-950 text-sky-300 px-1.5 py-0.5 rounded text-[11px] font-bold border border-sky-800">${weekStr}</span></td>
+            <td class="p-2.5 whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded-lg text-[11px] border ${weekBadgeClass}">${weekStr}</span>
+            </td>
             <td class="p-2.5 font-bold text-amber-300 whitespace-nowrap">${postStr}</td>
-            <td class="p-2.5 text-amber-200 whitespace-nowrap font-medium">${formatName(early)}</td>
-            <td class="p-2.5 text-slate-200 whitespace-nowrap font-medium">${formatName(late)}</td>
-            <td class="p-2.5 text-sky-300 whitespace-nowrap font-medium">${formatName(support)}</td>
+            <td class="p-2.5 text-amber-100 whitespace-nowrap font-medium">${formatName(early)}</td>
+            <td class="p-2.5 text-slate-100 whitespace-nowrap font-medium">${formatName(late)}</td>
+            <td class="p-2.5 text-sky-200 whitespace-nowrap font-medium">${formatName(support)}</td>
             <td class="p-2.5 text-slate-400 text-[11px]">${note}</td>
           </tr>
         `;
