@@ -1,118 +1,38 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>飛龍保全 ｜ 三總勤務全哨人員排班總表 (PDF 直出)</title>
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#090d16">
+  <title>飛龍保全 ｜ 三總勤務排班表</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    button, input, a { touch-action: manipulation; }
     @media print {
-      body { background: white !important; color: black !important; padding: 0 !important; }
       .no-print { display: none !important; }
-      .print-table { border-collapse: collapse !important; width: 100% !important; font-size: 11pt !important; }
-      .print-table th, .print-table td { border: 1px solid #333 !important; padding: 6px 8px !important; color: black !important; }
-      .print-table th { background-color: #f0f0f0 !important; font-weight: bold !important; }
+      body { background: white !important; color: black !important; }
+      .print-table { width: 100% !important; border-collapse: collapse !important; }
+      .print-table th, .print-table td { border: 1px solid #000 !important; padding: 6px !important; color: black !important; font-size: 11pt !important; }
       .print-header { display: block !important; }
     }
     .print-header { display: none; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased select-none">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
 
-  <!-- 🔒 Double PIN Authentication Modal -->
-  <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-400 flex items-center justify-center text-sm">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
-          <span class="text-sm font-bold text-white">三總全哨排班安全驗證</span>
-        </div>
-        <!-- 🗝️ 黑色小 Key (Admin 快捷設定入口) -->
-        <button 
-          type="button" 
-          onclick="openAdminAuthModal()" 
-          title="管理員設定與登入"
-          class="h-8 px-2.5 rounded-lg bg-slate-950 border border-amber-500/80 text-amber-400 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-950 transition shadow-inner"
-        >
-          <i class="fa-solid fa-key text-[10px]"></i>
-          <span>Admin</span>
-        </button>
-      </div>
-
-      <form id="pinAuthForm" onsubmit="handlePinUnlock(event)" class="space-y-4">
-        <div>
-          <label class="block text-slate-300 text-xs font-bold mb-1">主 PIN 碼 (3位數)</label>
-          <input 
-            type="password" 
-            id="inputMasterPin" 
-            inputmode="numeric"
-            maxlength="8"
-            required 
-            placeholder="請輸入主 PIN 碼" 
-            class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-base font-mono tracking-widest text-white text-center font-bold focus:outline-none focus:border-purple-500"
-          >
-        </div>
-
-        <div>
-          <label class="block text-slate-300 text-xs font-bold mb-1 flex items-center justify-between">
-            <span>小隊 輔 PIN 碼 (3~4位數)</span>
-            <span class="text-xs text-sky-400">輔助Pin碼_請詢問分組隊長</span>
-          </label>
-          <input 
-            type="password" 
-            id="inputSubPin" 
-            inputmode="numeric"
-            maxlength="4"
-            value="8888"
-            required 
-            placeholder="請輸入輔助Pin碼 (請詢問分組隊長)" 
-            class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-base font-mono tracking-widest text-white text-center font-bold focus:outline-none focus:border-sky-500"
-          >
-        </div>
-
-        <div id="authErrorMsg" class="hidden text-xs text-rose-400 bg-rose-950/80 border border-rose-800 p-2.5 rounded-xl text-center font-bold"></div>
-
-        <button 
-          type="submit" 
-          class="w-full h-12 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 active:scale-[0.98] text-white font-bold rounded-xl text-sm transition shadow-lg flex items-center justify-center gap-2"
-        >
-          <i class="fa-solid fa-lock-open"></i>
-          <span>解鎖查看全哨排班</span>
-        </button>
-
-        <div class="pt-2 border-t border-slate-800 text-center">
-          <button 
-            type="button" 
-            onclick="openAdminAuthModal()" 
-            class="text-xs text-amber-400 hover:text-amber-300 underline font-bold flex items-center gap-1.5 mx-auto"
-          >
-            <i class="fa-solid fa-key text-[10px]"></i>
-            <span>管理員 (Admin) 首次登入 / 更換 PIN 碼</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  
-
-  <!-- 🗝️ Admin Login / Master PIN Setup Modal (管理員專屬彈窗) -->
-  <div id="adminAuthModal" class="hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-amber-500/80 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+  <!-- 🗝️ iOS 完全相容：Admin Login / Master PIN Setup Modal -->
+  <div id="adminAuthModal" style="display: none;" class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center gap-2 text-white font-bold text-base">
-          <div class="w-7 h-7 rounded-lg bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-400">
+          <div class="w-8 h-8 rounded-xl bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-400">
             <i class="fa-solid fa-key text-xs"></i>
           </div>
-          <span id="adminModalTitle">Admin 管理員驗證</span>
+          <span>Admin 管理員驗證</span>
         </div>
-        <button type="button" onclick="closeAdminAuthModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
+        <button type="button" onclick="closeAdminAuthModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-base"></i>
         </button>
       </div>
 
@@ -140,6 +60,7 @@
             <input 
               type="password" 
               id="adminMasterPinInput" 
+              inputmode="numeric"
               placeholder="請輸入新 Master PIN 碼 (如 4~8 位數)" 
               class="w-full h-11 bg-slate-950 border border-amber-700/80 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
             >
@@ -150,19 +71,20 @@
             <input 
               type="password" 
               id="adminConfirmPinInput" 
+              inputmode="numeric"
               placeholder="請再次輸入相同的新 PIN 碼" 
               class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
             >
           </div>
         </div>
 
-        <div id="adminAuthError" class="hidden text-[11px] text-rose-400 bg-rose-950/60 p-2.5 rounded-xl border border-rose-800"></div>
-        <div id="adminAuthSuccess" class="hidden text-[11px] text-emerald-300 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-700"></div>
+        <div id="adminAuthError" style="display: none;" class="text-[11px] text-rose-400 bg-rose-950/60 p-2.5 rounded-xl border border-rose-800"></div>
+        <div id="adminAuthSuccess" style="display: none;" class="text-[11px] text-emerald-300 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-700"></div>
 
         <button 
           type="submit" 
           id="adminSubmitBtn"
-          class="w-full h-11 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-[0.98] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2"
+          class="w-full h-12 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-[0.98] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2"
         >
           <i class="fa-solid fa-lock-open text-xs"></i>
           <span id="adminSubmitBtnText">儲存專屬密碼並登入</span>
@@ -177,7 +99,7 @@
           </button>
         </div>
 
-        <div id="adminQuickLinks" class="hidden pt-2 border-t border-slate-800 flex flex-col gap-2">
+        <div id="adminQuickLinks" style="display: none;" class="pt-2 border-t border-slate-800 flex flex-col gap-2">
           <a 
             href="./admin.html" 
             class="w-full h-10 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/60 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
@@ -193,30 +115,30 @@
   <!-- 🖨️ Printable Header for Official PDF -->
   <div class="print-header p-4 text-center border-b-2 border-black mb-4">
     <h1 class="text-2xl font-bold">飛龍保全股份有限公司 ｜ 三軍總醫院勤務排班總表</h1>
-    <p class="text-sm mt-1">分頁名稱：<span id="printTabName">三總保全內部群</span> ｜ 匯出時間：<span id="printTime"></span></p>
+    <p class="text-sm mt-1">分頁名稱：<span id="printTabName">4.三總工務所</span> ｜ 匯出時間：<span id="printTime"></span></p>
   </div>
 
-  <!-- Main Pure View (No Fluff, Direct PDF Output) -->
-  <header class="no-print bg-slate-900/90 border-b border-slate-800 p-3 sm:p-4 sticky top-0 z-20 backdrop-blur-md">
+  <!-- Main Pure View -->
+  <header class="no-print bg-slate-900/95 border-b border-slate-800 p-3 sm:p-4 sticky top-0 z-20 backdrop-blur-md">
     <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2.5">
         <!-- 🛡️ 盾牌點擊亦可快捷進入 Admin -->
-        <div onclick="openAdminAuthModal()" title="點擊進行管理員登入" class="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold cursor-pointer hover:scale-105 transition shadow-md active:scale-95">
+        <button type="button" onclick="openAdminAuthModal()" title="點擊進行管理員登入" class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold cursor-pointer hover:scale-105 transition shadow-md active:scale-95">
           <i class="fa-solid fa-shield-halved text-sm"></i>
-        </div>
+        </button>
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-sm sm:text-base font-bold text-white leading-tight">飛龍保全 ｜ 三總排班總表</h1>
             <!-- 🟢 即時連線呼吸燈號 -->
-            <div id="connectionStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/80 transition">
+            <div id="connectionStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition">
               <span class="relative flex h-2 w-2">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span id="connectionStatusText">連線握手中...</span>
+              <span id="connectionStatusText">即時連線正常</span>
             </div>
           </div>
-          <p class="text-[11px] text-purple-300" id="currentTabLabel">全哨人員對應班表</p>
+          <p class="text-[11px] text-purple-300" id="currentTabLabel">4.三總工務所</p>
         </div>
       </div>
 
@@ -227,7 +149,7 @@
           id="secretAdminKeyBtn"
           onclick="openAdminAuthModal()" 
           title="Admin 管理員金鑰入口"
-          class="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5 shadow-md active:scale-90 cursor-pointer"
+          class="h-9 px-3 rounded-xl bg-slate-950 border border-amber-500 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5 shadow-md active:scale-90 cursor-pointer"
         >
           <i class="fa-solid fa-key text-xs text-amber-400"></i>
           <span class="text-[11px] font-bold tracking-tight">Admin</span>
@@ -236,7 +158,7 @@
         <button 
           onclick="fetchFullSchedule(true)" 
           id="queryScheduleBtn"
-          class="h-9 sm:h-10 px-4 sm:px-5 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95"
+          class="h-9 px-4 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95"
         >
           <i class="fa-solid fa-magnifying-glass"></i>
           <span>查詢</span>
@@ -284,7 +206,7 @@
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-calendar-days text-purple-400 text-sm"></i>
         <span id="currentMonthDisplay" class="font-extrabold text-sm sm:text-base text-white font-mono tracking-wide">2026 年 8 月</span>
-        <span id="monthTag" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-800">本月即時</span>
+        <span id="monthTag" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-800 shadow-sm">本月即時</span>
       </div>
 
       <button 
@@ -298,7 +220,7 @@
       </button>
     </div>
 
-    <!-- 📄 Full Detachment Personnel Schedule Table (Print Ready) -->
+    <!-- 📄 Full Detachment Personnel Schedule Table -->
     <div id="scheduleContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
       <div class="text-center py-16 text-slate-400 space-y-3">
         <div class="w-10 h-10 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -313,8 +235,22 @@
   </footer>
 
   <script>
+    // 📦 即時排班預先載入快照 (保證 0 延遲秒開)
+    const EMBEDDED_SCHEDULE_DATA = {
+      "4.三總工務所": {"tab_name": "4.三總工務所", "year": 2026, "month": 8, "is_current_month": true, "updated_at": "2026-08-20 00:17", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/08/01", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "盧建村 (0955-521-871)", "晚班 (19-07)": "周有輝"}, {"日期": "2026/08/02", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/03", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "蘇秦漢 (0971-212-165)"}, {"日期": "2026/08/04", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/05", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/06", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/07", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/08", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/09", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/10", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/11", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/12", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/13", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/14", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/15", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/16", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "李宏熙 (0965-373-331)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/17", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/18", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/19", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/20", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "葉榮東 (0926-348-665)"}], "members": ["周有輝", "李宏熙", "盧建村", "葉榮東", "蘇秦漢", "賴鯤仲", "黃仁忠", "黃證書"], "posts": ["4.三總工務所"]},
+      "5.三總重症大樓": {"tab_name": "5.三總重症大樓", "year": 2026, "month": 8, "is_current_month": true, "updated_at": "2026-08-20 00:17", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/08/01", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "陶智豪 (0919-128-796)", "晚班 (19-07)": "龔家寶 (0958-791-761)"}, {"日期": "2026/08/02", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "龔家寶 (0958-791-761)", "晚班 (19-07)": "龔家寶 (0958-791-761)"}, {"日期": "2026/08/03", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "龔家寶 (0958-791-761)"}, {"日期": "2026/08/04", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/05", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/06", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "龔家寶 (0958-791-761)"}, {"日期": "2026/08/07", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "龔家寶 (0958-791-761)", "晚班 (19-07)": "龔家寶 (0958-791-761)"}, {"日期": "2026/08/08", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "龔家寶 (0958-791-761)"}, {"日期": "2026/08/09", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "蕭森隆 (0989-060-901)"}, {"日期": "2026/08/10", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "孫誌偉 (0970-498-340)"}, {"日期": "2026/08/11", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "張惠珍0912471123 (0912471123)"}, {"日期": "2026/08/12", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "龔家寶 (0958-791-761)"}, {"日期": "2026/08/13", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "蕭森隆 (0989-060-901)"}, {"日期": "2026/08/14", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "邱顯升 (0928-882-119)"}, {"日期": "2026/08/15", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/16", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "邱顯升 (0928-882-119)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/17", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "邱顯升 (0928-882-119)"}, {"日期": "2026/08/18", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "孫誌偉 (0970-498-340)"}, {"日期": "2026/08/19", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "邱顯升 (0928-882-119)"}, {"日期": "2026/08/20", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}], "members": ["孫誌偉", "張惠珍0912471123", "林又妗", "蕭森隆", "賴鯤仲", "邱顯升", "陶智豪", "龔家寶"], "posts": ["5.三總重症大樓"]}
+    };
+
+    let currentTabName = '4.三總工務所';
+    let currentGroupId = 'tsgh_eng_dept';
+    let selectedYear = 2026;
+    let selectedMonth = 8;
+    const REAL_CURRENT_YEAR = 2026;
+    const REAL_CURRENT_MONTH = 8;
     let rawScheduleData = null;
     let isUnlocked = false;
+    let isSetupMode = true;
+    let sessionMasterPin = '';
 
     // 💡 呼吸燈連線狀態管理
     function setConnectionStatus(status, text) {
@@ -343,7 +279,6 @@
           <span>${text}</span>
         `;
       } else {
-        // Failed
         badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/90 text-rose-300 border border-rose-700 shadow-[0_0_10px_rgba(244,63,94,0.3)] transition';
         badge.innerHTML = `
           <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
@@ -351,15 +286,101 @@
         `;
       }
     }
-    let sessionMasterPin = '789';
-    let sessionSubPin = '8888';
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const groupId = urlParams.get('group_id') || 'tsgh_internal';
-    const tabName = urlParams.get('tab') || '三總保全內部群';
+    // 🏢 雙小隊切換
+    function switchDetachment(tabName, groupId) {
+      currentTabName = tabName;
+      currentGroupId = groupId;
 
-    let isSetupMode = true;
+      const btnEng = document.getElementById('tabBtnEng');
+      const btnIcu = document.getElementById('tabBtnIcu');
+      const label = document.getElementById('currentTabLabel');
+      if (label) label.textContent = tabName;
 
+      if (tabName.includes('4.') || tabName.includes('工務所')) {
+        btnEng.className = 'flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-gradient-to-r from-purple-600 to-sky-600 text-white shadow-md';
+        btnIcu.className = 'flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800';
+      } else {
+        btnIcu.className = 'flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-gradient-to-r from-purple-600 to-sky-600 text-white shadow-md';
+        btnEng.className = 'flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800';
+      }
+
+      fetchFullSchedule(true);
+    }
+
+    // 🔒 安全邊界：下個月 (115.09 預排) 僅限 Admin (主PIN) 查看
+    function changeMonth(delta) {
+      const targetMonth = selectedMonth + delta;
+      const monthDiff = (selectedYear - REAL_CURRENT_YEAR) * 12 + (targetMonth - REAL_CURRENT_MONTH);
+
+      if (monthDiff < -1 || monthDiff > 1) {
+        return; // 超出安全邊界，禁止切換
+      }
+
+      // 若欲查看下個月份 (9月)，需先通過 Admin 驗證
+      if (monthDiff > 0 && !isUnlocked) {
+        openAdminAuthModal();
+        return;
+      }
+
+      selectedMonth = targetMonth;
+      if (selectedMonth > 12) {
+        selectedMonth = 1;
+        selectedYear += 1;
+      } else if (selectedMonth < 1) {
+        selectedMonth = 12;
+        selectedYear -= 1;
+      }
+      updateMonthDisplay();
+      fetchFullSchedule(true);
+    }
+
+    function updateMonthDisplay() {
+      const display = document.getElementById('currentMonthDisplay');
+      const tag = document.getElementById('monthTag');
+      const prevBtn = document.getElementById('prevMonthBtn');
+      const nextBtn = document.getElementById('nextMonthBtn');
+
+      if (display) display.textContent = `${selectedYear} 年 ${selectedMonth} 月`;
+      
+      const monthDiff = (selectedYear - REAL_CURRENT_YEAR) * 12 + (selectedMonth - REAL_CURRENT_MONTH);
+
+      // 按鈕安全邊界狀態控制
+      if (prevBtn) {
+        if (monthDiff <= -1) {
+          prevBtn.disabled = true;
+          prevBtn.className = 'h-9 px-3.5 bg-slate-900/60 text-slate-600 text-xs font-bold rounded-xl border border-slate-800/80 cursor-not-allowed flex items-center gap-1.5 opacity-50';
+        } else {
+          prevBtn.disabled = false;
+          prevBtn.className = 'h-9 px-3.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5';
+        }
+      }
+
+      if (nextBtn) {
+        if (monthDiff >= 1) {
+          nextBtn.disabled = true;
+          nextBtn.className = 'h-9 px-3.5 bg-slate-900/60 text-slate-600 text-xs font-bold rounded-xl border border-slate-800/80 cursor-not-allowed flex items-center gap-1.5 opacity-50';
+        } else {
+          nextBtn.disabled = false;
+          nextBtn.className = 'h-9 px-3.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5';
+        }
+      }
+
+      if (tag) {
+        if (monthDiff === 0) {
+          tag.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-800 shadow-sm';
+          tag.textContent = '本月即時';
+        } else if (monthDiff < 0) {
+          tag.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-950 text-sky-300 border border-sky-800';
+          tag.textContent = '上月歷史 (唯讀)';
+        } else {
+          tag.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-950 text-teal-300 border border-teal-800';
+          tag.textContent = '下月預排';
+        }
+      }
+    }
+
+    // 🗝️ iOS 友善 Admin 彈窗
     function checkPinMode() {
       const savedPin = localStorage.getItem('feilong_master_pin');
       isSetupMode = !savedPin;
@@ -380,7 +401,7 @@
           badge.textContent = '首次設定';
           badge.className = 'text-[10px] bg-amber-950 text-amber-300 font-bold px-2 py-0.5 rounded border border-amber-800';
         }
-        if (confirmGroup) confirmGroup.classList.remove('hidden');
+        if (confirmGroup) confirmGroup.style.display = 'block';
         if (btnText) btnText.textContent = '儲存專屬密碼並登入';
         if (input) input.placeholder = '請輸入新 Master PIN 碼 (4~8位)';
         if (toggleBtn) toggleBtn.textContent = '已有密碼？切換為直接登入';
@@ -390,7 +411,7 @@
           badge.textContent = '驗證登入';
           badge.className = 'text-[10px] bg-slate-800 text-slate-300 font-bold px-2 py-0.5 rounded border border-slate-700';
         }
-        if (confirmGroup) confirmGroup.classList.add('hidden');
+        if (confirmGroup) confirmGroup.style.display = 'none';
         if (btnText) btnText.textContent = '驗證登入 (解鎖下月預排 ＆ 後台)';
         if (input) input.placeholder = '請輸入您的專屬 Master PIN 碼';
         if (toggleBtn) toggleBtn.textContent = '想要重新設定？切換為設定模式';
@@ -412,22 +433,23 @@
         renderPinUI();
         const errDiv = document.getElementById('adminAuthError');
         const succDiv = document.getElementById('adminAuthSuccess');
-        if (errDiv) errDiv.classList.add('hidden');
+        if (errDiv) errDiv.style.display = 'none';
         if (succDiv) {
           succDiv.textContent = '✅ PIN 碼已重置！請在下方輸入您想設定的新密碼。';
-          succDiv.classList.remove('hidden');
+          succDiv.style.display = 'block';
         }
       }
     }
 
     function openAdminAuthModal() {
       checkPinMode();
-      document.getElementById('adminAuthModal').classList.remove('hidden');
-      document.getElementById('adminMasterPinInput').focus();
+      const modal = document.getElementById('adminAuthModal');
+      if (modal) modal.style.display = 'flex';
     }
 
     function closeAdminAuthModal() {
-      document.getElementById('adminAuthModal').classList.add('hidden');
+      const modal = document.getElementById('adminAuthModal');
+      if (modal) modal.style.display = 'none';
     }
 
     async function handleAdminLogin(e) {
@@ -440,23 +462,26 @@
       const linksDiv = document.getElementById('adminQuickLinks');
       const keyBtn = document.getElementById('secretAdminKeyBtn');
 
-      errDiv.classList.add('hidden');
-      succDiv.classList.add('hidden');
+      if (errDiv) errDiv.style.display = 'none';
+      if (succDiv) succDiv.style.display = 'none';
 
       if (!pin || pin.length < 3) {
-        errDiv.textContent = '❌ PIN 碼長度至少需 3 位數！';
-        errDiv.classList.remove('hidden');
+        if (errDiv) {
+          errDiv.textContent = '❌ PIN 碼長度至少需 3 位數！';
+          errDiv.style.display = 'block';
+        }
         return;
       }
 
       if (isSetupMode) {
         if (pin !== confirmPin) {
-          errDiv.textContent = '❌ 兩次輸入的 PIN 碼不一致，請重新確認！';
-          errDiv.classList.remove('hidden');
+          if (errDiv) {
+            errDiv.textContent = '❌ 兩次輸入的 PIN 碼不一致，請重新確認！';
+            errDiv.style.display = 'block';
+          }
           return;
         }
 
-        // 🌟 儲存第一次密碼至 LocalStorage 與後端資料庫
         localStorage.setItem('feilong_master_pin', pin);
         try {
           await fetch('/api/admin/master-pin/setup', {
@@ -469,12 +494,14 @@
         sessionMasterPin = pin;
         isUnlocked = true;
 
-        succDiv.textContent = `👑 首次設定大成功！您的專屬 Master PIN 碼已永久記錄在後台。`;
-        succDiv.classList.remove('hidden');
-        linksDiv.classList.remove('hidden');
+        if (succDiv) {
+          succDiv.textContent = `👑 首次設定大成功！您的專屬 Master PIN 碼已永久記錄在後台。`;
+          succDiv.style.display = 'block';
+        }
+        if (linksDiv) linksDiv.style.display = 'flex';
 
         if (keyBtn) {
-          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90';
+          keyBtn.className = 'h-9 px-3 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center gap-1.5 active:scale-90';
           keyBtn.title = '👑 管理員已解鎖 (點擊可重開選單)';
         }
 
@@ -485,7 +512,7 @@
         return;
       }
 
-      // 驗證現有 PIN
+      // 驗證登入
       const savedPin = localStorage.getItem('feilong_master_pin');
       let isValid = (savedPin && pin === savedPin) || pin === '789';
 
@@ -504,12 +531,14 @@
         sessionMasterPin = pin;
         isUnlocked = true;
         
-        succDiv.textContent = '👑 管理員驗證成功！已解鎖下月預排與後台權限。';
-        succDiv.classList.remove('hidden');
-        linksDiv.classList.remove('hidden');
+        if (succDiv) {
+          succDiv.textContent = '👑 管理員驗證成功！已解鎖下月預排與後台權限。';
+          succDiv.style.display = 'block';
+        }
+        if (linksDiv) linksDiv.style.display = 'flex';
 
         if (keyBtn) {
-          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90';
+          keyBtn.className = 'h-9 px-3 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center gap-1.5 active:scale-90';
           keyBtn.title = '👑 管理員已解鎖 (點擊可重開選單)';
         }
 
@@ -518,38 +547,10 @@
           fetchFullSchedule(true);
         }, 1200);
       } else {
-        errDiv.textContent = '❌ PIN 碼不正確，請輸入您設定的專屬 Master PIN 碼！';
-        errDiv.classList.remove('hidden');
-      }
-    }
-
-    function openAuthModal() {
-      openAdminAuthModal();
-    }
-
-    function closeAuthModal() {
-      closeAdminAuthModal();
-    }
-
-    
-
-    function handlePinUnlock(e) {
-      e.preventDefault();
-      const masterPin = document.getElementById('inputMasterPin').value.trim();
-      const subPin = document.getElementById('inputSubPin').value.trim();
-      const errorDiv = document.getElementById('authErrorMsg');
-
-      errorDiv.classList.add('hidden');
-
-      if (masterPin === '789' && (subPin === '8888' || subPin.length >= 3)) {
-        sessionMasterPin = masterPin;
-        sessionSubPin = subPin;
-        isUnlocked = true;
-        closeAuthModal();
-        fetchFullSchedule();
-      } else {
-        errorDiv.textContent = '❌ PIN 碼錯誤 (預設主PIN: 789, 輔PIN請洽分組隊長)';
-        errorDiv.classList.remove('hidden');
+        if (errDiv) {
+          errDiv.textContent = '❌ PIN 碼不正確，請輸入您設定的專屬 Master PIN 碼！';
+          errDiv.style.display = 'block';
+        }
       }
     }
 
@@ -566,12 +567,10 @@
         
         if (!cleanName) return item;
 
-        // 🌟 若為歷史月份 (例如上個月 7 月)，純文字大字顯示，不顯示撥號與浮窗
         if (isHistorical) {
           return `<span class="inline-block px-2 py-0.5 rounded-lg bg-slate-800/50 text-slate-200 text-[16px] sm:text-[17px] font-black tracking-wide whitespace-nowrap">${cleanName}</span>`;
         }
 
-        // 🌟 本月即時排班：具備電話浮動提示與一鍵撥打
         if (phone) {
           const telHref = `tel:${phone.replace(/[-\s]/g, '')}`;
           return `
@@ -580,7 +579,6 @@
                 <span>${cleanName}</span>
                 <i class="fa-solid fa-phone text-[9px] text-amber-400 opacity-75"></i>
               </button>
-              <!-- 📱 浮動電話卡片 -->
               <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-amber-500/90 text-amber-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
                 <i class="fa-solid fa-phone-volume text-emerald-400 animate-pulse"></i>
                 <a href="${telHref}" class="font-bold underline hover:text-white">${phone}</a>
@@ -588,356 +586,13 @@
               </div>
             </span>
           `;
-        } else {
-          return `<span class="inline-block px-2 py-0.5 rounded-lg bg-slate-800/50 text-white text-[16px] sm:text-[17px] font-black tracking-wide whitespace-nowrap">${cleanName}</span>`;
         }
+
+        return `<span class="inline-block px-2 py-0.5 rounded-lg bg-slate-800/70 text-white text-[16px] sm:text-[17px] font-black tracking-wide whitespace-nowrap">${cleanName}</span>`;
       }).join(' ');
     }
 
-    
-
-    // 📦 即時排班預先載入快照 (保證 0 延遲秒開)
-    const EMBEDDED_SCHEDULE_DATA = {
-      "4.三總工務所": {
-  "tab_name": "4.三總工務所",
-  "year": 2026,
-  "month": 8,
-  "is_current_month": true,
-  "updated_at": "2026-08-20 00:04",
-  "columns": [
-    "日期",
-    "星期",
-    "哨點/崗位",
-    "早班 (07-19)",
-    "晚班 (19-07)"
-  ],
-  "rows": [
-    {
-      "日期": "2026/08/01",
-      "星期": "六",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "盧建村 (0955-521-871)",
-      "晚班 (19-07)": "周有輝"
-    },
-    {
-      "日期": "2026/08/02",
-      "星期": "日",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "賴鯤仲 (0965-591-375)"
-    },
-    {
-      "日期": "2026/08/03",
-      "星期": "一",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "蘇秦漢 (0971-212-165)"
-    },
-    {
-      "日期": "2026/08/04",
-      "星期": "二",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/05",
-      "星期": "三",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/06",
-      "星期": "四",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "賴鯤仲 (0965-591-375)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/07",
-      "星期": "五",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/08",
-      "星期": "六",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/09",
-      "星期": "日",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/10",
-      "星期": "一",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "賴鯤仲 (0965-591-375)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/11",
-      "星期": "二",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/12",
-      "星期": "三",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/13",
-      "星期": "四",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/14",
-      "星期": "五",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "賴鯤仲 (0965-591-375)"
-    },
-    {
-      "日期": "2026/08/15",
-      "星期": "六",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/16",
-      "星期": "日",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "李宏熙 (0965-373-331)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/17",
-      "星期": "一",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/18",
-      "星期": "二",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "賴鯤仲 (0965-591-375)"
-    },
-    {
-      "日期": "2026/08/19",
-      "星期": "三",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "黃證書 (0985-108-809)",
-      "晚班 (19-07)": "黃仁忠 (0975-009-622)"
-    },
-    {
-      "日期": "2026/08/20",
-      "星期": "四",
-      "哨點/崗位": "4.三總工務所",
-      "早班 (07-19)": "賴鯤仲 (0965-591-375)",
-      "晚班 (19-07)": "葉榮東 (0926-348-665)"
-    }
-  ],
-  "members": [
-    "周有輝",
-    "李宏熙",
-    "盧建村",
-    "葉榮東",
-    "蘇秦漢",
-    "賴鯤仲",
-    "黃仁忠",
-    "黃證書"
-  ],
-  "posts": [
-    "4.三總工務所"
-  ]
-},
-      "5.三總重症大樓": {
-  "tab_name": "5.三總重症大樓",
-  "year": 2026,
-  "month": 8,
-  "is_current_month": true,
-  "updated_at": "2026-08-20 00:04",
-  "columns": [
-    "日期",
-    "星期",
-    "哨點/崗位",
-    "早班 (07-19)",
-    "晚班 (19-07)"
-  ],
-  "rows": [
-    {
-      "日期": "2026/08/01",
-      "星期": "六",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "陶智豪 (0919-128-796)",
-      "晚班 (19-07)": "龔家寶 (0958-791-761)"
-    },
-    {
-      "日期": "2026/08/02",
-      "星期": "日",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "龔家寶 (0958-791-761)",
-      "晚班 (19-07)": "龔家寶 (0958-791-761)"
-    },
-    {
-      "日期": "2026/08/03",
-      "星期": "一",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "賴鯤仲 (0965-591-375)",
-      "晚班 (19-07)": "龔家寶 (0958-791-761)"
-    },
-    {
-      "日期": "2026/08/04",
-      "星期": "二",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "賴鯤仲 (0965-591-375)"
-    },
-    {
-      "日期": "2026/08/05",
-      "星期": "三",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "賴鯤仲 (0965-591-375)"
-    },
-    {
-      "日期": "2026/08/06",
-      "星期": "四",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "龔家寶 (0958-791-761)"
-    },
-    {
-      "日期": "2026/08/07",
-      "星期": "五",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "龔家寶 (0958-791-761)",
-      "晚班 (19-07)": "龔家寶 (0958-791-761)"
-    },
-    {
-      "日期": "2026/08/08",
-      "星期": "六",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "賴鯤仲 (0965-591-375)",
-      "晚班 (19-07)": "龔家寶 (0958-791-761)"
-    },
-    {
-      "日期": "2026/08/09",
-      "星期": "日",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "賴鯤仲 (0965-591-375)",
-      "晚班 (19-07)": "蕭森隆 (0989-060-901)"
-    },
-    {
-      "日期": "2026/08/10",
-      "星期": "一",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "孫誌偉 (0970-498-340)"
-    },
-    {
-      "日期": "2026/08/11",
-      "星期": "二",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "張惠珍0912471123 (0912471123)"
-    },
-    {
-      "日期": "2026/08/12",
-      "星期": "三",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "龔家寶 (0958-791-761)"
-    },
-    {
-      "日期": "2026/08/13",
-      "星期": "四",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "蕭森隆 (0989-060-901)"
-    },
-    {
-      "日期": "2026/08/14",
-      "星期": "五",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "賴鯤仲 (0965-591-375)",
-      "晚班 (19-07)": "邱顯升 (0928-882-119)"
-    },
-    {
-      "日期": "2026/08/15",
-      "星期": "六",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "賴鯤仲 (0965-591-375)",
-      "晚班 (19-07)": "賴鯤仲 (0965-591-375)"
-    },
-    {
-      "日期": "2026/08/16",
-      "星期": "日",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "邱顯升 (0928-882-119)",
-      "晚班 (19-07)": "賴鯤仲 (0965-591-375)"
-    },
-    {
-      "日期": "2026/08/17",
-      "星期": "一",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "邱顯升 (0928-882-119)"
-    },
-    {
-      "日期": "2026/08/18",
-      "星期": "二",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "孫誌偉 (0970-498-340)"
-    },
-    {
-      "日期": "2026/08/19",
-      "星期": "三",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "邱顯升 (0928-882-119)"
-    },
-    {
-      "日期": "2026/08/20",
-      "星期": "四",
-      "哨點/崗位": "5.三總重症大樓",
-      "早班 (07-19)": "林又妗 (0908-010-300)",
-      "晚班 (19-07)": "賴鯤仲 (0965-591-375)"
-    }
-  ],
-  "members": [
-    "孫誌偉",
-    "張惠珍0912471123",
-    "林又妗",
-    "蕭森隆",
-    "賴鯤仲",
-    "邱顯升",
-    "陶智豪",
-    "龔家寶"
-  ],
-  "posts": [
-    "5.三總重症大樓"
-  ]
-}
-    };
-
+    // ⚡ 即時秒開排班抓取引擎
     async function fetchFullSchedule(isManualQuery = false) {
       const qBtn = document.getElementById('queryScheduleBtn');
       if (qBtn && isManualQuery) {
@@ -946,14 +601,31 @@
       }
       const container = document.getElementById('scheduleContainer');
 
+      // 🌟 1. 預設當月即時排班 (8月)：優先以內嵌快照 0.001 秒秒開！
+      const isEng = (currentTabName.includes('4.') || currentTabName.includes('工務所'));
+      const currentTabKey = isEng ? '4.三總工務所' : '5.三總重症大樓';
+
+      if (selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH) {
+        if (EMBEDDED_SCHEDULE_DATA[currentTabKey]) {
+          rawScheduleData = EMBEDDED_SCHEDULE_DATA[currentTabKey];
+          setConnectionStatus('connected', '即時連線正常');
+          renderFullScheduleTable(rawScheduleData);
+          if (qBtn) {
+            qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
+            qBtn.disabled = false;
+          }
+          return;
+        }
+      }
+
       setConnectionStatus('connecting', '雲端握手中...');
 
-      // 🌟 1. 本地開發環境 (localhost / 127.0.0.1) 優先直連本地後端
+      // 🌟 2. 本地開發環境 (localhost / 127.0.0.1) 直連本地後端
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 1200);
-          const apiRes = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}&year=${selectedYear}&month=${selectedMonth}&master_pin=789&sub_pin=8888&t=${new Date().getTime()}`, {
+          const apiRes = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(currentGroupId)}&tab=${encodeURIComponent(currentTabName)}&year=${selectedYear}&month=${selectedMonth}&master_pin=789&sub_pin=8888&t=${new Date().getTime()}`, {
             signal: controller.signal,
             cache: 'no-store'
           });
@@ -964,18 +636,19 @@
               rawScheduleData = apiData;
               setConnectionStatus('connected', '即時連線正常');
               renderFullScheduleTable(rawScheduleData);
+              if (qBtn) {
+                qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
+                qBtn.disabled = false;
+              }
               return;
             }
           }
         } catch(err) {}
       }
 
-      // 🌟 2. GitHub Pages 即時同步快照通道 (100% 跨手機秒連)
-      const isEng = (tabName.includes('4.') || tabName.includes('工務所'));
+      // 🌟 3. 備用快照直連通道
       const snapUrls = [
         isEng ? './data/schedule_4_tsgh_eng.json' : './data/schedule_5_tsgh_icu.json',
-        isEng ? 'data/schedule_4_tsgh_eng.json' : 'data/schedule_5_tsgh_icu.json',
-        isEng ? 'docs/data/schedule_4_tsgh_eng.json' : 'docs/data/schedule_5_tsgh_icu.json',
         isEng ? 'https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/data/schedule_4_tsgh_eng.json' : 'https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/data/schedule_5_tsgh_icu.json'
       ];
 
@@ -991,22 +664,17 @@
               rawScheduleData = snapData;
               setConnectionStatus('connected', '即時連線正常');
               renderFullScheduleTable(rawScheduleData);
+              if (qBtn) {
+                qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
+                qBtn.disabled = false;
+              }
               return;
             }
           }
         } catch(e) {}
       }
 
-      // 🌟 3. 內嵌秒開通道 (保證 100% 絕不卡死握手)
-      const currentTabKey = isEng ? '4.三總工務所' : '5.三總重症大樓';
-      if (EMBEDDED_SCHEDULE_DATA[currentTabKey]) {
-        rawScheduleData = EMBEDDED_SCHEDULE_DATA[currentTabKey];
-        setConnectionStatus('connected', '即時連線正常');
-        renderFullScheduleTable(rawScheduleData);
-        return;
-      }
-
-      // 4. 雲端資料讀取失敗 (未能完成連線握手)
+      // 4. 雲端資料讀取失敗
       setConnectionStatus('failed', '雲端資料讀取失敗');
       container.innerHTML = `
         <div class="text-center py-12 space-y-4">
@@ -1016,7 +684,7 @@
           <div class="space-y-1.5">
             <h3 class="text-base font-bold text-rose-400">雲端資料讀取失敗</h3>
             <p class="text-xs text-slate-400 max-w-md mx-auto">
-              未能與 Google 雲端 / 後端伺服器完成「${tabName}」即時握手連線。
+              未能與 Google 雲端 / 後端伺服器完成「${currentTabName}」即時握手連線。
             </p>
           </div>
           <button onclick="fetchFullSchedule(true)" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-2 mx-auto shadow-md">
@@ -1025,10 +693,9 @@
           </button>
         </div>
       `;
-      const qBtnEnd = document.getElementById('queryScheduleBtn');
-      if (qBtnEnd) {
-        qBtnEnd.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
-        qBtnEnd.disabled = false;
+      if (qBtn) {
+        qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
+        qBtn.disabled = false;
       }
     }
 
@@ -1055,7 +722,7 @@
         return;
       }
 
-      document.getElementById('printTabName').textContent = data.tab_name || tabName;
+      document.getElementById('printTabName').textContent = data.tab_name || currentTabName;
       document.getElementById('printTime').textContent = new Date().toLocaleString();
 
       let html = `
@@ -1084,7 +751,6 @@
 
       data.rows.forEach(r => {
         let dateStr = (r['日期'] || '-').trim();
-        // 精簡年份節省寬度 (e.g. 2026/08/01 -> 08/01)
         if (dateStr.length > 5 && dateStr.includes('/')) {
           const parts = dateStr.split('/');
           if (parts.length === 3) dateStr = `${parts[1]}/${parts[2]}`;
@@ -1132,8 +798,8 @@
       window.print();
     }
 
-    // Auto unlock on load if default PIN
     document.addEventListener('DOMContentLoaded', () => {
+      updateMonthDisplay();
       fetchFullSchedule();
     });
   </script>
