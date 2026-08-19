@@ -110,6 +110,17 @@
       </div>
 
       <div class="flex items-center gap-2">
+        <!-- 🗝️ 秘密黑色小 Key (Admin 專屬入口) -->
+        <button 
+          type="button" 
+          id="secretAdminKeyBtn"
+          onclick="openAdminAuthModal()" 
+          title="管理員驗證入口"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/80 text-slate-600 hover:text-amber-400 transition flex items-center justify-center shadow-inner active:scale-90"
+        >
+          <i class="fa-solid fa-key text-xs"></i>
+        </button>
+
         <button 
           onclick="fetchFullSchedule(true)" 
           id="queryScheduleBtn"
@@ -235,12 +246,55 @@
     const groupId = urlParams.get('group_id') || 'tsgh_internal';
     const tabName = urlParams.get('tab') || '三總保全內部群';
 
+    function openAdminAuthModal() {
+      document.getElementById('adminAuthModal').classList.remove('hidden');
+      document.getElementById('adminMasterPinInput').focus();
+    }
+
+    function closeAdminAuthModal() {
+      document.getElementById('adminAuthModal').classList.add('hidden');
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const pin = document.getElementById('adminMasterPinInput').value.trim();
+      const errDiv = document.getElementById('adminAuthError');
+      const succDiv = document.getElementById('adminAuthSuccess');
+      const linksDiv = document.getElementById('adminQuickLinks');
+      const keyBtn = document.getElementById('secretAdminKeyBtn');
+
+      errDiv.classList.add('hidden');
+      succDiv.classList.add('hidden');
+
+      if (pin === '789') {
+        sessionMasterPin = pin;
+        isUnlocked = true;
+        
+        succDiv.textContent = '👑 管理員驗證成功！已解鎖下月預排與後台權限。';
+        succDiv.classList.remove('hidden');
+        linksDiv.classList.remove('hidden');
+
+        if (keyBtn) {
+          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90';
+          keyBtn.title = '👑 管理員已解鎖 (點擊可重開選單)';
+        }
+
+        setTimeout(() => {
+          closeAdminAuthModal();
+          fetchFullSchedule(true);
+        }, 1200);
+      } else {
+        errDiv.textContent = '❌ PIN 碼錯誤，請輸入管理員主 PIN 碼 (預設: 789)';
+        errDiv.classList.remove('hidden');
+      }
+    }
+
     function openAuthModal() {
-      document.getElementById('authModal').classList.remove('hidden');
+      openAdminAuthModal();
     }
 
     function closeAuthModal() {
-      document.getElementById('authModal').classList.add('hidden');
+      closeAdminAuthModal();
     }
 
     
