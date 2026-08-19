@@ -27,7 +27,7 @@
         </div>
         <div>
           <h1 class="text-base sm:text-lg font-bold text-white leading-tight">飛龍保全 ｜ 幹部後台</h1>
-          <p class="text-[11px] text-purple-300">隊長 Email 白名單常駐 ｜ 限 Admin、排班小姐 (2人)、經理</p>
+          <p class="text-[11px] text-purple-300">隊長安全權限常駐 ｜ 雙重 PIN 碼與管理員審計保護</p>
         </div>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
@@ -1057,7 +1057,7 @@
         const client = google.accounts.oauth2.initTokenClient({
           client_id: '1092837465920-feilong-security.apps.googleusercontent.com',
           scope: 'https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.readonly',
-          hint: 'ericlai429@gmail.com',
+          hint: 'admin@company.com',
           callback: async (response) => {
             if (response.access_token) {
               showToast('Google 帳號授權成功！正在同步雲端資料...', 'success');
@@ -1111,7 +1111,7 @@
         const res = await fetch('/api/admin/google/oauth-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token, refresh_token: refreshToken, user_email: 'ericlai429@gmail.com' })
+          body: JSON.stringify({ token: token, refresh_token: refreshToken, user_email: 'admin_session' })
         });
         if (!res.ok) throw new Error('OAuth 驗證失敗');
         const data = await res.json();
@@ -1728,7 +1728,7 @@
         const res = await fetch('/api/admin/heartbeat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'ericlai429@gmail.com' })
+          body: JSON.stringify({ email: 'admin_session' })
         });
         if (res.ok) {
           const pill = document.getElementById('adminHeartbeatPill');
