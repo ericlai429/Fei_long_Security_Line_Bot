@@ -480,7 +480,43 @@ def get_live_schedule(
         }
     )
 
-# --- PDF Generation & Download Endpoints ---
+# --- Monthly Spreadsheet Mapping Endpoint ---
+@app.post("/api/admin/monthly-sheet-id")
+async def set_monthly_sheet_id(request: Request):
+    body = await request.json()
+    month = body.get("month", 7)
+    raw_input = body.get("url_or_id", "").strip()
+    
+    import re
+    # Extract spreadsheet ID from full URL if needed
+    match = re.search(r"/spreadsheets/d/([a-zA-Z0-9-_]+)", raw_input)
+    sheet_id = match.group(1) if match else raw_input
+
+    if not sheet_id:
+        raise HTTPException(status_code=400, detail="請提供有效的 Google 試算表 ID 或網址！")
+
+    map_file = os.path.join("data", "monthly_spreadsheets.json")
+    cfg = {}
+    if os.path.exists(map_file):
+        with open(map_file, "r", encoding="utf-8") as mf:
+            cfg = json.load(mf)
+    if "months" not in cfg:
+        cfg["months"] = {}
+
+    key = f"115.{int(month):02d}"
+    if key not in cfg["months"]:
+        cfg["months"][key] = {"name": f"{key} (2026年{month}月)", "spreadsheet_id": sheet_id, "year": 2026, "month": int(month)}
+    else:
+        cfg["months"][key]["spreadsheet_id"] = sheet_id
+
+    with open(map_file, "w", encoding="utf-8") as out:
+        json.dump(cfg, out, ensure_ascii=False, indent=2)
+    docs_map = os.path.join("docs", "monthly_spreadsheets.json")
+    with open(docs_map, "w", encoding="utf-8") as out2:
+        json.dump(cfg, out2, ensure_ascii=False, indent=2)
+
+    return {"status": "success", "month": key, "spreadsheet_id": sheet_id}
+
 @app.get("/api/pdf/generate")
 def generate_pdf(group_id: str = "tsgh_internal", tab: Optional[str] = None):
     group = db.get_group(group_id)
