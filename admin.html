@@ -18,83 +18,57 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
 
-  <!-- Top Navbar -->
-  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur px-4 sm:px-6 py-3">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-purple-600 flex items-center justify-center shadow-md">
-          <i class="fa-solid fa-shield-halved text-white text-base"></i>
+  <!-- Top Navbar (Sleek, Clean, Tooltip-driven Mobile Responsive) -->
+  <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-50 backdrop-blur px-3 sm:px-6 py-2.5">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
+      <!-- Brand & Title (Single Line) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center shadow-md shrink-0 text-white">
+          <i class="fa-solid fa-shield-halved text-sm"></i>
         </div>
-        <div>
-          <h1 class="text-base sm:text-lg font-bold text-white leading-tight">飛龍保全 ｜ 幹部後台</h1>
-          <p class="text-[11px] text-purple-300">隊長安全權限常駐 ｜ 雙重 PIN 碼與管理員審計保護</p>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm sm:text-base font-black text-white leading-none whitespace-nowrap">飛龍保全 ｜ 幹部後台</h1>
+            <!-- 🟢 Admin Heartbeat Pill -->
+            <div id="adminHeartbeatPill" class="flex items-center gap-1 bg-slate-950 border border-emerald-800 text-emerald-400 px-1.5 py-0.5 rounded-full text-[9px] font-bold" title="管理員在線保護中">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="hidden sm:inline">在線</span>
+            </div>
+          </div>
+          <span class="text-[10px] text-purple-300 font-bold hidden sm:inline">幹部安全管理控制台</span>
         </div>
       </div>
-      <div class="flex items-center gap-2 flex-wrap">
-        <!-- 🌟 精簡專業：Google 雲端試算表即時連線列 (Top-Right Navbar) -->
-        <div class="flex items-center gap-1.5 bg-slate-950 border border-emerald-500/60 rounded-xl px-2.5 py-1 text-xs shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" title="即時連線中"></span>
-          <i class="fa-brands fa-google-drive text-emerald-400 text-sm"></i>
-          <input 
-            type="text" 
-            id="inputSpreadsheetUrlMain" 
-            value="https://docs.google.com/spreadsheets/d/1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s/edit?gid=1503884715#gid=1503884715"
-            placeholder="Google 試算表網址..." 
-            class="bg-transparent text-slate-200 text-xs font-mono w-44 sm:w-56 focus:w-72 transition-all focus:outline-none placeholder-slate-500 truncate"
-            title="Google 試算表網址 (點擊編輯)"
-          >
-          <button 
-            onclick="connectFromMainField()" 
-            class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold px-2 py-0.5 rounded-lg text-[11px] transition flex items-center gap-1 shadow-sm flex-shrink-0"
-            title="即時連線並讀取分頁"
-          >
-            <i class="fa-solid fa-bolt text-[10px]"></i>
-            <span>連線</span>
-          </button>
-        </div>
 
-        <!-- 🎨 Theme Switcher -->
-        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] font-bold" id="themeSelectorContainer">
-          <button onclick="setAdminTheme('DARK_GLASS')" class="theme-btn active bg-purple-600 text-white px-2 py-1 rounded-lg transition" data-theme="DARK_GLASS" title="深色玻璃模式">
-            🎛️ 深色
-          </button>
-          <button onclick="setAdminTheme('LIGHT_CLEAN')" class="theme-btn text-slate-400 hover:text-white px-2 py-1 rounded-lg transition" data-theme="LIGHT_CLEAN" title="企業亮色模式">
-            🏢 亮色
-          </button>
-          <button onclick="setAdminTheme('COMPACT_TABLE')" class="theme-btn text-slate-400 hover:text-white px-2 py-1 rounded-lg transition" data-theme="COMPACT_TABLE" title="緊湊表格模式">
-            📊 緊湊
-          </button>
-          <button onclick="setAdminTheme('HIGH_CONTRAST')" class="theme-btn text-slate-400 hover:text-white px-2 py-1 rounded-lg transition" data-theme="HIGH_CONTRAST" title="軍規極簡模式">
-            🌙 極簡
-          </button>
-        </div>
-
-        <!-- 🟢 Admin Heartbeat Pill -->
-        <div id="adminHeartbeatPill" class="flex items-center gap-1 bg-slate-950 border border-emerald-800 text-emerald-300 px-2 py-1 rounded-xl text-[10px] font-bold" title="Admin 心跳連線保持中 (Keep-Login)">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Admin 在線</span>
-        </div>
-
-        <button onclick="openChangeLogModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1 shadow-sm" title="檢視班表異動推播與審計紀錄 (3分鐘延時推播)">
-          <i class="fa-solid fa-clock-rotate-left"></i>
-          <span>異動 Log</span>
+      <!-- Action Toolbar (Icons with Tooltips to avoid clutter) -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <!-- 雲端設定 -->
+        <button onclick="openGoogleDriveModal()" class="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0" title="Google 雲端試算表連線設定">
+          <i class="fa-brands fa-google-drive text-sm sm:text-xs"></i>
+          <span class="hidden sm:inline">雲端</span>
         </button>
 
-        <button onclick="openSmartInspectModal()" class="bg-gradient-to-r from-purple-800 to-indigo-800 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl border border-purple-500/60 transition flex items-center gap-1 shadow-md" title="智能分析表頭與姓名日期對齊檢查">
-          <i class="fa-solid fa-brain text-purple-300"></i>
-          <span>診斷</span>
+        <!-- 異動 Log -->
+        <button onclick="openChangeLogModal()" class="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0" title="班表異動審計日誌 (3分鐘延時推播)">
+          <i class="fa-solid fa-clock-rotate-left text-sm sm:text-xs"></i>
+          <span class="hidden sm:inline">Log</span>
         </button>
-        <button onclick="openGoogleDriveModal()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1 shadow-sm" title="選擇 Google 雲端共享表單">
-          <i class="fa-solid fa-folder-open"></i>
-          <span>雲端</span>
+
+        <!-- 智能診斷 -->
+        <button onclick="openSmartInspectModal()" class="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0" title="智能分析排班對齊檢查">
+          <i class="fa-solid fa-brain text-sm sm:text-xs"></i>
+          <span class="hidden sm:inline">診斷</span>
         </button>
-        <a href="/pwa?group_id=tsgh_internal&tab=三總保全內部群" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1">
-          <i class="fa-solid fa-mobile-screen"></i>
-          <span>PWA</span>
+
+        <!-- PWA 班表入口 -->
+        <a href="./index.html" class="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shrink-0" title="前往員工排班表 (PWA)">
+          <i class="fa-solid fa-mobile-screen text-sm sm:text-xs"></i>
+          <span class="hidden sm:inline">班表</span>
         </a>
-        <button onclick="loadGroupList()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm">
+
+        <!-- 重整按鈕 -->
+        <button onclick="loadGroupList()" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 shadow-sm shrink-0" title="重新載入名冊與設定">
           <i class="fa-solid fa-rotate text-xs" id="reloadIcon"></i>
-          <span>重整</span>
+          <span class="hidden sm:inline">重整</span>
         </button>
       </div>
     </div>
