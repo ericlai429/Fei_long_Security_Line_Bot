@@ -153,6 +153,7 @@ class SheetsService:
         return True, f"已設定試算表 ID: {sheet_id}", tabs
 
     def list_tabs(self) -> List[str]:
+        # 1. Dynamically read all loaded sheets (supporting 1~100+ tabs)
         if self.custom_sheet_data:
             return list(self.custom_sheet_data.keys())
         if self.client and self.active_spreadsheet_id:
@@ -167,6 +168,7 @@ class SheetsService:
             "2.威強電工(自)",
             "3.聯合報（自）",
             "5.三總重症大樓",
+            "80.雲崗高爾夫休閒館",
             "三總保全內部群"
         ]
 

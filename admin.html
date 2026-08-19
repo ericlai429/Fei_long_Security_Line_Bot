@@ -562,7 +562,7 @@
             >
             <datalist id="tabSuggestions"></datalist>
             
-            <!-- Real Tab Quick Select Badges (精準對齊 Google 試算表真實分頁) -->
+            <!-- Real Tab Quick Select Badges (精準對齊 Google 試算表真實分頁，支援 80+ 分頁) -->
             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
               <span class="text-[11px] text-slate-400 font-bold">真實分頁：</span>
               <button type="button" onclick="pickTabDirectly('4.三總工務所')" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-emerald-300 text-xs font-bold rounded-md border border-emerald-700 hover:border-emerald-400 transition cursor-pointer">
@@ -579,6 +579,9 @@
               </button>
               <button type="button" onclick="pickTabDirectly('5.三總重症大樓')" class="h-6 px-2 bg-slate-900 hover:bg-indigo-900/60 active:scale-95 text-indigo-300 text-xs font-bold rounded-md border border-slate-700 hover:border-indigo-500 transition cursor-pointer">
                 📋 5.三總重症大樓
+              </button>
+              <button type="button" onclick="pickTabDirectly('80.雲崗高爾夫休閒館')" class="h-6 px-2 bg-slate-900 hover:bg-emerald-900/60 active:scale-95 text-teal-300 text-xs font-bold rounded-md border border-teal-700 hover:border-teal-400 transition cursor-pointer">
+                📋 80.雲崗高爾夫休閒館
               </button>
               <button type="button" onclick="pickTabDirectly('三總保全內部群')" class="h-6 px-2 bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 text-xs font-bold rounded-md border border-slate-700 transition cursor-pointer">
                 📋 三總保全內部群
@@ -1609,6 +1612,7 @@
       "2.威強電工(自)",
       "3.聯合報（自）",
       "5.三總重症大樓",
+      "80.雲崗高爾夫休閒館",
       "三總保全內部群"
     ];
     let tabCycleIndex = 0;
@@ -2039,6 +2043,7 @@
         "2.威強電工(自)",
         "3.聯合報（自）",
         "5.三總重症大樓",
+        "80.雲崗高爾夫休閒館",
         "三總保全內部群"
       ];
 
