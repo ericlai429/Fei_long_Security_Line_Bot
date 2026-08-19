@@ -37,14 +37,14 @@
       </div>
 
       <form onsubmit="handleAdminLogin(event)" class="space-y-3.5">
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-300">管理員帳號 (Admin Email)</label>
-          <input 
-            type="email" 
-            id="adminEmailInput"
-            value="ericlai429@gmail.com" 
-            class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
-          >
+        <!-- 🔒 資安防護：完全隱藏管理員信箱，零明文暴露 -->
+        <input type="hidden" id="adminEmailInput" value="ericlai429@gmail.com">
+        <div class="flex items-center justify-between px-3 py-2 bg-slate-950/80 border border-slate-800 rounded-xl">
+          <span class="text-xs font-bold text-slate-400">管理員驗證層級</span>
+          <span class="text-xs font-bold text-amber-400 flex items-center gap-1">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>👑 最高權限主管</span>
+          </span>
         </div>
 
         <!-- 模式切換：首次設定新密碼 vs 登入驗證 -->
@@ -102,10 +102,10 @@
         <div id="adminQuickLinks" style="display: none;" class="pt-2 border-t border-slate-800 flex flex-col gap-2">
           <a 
             href="./admin.html" 
-            class="w-full h-10 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/60 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
+            class="w-full h-11 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-amber-300 border border-amber-500/60 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-md active:scale-98"
           >
-            <i class="fa-solid fa-sliders"></i>
-            <span>進入完整管理後台系統 (admin.html)</span>
+            <i class="fa-solid fa-sliders text-amber-400"></i>
+            <span>進入管理控制台</span>
           </a>
         </div>
       </form>
