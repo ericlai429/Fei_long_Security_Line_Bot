@@ -1702,7 +1702,7 @@
       showToast('✅ 已複製 1 行提取指令！請到 Google 試算表分頁按 F12 ➔ Console 貼上執行！', 'success');
     }
 
-    function triggerDirectGoogleApiFetch() {
+    async function triggerDirectGoogleApiFetch() {
       const spreadsheetId = '1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s';
       let token = (document.getElementById('directOAuthTokenInput') ? document.getElementById('directOAuthTokenInput').value.trim() : '') || localStorage.getItem('saved_oauth_token') || '';
       let refreshToken = (document.getElementById('directRefreshTokenInput') ? document.getElementById('directRefreshTokenInput').value.trim() : '') || localStorage.getItem('saved_refresh_token') || '';
