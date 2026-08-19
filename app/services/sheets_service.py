@@ -163,20 +163,36 @@ class SheetsService:
                 logger.error(f"Error reading tabs from Google Sheets: {e}")
         return ["三總保全內部群", "4.三總工務所", "5.三總重症大樓", "急診與中控小隊", "門診與機動小隊", "8月份總班表"]
 
-    def get_raw_sheet_data(self, tab_name: str) -> List[List[str]]:
+    def get_spreadsheet_id_for_month(self, year: int = 2026, month: int = 8) -> str:
+        map_file = os.path.join("data", "monthly_spreadsheets.json")
+        if os.path.exists(map_file):
+            try:
+                with open(map_file, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                    key = f"115.{month:02d}"
+                    sid = cfg.get("months", {}).get(key, {}).get("spreadsheet_id", "")
+                    if sid:
+                        return sid
+            except Exception as ex:
+                logger.debug(f"Monthly mapping load note: {ex}")
+        return self.active_spreadsheet_id or "1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s"
+
+    def get_raw_sheet_data(self, tab_name: str, year: int = 2026, month: int = 8) -> List[List[str]]:
         # 0. Custom loaded direct real data
         if tab_name in self.custom_sheet_data:
             return self.custom_sheet_data[tab_name]
 
+        target_spreadsheet_id = self.get_spreadsheet_id_for_month(year, month)
+
         # 1. Direct Google Sheets REST API v4 with user OAuth access token
-        if self.user_access_token and self.active_spreadsheet_id:
+        if self.user_access_token and target_spreadsheet_id:
             import urllib.request
             import urllib.parse
             import json
             for candidate in [tab_name, tab_name.strip(), f" {tab_name.strip()}"]:
                 try:
                     encoded_range = urllib.parse.quote(f"{candidate}!A1:Z100")
-                    api_url = f"https://sheets.googleapis.com/v4/spreadsheets/{self.active_spreadsheet_id}/values/{encoded_range}"
+                    api_url = f"https://sheets.googleapis.com/v4/spreadsheets/{target_spreadsheet_id}/values/{encoded_range}"
                     req = urllib.request.Request(api_url, headers={
                         'Authorization': f'Bearer {self.user_access_token}',
                         'User-Agent': 'Mozilla/5.0'
@@ -185,7 +201,7 @@ class SheetsService:
                         data = json.loads(resp.read().decode('utf-8'))
                         values = data.get('values', [])
                         if values and len(values) > 0:
-                            logger.info(f"Successfully fetched {len(values)} live rows via Google Sheets API v4 for [{tab_name}] (matched: {candidate})")
+                            logger.info(f"Successfully fetched {len(values)} live rows via Google Sheets API v4 for [{tab_name}] (month: {month}, matched: {candidate})")
                             return values
                 except Exception as ex:
                     logger.debug(f"Candidate {candidate} note: {ex}")
@@ -276,7 +292,7 @@ class SheetsService:
         target_month = month or 8 # 預設當前排班月份為 8月
         is_current = (target_year == today.year and target_month == 8)
 
-        raw_data = self.get_raw_sheet_data(tab_name)
+        raw_data = self.get_raw_sheet_data(tab_name, year=target_year, month=target_month)
         if not raw_data:
             return {
                 "tab_name": tab_name,

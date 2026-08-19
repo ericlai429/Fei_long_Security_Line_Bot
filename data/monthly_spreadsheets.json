@@ -1,0 +1,79 @@
+{
+  "description": "飛龍保全 2026 案場月度排班試算表映射表 (與我共用 > 飛龍保全-班表 > 2026班表 > 案場班表)",
+  "year": 2026,
+  "roc_year": 115,
+  "months": {
+    "115.01": {
+      "name": "115.01 (2026年1月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 1
+    },
+    "115.02": {
+      "name": "115.02 (2026年2月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 2
+    },
+    "115.03": {
+      "name": "115.03 (2026年3月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 3
+    },
+    "115.04": {
+      "name": "115.04 (2026年4月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 4
+    },
+    "115.05": {
+      "name": "115.05 (2026年5月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 5
+    },
+    "115.06": {
+      "name": "115.06 (2026年6月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 6
+    },
+    "115.07": {
+      "name": "115.07 (2026年7月 - 上月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 7
+    },
+    "115.08": {
+      "name": "115.08 (2026年8月 - 當月)",
+      "spreadsheet_id": "1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s",
+      "year": 2026,
+      "month": 8
+    },
+    "115.09": {
+      "name": "115.09 (2026年9月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 9
+    },
+    "115.10": {
+      "name": "115.10 (2026年10月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 10
+    },
+    "115.11": {
+      "name": "115.11 (2026年11月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 11
+    },
+    "115.12": {
+      "name": "115.12 (2026年12月)",
+      "spreadsheet_id": "",
+      "year": 2026,
+      "month": 12
+    }
+  }
+}
