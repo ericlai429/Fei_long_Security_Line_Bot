@@ -364,6 +364,45 @@
         </div>
       </div>
 
+                <!-- 📋 一鍵批量貼上或同步「全案場 1~80 分頁真實名冊」 (Batch Tab Names Importer) -->
+        <div class="bg-slate-950 border border-sky-800/80 rounded-2xl p-4 space-y-3 shadow-lg">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-list-ol text-sky-400 text-base"></i>
+              <span class="text-xs sm:text-sm font-bold text-white">同步全案場 1~80 真實分頁清單</span>
+            </div>
+            <span class="text-[10px] bg-sky-950 text-sky-300 font-bold px-2 py-0.5 rounded border border-sky-800">
+              支援 1~80 精準對齊
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            可直接在此貼上或編輯試算表底部的所有真實分頁名稱（每行一個，如 <code>1.亞太經貿一期(自)</code>、<code>22.某某案場</code>、<code>80.雲崗高爾夫休閒館</code>），點擊儲存後系統將 100% 永久對齊所有真實分頁！
+          </p>
+          <textarea 
+            id="batchTabsTextarea" 
+            rows="5" 
+            placeholder="1.亞太經貿一期(自)&#10;2.威強電工(自)&#10;3.聯合報（自）&#10;4.三總工務所&#10;5.三總重症大樓&#10;...&#10;80.雲崗高爾夫休閒館"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-sky-200 placeholder-slate-500 font-mono focus:outline-none focus:border-sky-500"
+          ></textarea>
+          <div class="flex items-center justify-between pt-1">
+            <button 
+              type="button" 
+              onclick="loadDefaultAuthenticTabs()" 
+              class="text-xs text-slate-400 hover:text-sky-300 underline font-bold"
+            >
+              載入已建檔之真實分頁名冊
+            </button>
+            <button 
+              type="button" 
+              onclick="saveBatchTabsList()" 
+              class="h-9 px-5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md cursor-pointer"
+            >
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>儲存並同步 1~80 分頁名冊</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 📥 Excel (.xlsx) Multi-Tab Auto-Loader -->
         <div class="bg-gradient-to-r from-emerald-950/60 via-slate-950 to-slate-950 border border-emerald-800/80 rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
@@ -1994,6 +2033,58 @@
 
     let tabNumberDebounceTimer = null;
 
+        // 📚 動態 1~80 真實分頁字典管理器
+    function getPersistedTabsMapping() {
+      const stored = localStorage.getItem('feilong_custom_tabs_mapping');
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch(e) {}
+      }
+      return tabNumberMapping;
+    }
+
+    function saveBatchTabsList() {
+      const textarea = document.getElementById('batchTabsTextarea');
+      const text = textarea ? textarea.value.trim() : '';
+      if (!text) {
+        showToast('請先貼上或輸入分頁名冊！', 'error');
+        return;
+      }
+
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      const newMapping = { ...tabNumberMapping };
+      
+      lines.forEach((line, idx) => {
+        // 匹配 "22.某某案場" 或 "22 某某案場"
+        const m = line.match(/^(\d+)[.\s、_]+(.+)$/);
+        if (m) {
+          const num = parseInt(m[1], 10);
+          newMapping[num] = line;
+        } else {
+          // 若無序號，依序給予序號
+          const nextIdx = idx + 1;
+          newMapping[nextIdx] = `${nextIdx}.${line}`;
+        }
+      });
+
+      localStorage.setItem('feilong_custom_tabs_mapping', JSON.stringify(newMapping));
+      
+      // 更新全域字典
+      Object.assign(tabNumberMapping, newMapping);
+      
+      showToast(`🎉 成功同步 ${Object.keys(newMapping).length} 個真實分頁！輸入數字將 100% 精準對齊！`, 'success');
+      fetchAvailableTabs();
+    }
+
+    function loadDefaultAuthenticTabs() {
+      const textarea = document.getElementById('batchTabsTextarea');
+      if (!textarea) return;
+      const current = getPersistedTabsMapping();
+      const list = Object.keys(current).sort((a, b) => parseInt(a) - parseInt(b)).map(k => current[k]);
+      textarea.value = list.join('\n');
+    }
+
     function handleTabNumberInput(val) {
       clearTimeout(tabNumberDebounceTimer);
 
@@ -2010,7 +2101,8 @@
       const tabInput = document.getElementById('inputSheetTab');
       const groupInput = document.getElementById('inputGroupName');
 
-      const fullTabName = tabNumberMapping[val] || `${val}.案場分頁_${val}`;
+      const activeMap = getPersistedTabsMapping();
+      const fullTabName = activeMap[val] || `${val}.案場分頁_${val}`;
       if (tabInput) {
         tabInput.value = fullTabName;
         tabInput.classList.add('ring-2', 'ring-sky-500');
