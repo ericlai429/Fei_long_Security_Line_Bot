@@ -42,8 +42,14 @@
 
       <!-- Action Toolbar (Strictly Aligned Inside Right Edge) -->
       <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+        <!-- ✉️ 白名單管理按鈕 (1~80 分頁快速對應) -->
+        <button onclick="openWhitelistModal()" class="h-8 px-2 sm:px-2.5 bg-gradient-to-r from-emerald-900/80 to-slate-800 hover:from-emerald-800 hover:to-slate-700 text-emerald-300 rounded-xl border border-emerald-700/80 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="小隊長 Email 白名單管理 (1~80分頁對應)">
+          <i class="fa-solid fa-envelope-circle-check text-xs text-emerald-400"></i>
+          <span class="inline">白名單</span>
+        </button>
+
         <!-- 雲端設定 -->
-        <button onclick="openGoogleDriveModal()" class="h-8 px-2 sm:px-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="Google 雲端試算表連線設定">
+        <button onclick="openGoogleDriveModal()" class="h-8 px-2 sm:px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="Google 雲端試算表連線設定">
           <i class="fa-brands fa-google-drive text-xs"></i>
           <span class="hidden md:inline">雲端</span>
         </button>
@@ -80,6 +86,100 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="hidden fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300"></div>
+
+        <!-- ✉️ 小隊長 Email 白名單專屬管理彈窗 (1~80分頁下拉填入) -->
+    <div id="whitelistModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-emerald-500/80 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2.5 text-white font-bold text-base">
+            <div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md">
+              <i class="fa-solid fa-envelope-circle-check text-sm"></i>
+            </div>
+            <div>
+              <div class="text-base font-bold text-white leading-tight">小隊長 Email 白名單管理</div>
+              <div class="text-xs text-emerald-300 font-bold">下拉選取 1~80 分頁 ｜ 登記隊長認證信箱</div>
+            </div>
+          </div>
+          <button onclick="closeWhitelistModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <form id="whitelistForm" onsubmit="handleWhitelistModalSubmit(event)" class="space-y-3.5 text-xs">
+          <!-- 1~80 下拉選單 -->
+          <div>
+            <label class="block text-slate-200 font-bold text-sm mb-1 flex items-center justify-between">
+              <span>1. 選擇分頁序號 (1~80) <span class="text-rose-400">*</span></span>
+              <span class="text-xs text-sky-400 font-bold">精準對齊各案場</span>
+            </label>
+            <select 
+              id="whitelistTabSelect" 
+              onchange="handleWhitelistTabChange(this.value)"
+              class="w-full h-11 bg-slate-950 border border-emerald-700/80 rounded-xl px-3 text-sm text-emerald-300 font-bold focus:outline-none focus:border-emerald-500 transition font-mono"
+            >
+              <option value="4.三總工務所">[4] 4.三總工務所</option>
+              <option value="1.亞太經貿一期(自)">[1] 1.亞太經貿一期(自)</option>
+              <option value="2.威強電工(自)">[2] 2.威強電工(自)</option>
+              <option value="3.聯合報（自）">[3] 3.聯合報（自）</option>
+              <option value="5.三總重症大樓">[5] 5.三總重症大樓</option>
+              <option value="80.雲崗高爾夫休閒館">[80] 80.雲崗高爾夫休閒館</option>
+              <option value="三總保全內部群">[0] 三總保全內部群</option>
+            </select>
+          </div>
+
+          <!-- 對應小隊長 Email 輸入框 -->
+          <div>
+            <label class="block text-slate-200 font-bold text-sm mb-1 flex items-center justify-between">
+              <span>2. 小隊長 E-mail 信箱 <span class="text-rose-400">*</span></span>
+              <span id="whitelistEmailWarn" class="hidden text-[10px] text-amber-300 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+                ⚠️ 自動校正全形符號
+              </span>
+            </label>
+            <input 
+              type="text" 
+              id="whitelistEmailInput" 
+              placeholder="如：leader@feilong.com 或 ericlai429@gmail.com" 
+              required
+              oninput="handleEmailInputWithAutoFix(this, 'whitelistEmailWarn')"
+              class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-mono"
+            >
+          </div>
+
+          <!-- Action Buttons (飛龍翡翠光盾 Save 動態) -->
+          <div class="pt-2 flex gap-2">
+            <button 
+              type="submit" 
+              id="saveWhitelistBtn"
+              class="flex-1 h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <i class="fa-solid fa-cloud-arrow-down"></i>
+              <span id="saveWhitelistBtnText">儲存隊長白名單 (Save)</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="closeWhitelistModal()" 
+              class="h-11 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+            >
+              關閉
+            </button>
+          </div>
+        </form>
+
+        <!-- Current Whitelist Quick Table -->
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <div class="text-xs font-bold text-slate-300 flex items-center justify-between">
+            <span>📋 已登錄之各分頁小隊長白名單：</span>
+            <button type="button" onclick="toggleExecutiveReveal()" class="text-slate-400 hover:text-white text-xs flex items-center gap-1">
+              <i class="fa-solid fa-eye text-[11px]"></i>
+              <span>切換防窺</span>
+            </button>
+          </div>
+          <div id="modalWhitelistListContainer" class="space-y-1.5 max-h-48 overflow-y-auto pr-1 text-xs">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- ❓ Group ID 查詢圖解教學彈窗 -->
     <div id="groupIdHelpModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1223,6 +1323,134 @@
     }
 
     /* 📁 Google Drive Shared Files & Tabs Picker Functions */
+        // ✉️ 白名單專屬管理彈窗 (1~80 下拉與儲存)
+    function openWhitelistModal() {
+      const modal = document.getElementById('whitelistModal');
+      if (modal) {
+        populateWhitelistSelect();
+        renderModalWhitelistList();
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeWhitelistModal() {
+      const modal = document.getElementById('whitelistModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function populateWhitelistSelect() {
+      const sel = document.getElementById('whitelistTabSelect');
+      if (!sel) return;
+      
+      // 支援 1~80 完整分頁陣列
+      const allTabs = [
+        { no: 4, name: "4.三總工務所" },
+        { no: 1, name: "1.亞太經貿一期(自)" },
+        { no: 2, name: "2.威強電工(自)" },
+        { no: 3, name: "3.聯合報（自）" },
+        { no: 5, name: "5.三總重症大樓" },
+        { no: 80, name: "80.雲崗高爾夫休閒館" },
+        { no: 0, name: "三總保全內部群" }
+      ];
+
+      sel.innerHTML = '';
+      allTabs.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.name;
+        opt.textContent = `[${t.no}] ${t.name}`;
+        sel.appendChild(opt);
+      });
+
+      handleWhitelistTabChange(sel.value);
+    }
+
+    function handleWhitelistTabChange(tabName) {
+      const emailInput = document.getElementById('whitelistEmailInput');
+      // 檢查此分頁是否已有儲存之隊長 Email
+      const savedEmail = localStorage.getItem(`saved_leader_email_tab_${tabName}`) || 
+                         localStorage.getItem('saved_leader_email_tsgh_internal') || '';
+      if (emailInput) emailInput.value = savedEmail;
+    }
+
+    function handleWhitelistModalSubmit(e) {
+      e.preventDefault();
+      const tabSelect = document.getElementById('whitelistTabSelect');
+      const tabName = tabSelect ? tabSelect.value : '';
+      const emailInput = document.getElementById('whitelistEmailInput');
+      const rawEmail = emailInput ? emailInput.value.trim() : '';
+      const { cleaned } = cleanAndCheckEmail(rawEmail);
+
+      if (!cleaned) {
+        showToast('請輸入有效的小隊長 Email！', 'error');
+        return;
+      }
+
+      // 1. 持久保存 (LocalStorage)
+      localStorage.setItem(`saved_leader_email_tab_${tabName}`, cleaned);
+      localStorage.setItem(`saved_leader_email_tsgh_internal`, cleaned);
+
+      // 2. 更新主畫面 currentGroups 名冊
+      const grp = currentGroups.find(g => g.sheet_tab === tabName || g.group_id === 'tsgh_internal');
+      if (grp) {
+        grp.leader_email = cleaned;
+        grp.is_email_verified = true;
+      }
+      renderLeaderEmailOverview(currentGroups);
+      renderGroupsTable(currentGroups);
+
+      // 3. 飛龍翡翠光盾按鈕動態
+      const btn = document.getElementById('saveWhitelistBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-check text-base text-emerald-200 animate-bounce"></i><span>✅ 已成功寫入隊長白名單！</span>';
+        btn.className = "flex-1 h-11 bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2";
+      }
+      showToast(`🎉 已成功將「${cleaned}」綁定為「${tabName}」隊長白名單！`, 'success');
+      renderModalWhitelistList();
+
+      setTimeout(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存隊長白名單 (Save)</span>';
+          btn.className = "flex-1 h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer";
+        }
+      }, 2500);
+
+      // 4. 背景發送後端
+      fetch(API_BASE + `/api/admin/groups/tsgh_internal/leader-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleaned, verify_and_save: true })
+      }).catch(() => {});
+    }
+
+    function renderModalWhitelistList() {
+      const container = document.getElementById('modalWhitelistListContainer');
+      if (!container) return;
+
+      const allTabs = [
+        "4.三總工務所",
+        "1.亞太經貿一期(自)",
+        "2.威強電工(自)",
+        "3.聯合報（自）",
+        "5.三總重症大樓",
+        "80.雲崗高爾夫休閒館"
+      ];
+
+      let html = '';
+      allTabs.forEach(tab => {
+        const email = localStorage.getItem(`saved_leader_email_tab_${tab}`) || 
+                      (tab.includes('三總') ? localStorage.getItem('saved_leader_email_tsgh_internal') || 'ericlai429@gmail.com' : '');
+        html += `
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-2 flex items-center justify-between">
+            <span class="font-bold text-sky-300 text-xs">📋 ${tab}</span>
+            <span class="font-mono text-emerald-400 font-bold text-xs">${email ? (isExecutiveRevealed ? email : maskEmail(email)) : '<span class="text-slate-600">未登記</span>'}</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
     function openGoogleDriveModal() {
       document.getElementById('googleDriveModal').classList.remove('hidden');
       // 自動回填本地已存金鑰
