@@ -19,9 +19,9 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
 
-  <!-- Top Navbar (Sleek, Clean, Tooltip-driven Mobile Responsive) -->
-  <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-50 backdrop-blur px-3 sm:px-6 py-2.5">
-    <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
+  <!-- Top Navbar (Perfect Margin Alignment & Zero Overflow) -->
+  <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-50 backdrop-blur">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
       <!-- Brand & Title (Single Line) -->
       <div class="flex items-center gap-2 shrink-0">
         <div class="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center shadow-md shrink-0 text-white">
@@ -40,34 +40,34 @@
         </div>
       </div>
 
-      <!-- Action Toolbar (Icons with Tooltips to avoid clutter) -->
+      <!-- Action Toolbar (Strictly Aligned with Right Border) -->
       <div class="flex items-center gap-1.5 shrink-0">
         <!-- 雲端設定 -->
-        <button onclick="openGoogleDriveModal()" class="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0" title="Google 雲端試算表連線設定">
-          <i class="fa-brands fa-google-drive text-sm sm:text-xs"></i>
+        <button onclick="openGoogleDriveModal()" class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="Google 雲端試算表連線設定">
+          <i class="fa-brands fa-google-drive text-xs"></i>
           <span class="hidden sm:inline">雲端</span>
         </button>
 
         <!-- 異動 Log -->
-        <button onclick="openChangeLogModal()" class="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0" title="班表異動審計日誌 (3分鐘延時推播)">
-          <i class="fa-solid fa-clock-rotate-left text-sm sm:text-xs"></i>
+        <button onclick="openChangeLogModal()" class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="班表異動審計日誌 (3分鐘延時推播)">
+          <i class="fa-solid fa-clock-rotate-left text-xs"></i>
           <span class="hidden sm:inline">Log</span>
         </button>
 
         <!-- 智能診斷 -->
-        <button onclick="openSmartInspectModal()" class="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0" title="智能分析排班對齊檢查">
-          <i class="fa-solid fa-brain text-sm sm:text-xs"></i>
+        <button onclick="openSmartInspectModal()" class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 text-purple-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="智能分析排班對齊檢查">
+          <i class="fa-solid fa-brain text-xs"></i>
           <span class="hidden sm:inline">診斷</span>
         </button>
 
         <!-- PWA 班表入口 -->
-        <a href="./index.html" class="w-8 h-8 sm:w-auto sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shrink-0" title="前往員工排班表 (PWA)">
-          <i class="fa-solid fa-mobile-screen text-sm sm:text-xs"></i>
+        <a href="./index.html" class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 shrink-0 cursor-pointer" title="前往員工排班表 (PWA)">
+          <i class="fa-solid fa-mobile-screen text-xs"></i>
           <span class="hidden sm:inline">班表</span>
         </a>
 
         <!-- 重整按鈕 -->
-        <button onclick="loadGroupList()" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 shadow-sm shrink-0" title="重新載入名冊與設定">
+        <button onclick="loadGroupList()" class="h-8 px-3 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="重新載入名冊與設定">
           <i class="fa-solid fa-rotate text-xs" id="reloadIcon"></i>
           <span class="hidden sm:inline">重整</span>
         </button>
@@ -475,30 +475,7 @@
       </div>
     </div>
 
-    <!-- 📧 小隊長 E-mail 白名單常駐快速面板 (極簡緊湊版) -->
-    <section class="bg-slate-900/90 border border-purple-800/70 rounded-2xl p-3 shadow-md space-y-2">
-      <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-envelope-circle-check text-emerald-400 text-sm"></i>
-          <h2 class="text-xs font-bold text-white">小隊長 E-mail (白名單認證) 常駐面板</h2>
-        </div>
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="toggleExecutiveReveal()" class="text-slate-400 hover:text-slate-200 text-xs flex items-center gap-1 cursor-pointer">
-            <i class="fa-solid fa-eye text-[11px]"></i>
-            <span class="text-[10px]">切換遮蔽</span>
-          </button>
-          <span class="text-[9px] bg-emerald-950 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-800 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>24/7 常駐</span>
-          </span>
-        </div>
-      </div>
 
-      <!-- Quick Fast Whitelist Status Matrix -->
-      <div id="leaderEmailOverview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        <div class="text-xs text-slate-500 py-1 col-span-full text-center">載入隊長白名單中...</div>
-      </div>
-    </section>
 
     <!-- Main Grid: Form (4 cols) & Groups List (8 cols) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
@@ -1674,6 +1651,7 @@
 
     function renderLeaderEmailOverview(groups) {
       const container = document.getElementById('leaderEmailOverview');
+      if (!container) return;
       if (!groups || groups.length === 0) {
         container.innerHTML = `<div class="text-xs text-slate-500 py-2 col-span-full">尚無群組</div>`;
         return;
@@ -1785,39 +1763,48 @@
         const leaderEmail = g.leader_email;
 
         html += `
-          <div class="${isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'} border rounded-xl p-3.5 space-y-3 transition hover:border-purple-500">
-            <div class="flex items-center justify-between">
+          <div class="${isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'} border rounded-2xl p-4 space-y-3 transition hover:border-emerald-500 shadow-md">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
               <div class="flex items-center gap-2">
-                <span class="text-xs sm:text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}">${actual}</span>
-                <span class="text-[10px] text-slate-400 font-mono">(${g.group_id})</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-sm font-black ${isLight ? 'text-slate-900' : 'text-white'}">${actual}</span>
+                <span class="text-[10px] text-slate-400 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">${g.group_id}</span>
               </div>
 
               <!-- Buttons -->
               <div class="flex items-center gap-1.5">
-                <button onclick="editGroup('${g.group_id}')" class="bg-slate-800 hover:bg-slate-700 text-purple-300 text-[11px] px-2.5 py-1 rounded-lg border border-slate-700 transition">
-                  編輯
+                <button onclick="editGroup('${g.group_id}')" class="h-7 px-3 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-bold rounded-lg border border-slate-700 transition cursor-pointer">
+                  <i class="fa-solid fa-pen-to-square text-[10px] mr-1"></i>編輯
                 </button>
                 ${leaderEmail ? `
-                  <button onclick="deleteLeaderEmailOnly('${g.group_id}', '${actual}')" title="清除隊長信箱" class="bg-slate-800 hover:bg-amber-900/60 text-amber-400 text-[11px] px-2 py-1 rounded-lg border border-slate-700 transition">
+                  <button onclick="deleteLeaderEmailOnly('${g.group_id}', '${actual}')" title="清除隊長信箱" class="h-7 px-2.5 bg-slate-800 hover:bg-amber-900/60 text-amber-400 text-xs font-bold rounded-lg border border-slate-700 transition cursor-pointer">
                     清除Email
                   </button>
                 ` : ''}
-                <button onclick="deleteGroup('${g.group_id}', '${actual}')" title="刪除群組" class="bg-slate-800 hover:bg-rose-900/60 text-rose-400 text-[11px] px-2 py-1 rounded-lg border border-slate-700 transition">
-                  <i class="fa-solid fa-trash"></i>
+                <button onclick="deleteGroup('${g.group_id}', '${actual}')" title="刪除群組" class="h-7 w-7 bg-slate-800 hover:bg-rose-900/60 text-rose-400 text-xs rounded-lg border border-slate-700 transition flex items-center justify-center cursor-pointer">
+                  <i class="fa-solid fa-trash text-[10px]"></i>
                 </button>
               </div>
             </div>
 
-            <!-- Chips -->
-            <div class="grid grid-cols-3 gap-1.5 text-[11px]">
-              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} px-2 py-1.5 rounded-lg border truncate">
-                <span class="text-slate-400">分頁: </span><b class="text-sky-400">${g.sheet_tab}</b>
+            <!-- Chips Information Matrix -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-2.5 rounded-xl border flex flex-col justify-center">
+                <span class="text-[10px] text-slate-400 font-bold mb-0.5">試算表分頁</span>
+                <b class="text-sky-400 font-mono truncate text-xs">📋 ${g.sheet_tab}</b>
               </div>
-              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} px-2 py-1.5 rounded-lg border">
-                <span class="text-slate-400">輔PIN: </span><b class="text-purple-400 font-mono">${g.pin_code}</b>
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-2.5 rounded-xl border flex flex-col justify-center">
+                <span class="text-[10px] text-slate-400 font-bold mb-0.5">小隊輔 PIN 碼</span>
+                <b class="text-purple-400 font-mono text-sm tracking-widest">🔑 ${g.pin_code}</b>
               </div>
-              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} px-2 py-1.5 rounded-lg border truncate">
-                <span class="text-slate-400">隊長: </span><span class="text-emerald-400 font-mono">${maskEmail(leaderEmail)}</span>
+              <div class="${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-2.5 rounded-xl border flex flex-col justify-center">
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold mb-0.5">
+                  <span>小隊長 E-mail</span>
+                  <button type="button" onclick="toggleExecutiveReveal()" class="text-slate-500 hover:text-slate-300">
+                    <i class="fa-solid ${isExecutiveRevealed ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                  </button>
+                </div>
+                <span class="text-emerald-400 font-mono truncate font-bold text-xs">${maskEmail(leaderEmail)}</span>
               </div>
             </div>
           </div>
