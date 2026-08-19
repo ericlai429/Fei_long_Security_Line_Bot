@@ -115,47 +115,48 @@
 
 
   <!-- Main Pure View -->
-  <header class="no-print bg-slate-900/95 border-b border-slate-800 p-3 sm:p-4 sticky top-0 z-20 backdrop-blur-md">
-    <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5">
-        <!-- 🛡️ 飛龍企業盾牌 (純品牌識別圖示，不觸發 Admin 彈窗) -->
+  <header class="no-print bg-slate-900/95 border-b border-slate-800 px-3 py-2.5 sm:px-4 sticky top-0 z-20 backdrop-blur-md">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- 🛡️ 飛龍企業盾牌 (純品牌識別圖示) -->
         <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold shadow-md shrink-0">
           <i class="fa-solid fa-shield-halved text-xs sm:text-sm"></i>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-sm sm:text-base font-bold text-white leading-tight">飛龍保全 ｜ 三總排班總表</h1>
-            <!-- 🟢 即時連線呼吸燈號 -->
-            <div id="connectionStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition">
-              <span class="relative flex h-2 w-2">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5 whitespace-nowrap">
+            <!-- 🟨 黃框：內縮精簡字「飛龍三總班表」 -->
+            <h1 class="text-sm sm:text-base font-black text-white leading-tight tracking-tight whitespace-nowrap">飛龍三總班表</h1>
+            <!-- 🟥 紅框：呼吸燈號「連線偵測」 -->
+            <div id="connectionStatusBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition">
+              <span class="relative flex h-1.5 w-1.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
-              <span id="connectionStatusText">即時連線正常</span>
+              <span id="connectionStatusText">連線偵測</span>
             </div>
           </div>
-          <p class="text-[11px] text-purple-300" id="currentTabLabel">4.三總工務所</p>
+          <p class="text-[10px] text-purple-300 font-bold" id="currentTabLabel">4.三總工務所</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 shrink-0">
         <!-- 🗝️ 黑色金屬小 Key (純小鑰匙圖示，極簡不溢出) -->
         <button 
           type="button" 
           id="secretAdminKeyBtn"
           onclick="openAdminAuthModal()" 
           title="Admin 管理員金鑰"
-          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
+          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
         >
-          <i class="fa-solid fa-key text-xs"></i>
+          <i class="fa-solid fa-key text-[11px]"></i>
         </button>
 
         <button 
           onclick="fetchFullSchedule(true)" 
           id="queryScheduleBtn"
-          class="h-9 px-4 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95"
+          class="h-8 sm:h-9 px-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95 shrink-0"
         >
-          <i class="fa-solid fa-magnifying-glass"></i>
+          <i class="fa-solid fa-rotate text-xs"></i>
           <span>查詢</span>
         </button>
       </div>
@@ -603,7 +604,7 @@
       if (selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH) {
         if (EMBEDDED_SCHEDULE_DATA[currentTabKey]) {
           rawScheduleData = EMBEDDED_SCHEDULE_DATA[currentTabKey];
-          setConnectionStatus('connected', '即時連線正常');
+          setConnectionStatus('connected', '連線偵測');
           renderFullScheduleTable(rawScheduleData);
           if (qBtn) {
             qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
@@ -629,7 +630,7 @@
             const apiData = await apiRes.json();
             if (apiData.rows && apiData.rows.length > 0) {
               rawScheduleData = apiData;
-              setConnectionStatus('connected', '即時連線正常');
+              setConnectionStatus('connected', '連線偵測');
               renderFullScheduleTable(rawScheduleData);
               if (qBtn) {
                 qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
@@ -657,7 +658,7 @@
             const snapData = await snapRes.json();
             if (snapData.rows && snapData.rows.length > 0) {
               rawScheduleData = snapData;
-              setConnectionStatus('connected', '即時連線正常');
+              setConnectionStatus('connected', '連線偵測');
               renderFullScheduleTable(rawScheduleData);
               if (qBtn) {
                 qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
@@ -722,7 +723,7 @@
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-table-list text-emerald-400"></i>
-            <span class="text-sm font-bold text-white">全哨人員勤務清單 (共 ${data.rows.length} 列勤務)</span>
+            <span class="text-sm font-bold text-white">人員班表(即時雲端) <span class="text-xs text-emerald-400 font-normal">(${data.rows.length}列)</span></span>
           </div>
         </div>
 
