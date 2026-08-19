@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>飛龍保全 ｜ 三總勤務排班即時系統 (多版型自適應)</title>
-  <link rel="manifest" href="/static/pwa/manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#090d16">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -257,6 +257,41 @@
 
   <script>
     let rawScheduleData = null;
+
+    // GitHub Pages Client-side CSV & Parser Support
+    function parseClientCsv(csvText, tab) {
+      const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length === 0) return { tab_name: tab, columns: [], rows: [], members: [], posts: [] };
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const rows = [];
+      const members = new Set();
+      const posts = new Set();
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = cols[idx] || '';
+          if (h.includes('早班') || h.includes('晚班') || h.includes('機動')) {
+            if (row[h] && row[h] !== '-' && row[h] !== '休') {
+              row[h].split(/[/、\s]+/).forEach(m => m.trim() && members.add(m.trim()));
+            }
+          }
+          if (h.includes('哨點') || h.includes('崗位')) {
+            if (row[h]) posts.add(row[h]);
+          }
+        });
+        rows.push(row);
+      }
+      return {
+        tab_name: tab,
+        columns: headers,
+        rows: rows,
+        members: Array.from(members).sort(),
+        posts: Array.from(posts).sort()
+      };
+    }
+
     let currentShiftFilter = 'ALL';
     let currentLayoutMode = 'CARD'; // 'CARD' | 'MATRIX' | 'TIMELINE'
     let sessionMasterPin = '789';
@@ -311,24 +346,34 @@
       errorDiv.classList.add('hidden');
 
       try {
-        const res = await fetch('/api/auth/verify-pin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            group_id: groupId,
-            master_pin: masterPin,
-            sub_pin: subPin
-          })
-        });
+        const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+        if (isStaticHost) {
+          if (masterPin !== '789' || (subPin && subPin !== '8888')) {
+            throw new Error('主 PIN 或 輔 PIN 錯誤 (預設主PIN: 789, 輔PIN: 8888)');
+          }
+          sessionMasterPin = masterPin;
+          sessionSubPin = subPin;
+          isUnlocked = true;
+        } else {
+          const res = await fetch('/api/auth/verify-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              group_id: groupId,
+              master_pin: masterPin,
+              sub_pin: subPin
+            })
+          });
 
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || 'PIN 碼驗證失敗');
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || 'PIN 碼驗證失敗');
+          }
+
+          sessionMasterPin = masterPin;
+          sessionSubPin = subPin;
+          isUnlocked = true;
         }
-
-        sessionMasterPin = masterPin;
-        sessionSubPin = subPin;
-        isUnlocked = true;
         
         document.getElementById('authStatusText').textContent = '已解鎖';
         document.getElementById('authBtn').className = "h-10 sm:h-11 px-3 sm:px-4 bg-emerald-950 text-emerald-400 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-emerald-700 transition shadow-sm";
@@ -353,25 +398,54 @@
       const container = document.getElementById('scheduleContainer');
       
       try {
-        const timestamp = new Date().getTime();
-        const res = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}&master_pin=${encodeURIComponent(sessionMasterPin)}&sub_pin=${encodeURIComponent(sessionSubPin)}&t=${timestamp}`, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        });
+        const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+        let data = null;
 
-        if (!res.ok) {
-          if (res.status === 401) {
-            isUnlocked = false;
-            openAuthModal();
-            throw new Error('PIN 碼已變更，請重新輸入新密碼！');
+        if (isStaticHost) {
+          // GitHub Pages Mode: Direct Google Sheet fetch or local saved state
+          const savedCustom = localStorage.getItem('feilong_custom_schedule');
+          if (savedCustom) {
+            try { data = JSON.parse(savedCustom); } catch(e) {}
           }
-          throw new Error('伺服器連線失敗');
+          if (!data) {
+            try {
+              const sheetId = '1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s';
+              const gid = '1503884715';
+              const csvRes = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`);
+              if (csvRes.ok) {
+                const csvText = await csvRes.text();
+                if (!csvText.includes('<!DOCTYPE') && !csvText.includes('<html')) {
+                  data = parseClientCsv(csvText, tabName);
+                }
+              }
+            } catch(e) {
+              console.log('GitHub pages direct fetch note:', e);
+            }
+          }
+          if (!data) {
+            throw new Error('目前 Google 試算表尚未開放公開讀取，請在「管理後台」或點擊下方貼上真實排班表！');
+          }
+        } else {
+          const timestamp = new Date().getTime();
+          const res = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}&master_pin=${encodeURIComponent(sessionMasterPin)}&sub_pin=${encodeURIComponent(sessionSubPin)}&t=${timestamp}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache'
+            }
+          });
+
+          if (!res.ok) {
+            if (res.status === 401) {
+              isUnlocked = false;
+              openAuthModal();
+              throw new Error('PIN 碼已變更，請重新輸入新密碼！');
+            }
+            throw new Error('伺服器連線失敗');
+          }
+
+          data = await res.json();
         }
-
-        const data = await res.json();
         rawScheduleData = data;
 
         document.getElementById('currentTabName').textContent = data.tab_name || tabName;
@@ -748,12 +822,17 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch(`/api/pdf/generate?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}`);
-        const data = await res.json();
-        if (data.download_url) {
-          window.location.href = data.download_url;
+        const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+        if (isStaticHost) {
+          window.print();
         } else {
-          alert('PDF 產生失敗，請稍後再試。');
+          const res = await fetch(`/api/pdf/generate?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}`);
+          const data = await res.json();
+          if (data.download_url) {
+            window.location.href = data.download_url;
+          } else {
+            alert('PDF 產生失敗，請稍後再試。');
+          }
         }
       } catch (e) {
         alert('連線失敗：' + e.message);
