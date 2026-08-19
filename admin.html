@@ -1244,7 +1244,7 @@
     async function loadGoogleDriveStatus() {
       try {
         const res = await fetch(API_BASE + '/api/admin/google-drive/status');
-        if (!res.ok) throw new Error('無法取得 Google 雲端狀態');
+        if (!res.ok) return;
         const data = await res.json();
         
         const saInput = document.getElementById('serviceAccountEmailInput');
@@ -1253,11 +1253,11 @@
         if (urlInput && data.active_spreadsheet_id) urlInput.value = data.active_spreadsheet_id;
 
         const container = document.getElementById('sharedFilesList');
-        if (container) {
-          if (!data.shared_files || data.shared_files.length === 0) {
-            container.innerHTML = '<div class="text-slate-500 text-center py-3 text-xs">尚無授權共享的試算表</div>';
-            return;
-          }
+        if (!container) return;
+
+        if (!data.shared_files || data.shared_files.length === 0) {
+          container.innerHTML = '<div class="text-slate-500 text-center py-3 text-xs">尚無授權共享的試算表</div>';
+          return;
         }
 
         let html = '';
@@ -1273,7 +1273,7 @@
               </div>
               <div class="text-[11px] text-slate-400 flex items-center justify-between">
                 <span>擁有者: ${f.owner}</span>
-                <span>ID: <code class="text-sky-300 font-mono">${f.file_id.slice(0, 10)}...</code></span>
+                <span>ID: <code class="text-sky-300 font-mono">${f.file_id ? f.file_id.slice(0, 10) : ''}...</code></span>
               </div>
               <!-- Tabs Pill List -->
               <div class="space-y-1">
@@ -1293,9 +1293,9 @@
             </div>
           `;
         });
-        container.innerHTML = html;
+        if (container) container.innerHTML = html;
       } catch (err) {
-        showToast(err.message, 'error');
+        console.debug('loadGoogleDriveStatus note:', err);
       }
     }
 
