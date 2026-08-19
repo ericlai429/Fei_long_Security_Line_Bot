@@ -153,6 +153,28 @@
 
   <main class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-5 space-y-4">
     
+    <!-- 🏢 Unified Detachment Selector (工務所 ｜ 重症大樓 單一網址隨選即看) -->
+    <div class="no-print flex items-center gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
+      <button 
+        type="button" 
+        id="tabBtnEng"
+        onclick="switchDetachment('4.三總工務所', 'tsgh_eng_dept')" 
+        class="flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-gradient-to-r from-purple-600 to-sky-600 text-white shadow-md"
+      >
+        <i class="fa-solid fa-building-shield text-sm"></i>
+        <span>4. 三總工務所</span>
+      </button>
+      <button 
+        type="button" 
+        id="tabBtnIcu"
+        onclick="switchDetachment('5.三總重症大樓', 'tsgh_icu_bldg')" 
+        class="flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+      >
+        <i class="fa-solid fa-hospital text-sm"></i>
+        <span>5. 三總重症大樓</span>
+      </button>
+    </div>
+
     <!-- 📄 Full Detachment Personnel Schedule Table (Print Ready) -->
     <div id="scheduleContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
       <div class="text-center py-16 text-slate-400 space-y-3">
