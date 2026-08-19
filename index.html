@@ -115,47 +115,48 @@
 
 
   <!-- Main Pure View -->
-  <header class="no-print bg-slate-900/95 border-b border-slate-800 p-3 sm:p-4 sticky top-0 z-20 backdrop-blur-md">
-    <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5">
-        <!-- 🛡️ 盾牌點擊亦可快捷進入 Admin -->
-        <button type="button" onclick="openAdminAuthModal()" title="點擊進行管理員登入" class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold cursor-pointer hover:scale-105 transition shadow-md active:scale-95">
-          <i class="fa-solid fa-shield-halved text-sm"></i>
+  <header class="no-print bg-slate-900/95 border-b border-slate-800 px-3 py-2 sm:px-4 sticky top-0 z-20 backdrop-blur-md">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
+      <!-- 🛡️ 左側：盾牌 ＋ 緊湊單行標題 (絕不折行) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" onclick="openAdminAuthModal()" title="管理員登入" class="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold cursor-pointer hover:scale-105 transition shadow-md active:scale-95 shrink-0">
+          <i class="fa-solid fa-shield-halved text-xs"></i>
         </button>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-sm sm:text-base font-bold text-white leading-tight">飛龍保全 ｜ 三總排班總表</h1>
-            <!-- 🟢 即時連線呼吸燈號 -->
-            <div id="connectionStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition">
-              <span class="relative flex h-2 w-2">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5 whitespace-nowrap">
+            <span class="text-sm font-black text-white tracking-tight">飛龍保全 ｜ 三總排班</span>
+            <!-- 🟢 精簡呼吸燈 -->
+            <div id="connectionStatusBadge" title="即時連線正常" class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-600/80">
+              <span class="relative flex h-1.5 w-1.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
-              <span id="connectionStatusText">即時連線正常</span>
+              <span id="connectionStatusText" class="hidden sm:inline">正常</span>
             </div>
           </div>
-          <p class="text-[11px] text-purple-300" id="currentTabLabel">4.三總工務所</p>
+          <span class="text-[10px] text-purple-300 font-bold" id="currentTabLabel">4.三總工務所</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <!-- 🗝️ 黑色金屬小 Key (純小鑰匙圖示，極簡不溢出) -->
+      <!-- 右側：黑色金鑰 ＋ 查詢按鈕 -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <!-- 🗝️ 黑色金屬小 Key -->
         <button 
           type="button" 
           id="secretAdminKeyBtn"
           onclick="openAdminAuthModal()" 
           title="Admin 管理員金鑰"
-          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
+          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
         >
-          <i class="fa-solid fa-key text-xs"></i>
+          <i class="fa-solid fa-key text-[11px]"></i>
         </button>
 
         <button 
           onclick="fetchFullSchedule(true)" 
           id="queryScheduleBtn"
-          class="h-9 px-4 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95"
+          class="h-8 sm:h-9 px-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95 shrink-0"
         >
-          <i class="fa-solid fa-magnifying-glass"></i>
+          <i class="fa-solid fa-rotate text-xs"></i>
           <span>查詢</span>
         </button>
       </div>
@@ -569,12 +570,12 @@
         if (phone) {
           const telHref = `tel:${phone.replace(/[-\s]/g, '')}`;
           return `
-            <span class="relative group inline-block whitespace-nowrap">
-              <button type="button" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800/90 border border-slate-700/80 hover:border-amber-400 hover:bg-slate-700/90 text-white text-[16px] sm:text-[17px] font-black tracking-wide transition shadow-sm active:scale-95 whitespace-nowrap">
+            <span class="relative group inline-flex justify-center whitespace-nowrap">
+              <button type="button" class="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/95 border border-slate-700 hover:border-amber-400 hover:bg-slate-700 text-white text-[16px] sm:text-[17px] font-black tracking-wide transition shadow-sm active:scale-95 whitespace-nowrap">
                 <span>${cleanName}</span>
-                <i class="fa-solid fa-phone text-[9px] text-amber-400 opacity-75"></i>
+                <i class="fa-solid fa-phone text-[9px] text-amber-400 opacity-80"></i>
               </button>
-              <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-amber-500/90 text-amber-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
+              <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-amber-500 text-amber-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
                 <i class="fa-solid fa-phone-volume text-emerald-400 animate-pulse"></i>
                 <a href="${telHref}" class="font-bold underline hover:text-white">${phone}</a>
                 <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">(撥打)</span>
@@ -583,7 +584,7 @@
           `;
         }
 
-        return `<span class="inline-block px-2 py-0.5 rounded-lg bg-slate-800/70 text-white text-[16px] sm:text-[17px] font-black tracking-wide whitespace-nowrap">${cleanName}</span>`;
+        return `<span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-lg bg-slate-800/80 text-white text-[16px] sm:text-[17px] font-black tracking-wide whitespace-nowrap">${cleanName}</span>`;
       }).join(' ');
     }
 
@@ -726,14 +727,14 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto -mx-2 sm:mx-0">
-          <table class="w-full text-left text-xs border-collapse print-table">
+        <div class="overflow-x-auto -mx-3 sm:mx-0">
+          <table class="w-full text-left text-xs border-collapse table-fixed">
             <thead>
               <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-bold">
-                <th class="py-2.5 px-2 whitespace-nowrap text-center">日期</th>
-                <th class="py-2.5 px-1.5 whitespace-nowrap text-center">週</th>
-                <th class="py-2.5 px-2 whitespace-nowrap text-amber-400 font-extrabold text-[13px]">☀️ 早班 (07-19)</th>
-                <th class="py-2.5 px-2 whitespace-nowrap text-sky-300 font-extrabold text-[13px]">🌆 晚班 (19-07)</th>
+                <th class="w-[17%] py-2 px-1 whitespace-nowrap text-center text-xs">日期</th>
+                <th class="w-[11%] py-2 px-0.5 whitespace-nowrap text-center text-xs">週</th>
+                <th class="w-[36%] py-2 px-1 whitespace-nowrap text-center text-amber-400 font-extrabold text-[13px]">☀️ 早班</th>
+                <th class="w-[36%] py-2 px-1 whitespace-nowrap text-center text-sky-300 font-extrabold text-[13px]">🌆 晚班</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/90">
@@ -765,12 +766,12 @@
         const isHistorical = !(selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH);
         html += `
           <tr class="${rowClass} transition border-b border-slate-800/80">
-            <td class="py-2.5 px-2 font-mono font-extrabold text-slate-100 whitespace-nowrap text-center text-xs sm:text-sm">${dateStr}</td>
-            <td class="py-2.5 px-1.5 whitespace-nowrap text-center">
+            <td class="w-[17%] py-2.5 px-1 font-mono font-extrabold text-slate-100 whitespace-nowrap text-center text-xs sm:text-sm">${dateStr}</td>
+            <td class="w-[11%] py-2.5 px-0.5 whitespace-nowrap text-center">
               <span class="px-1.5 py-0.5 rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>
             </td>
-            <td class="py-2.5 px-2 whitespace-nowrap font-medium">${formatName(early, isHistorical)}</td>
-            <td class="py-2.5 px-2 whitespace-nowrap font-medium">${formatName(late, isHistorical)}</td>
+            <td class="w-[36%] py-2 px-1 whitespace-nowrap text-center font-medium">${formatName(early, isHistorical)}</td>
+            <td class="w-[36%] py-2 px-1 whitespace-nowrap text-center font-medium">${formatName(late, isHistorical)}</td>
           </tr>
         `;
       });
