@@ -509,7 +509,7 @@
 
       // 驗證登入
       const savedPin = localStorage.getItem('feilong_master_pin');
-      let isValid = (savedPin && pin === savedPin) || pin === '789';
+      let isValid = (savedPin && pin === savedPin);
 
       if (!isValid) {
         try {
@@ -558,7 +558,7 @@
         item = item.trim();
         const phoneMatch = item.match(/09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{9,10}/);
         const phone = phoneMatch ? phoneMatch[0] : '';
-        const cleanName = item.replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?\d{3}[\)）]?|[\(（]?\d{9,10}[\)）]?/, '').trim();
+        const cleanName = item.replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?\d{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?/g, '').trim();
         
         if (!cleanName) return item;
 
@@ -620,7 +620,7 @@
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 1200);
-          const apiRes = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(currentGroupId)}&tab=${encodeURIComponent(currentTabName)}&year=${selectedYear}&month=${selectedMonth}&master_pin=789&sub_pin=8888&t=${new Date().getTime()}`, {
+          const apiRes = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(currentGroupId)}&tab=${encodeURIComponent(currentTabName)}&year=${selectedYear}&month=${selectedMonth}&t=${new Date().getTime()}`, {
             signal: controller.signal,
             cache: 'no-store'
           });
