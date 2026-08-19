@@ -130,20 +130,12 @@
 
       <div class="flex items-center gap-2">
         <button 
-          onclick="openPasteModal()" 
-          class="h-9 px-3 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5"
-          title="貼上試算表更新排班"
+          onclick="fetchFullSchedule(true)" 
+          id="queryScheduleBtn"
+          class="h-9 sm:h-10 px-4 sm:px-5 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95"
         >
-          <i class="fa-solid fa-paste"></i>
-          <span class="hidden sm:inline">貼上資料</span>
-        </button>
-        <button 
-          onclick="downloadOrPrintPdf()" 
-          id="directPdfBtn"
-          class="h-9 sm:h-10 px-4 sm:px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95"
-        >
-          <i class="fa-solid fa-file-pdf text-sm"></i>
-          <span>一鍵輸出 / 下載全哨 PDF</span>
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>查詢</span>
         </button>
       </div>
     </div>
@@ -291,7 +283,12 @@
       renderFullScheduleTable(parsed);
     }
 
-    async function fetchFullSchedule() {
+    async function fetchFullSchedule(isManualQuery = false) {
+      const qBtn = document.getElementById('queryScheduleBtn');
+      if (qBtn && isManualQuery) {
+        qBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>查詢中...</span>';
+        qBtn.disabled = true;
+      }
       const container = document.getElementById('scheduleContainer');
 
       // 🌟 0. 優先讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表
