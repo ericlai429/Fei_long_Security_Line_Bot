@@ -343,15 +343,17 @@ class SheetsService:
                 if not person_col or any(k in person_col for k in ['值勤人員', '電話', '姓名']):
                     continue
 
-                name_clean = person_col.split('\n')[0].strip()
-                phone_match = re.search(r'09\d{2}[-\s]?\d{3}[-\s]?\d{3}', person_col)
+                # 智能姓名與電話萃取清洗 (根除 "張惠珍0912471123" 等電話混入姓名的狀況)
+                phone_match = re.search(r'09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{9,10}', person_col)
                 phone = phone_match.group(0) if phone_match else ''
 
-                if not name_clean:
+                name_pure = re.sub(r'[\(（]?09\d{2}[-\s]?\d{3}[-\s]?\d{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?', '', person_col.split('\n')[0]).strip()
+
+                if not name_pure:
                     continue
 
-                display_name = f"{name_clean} ({phone})" if phone else name_clean
-                members_set.add(name_clean)
+                display_name = f"{name_pure} ({phone})" if phone else name_pure
+                members_set.add(name_pure)
 
                 for col_idx, (day_num, _) in day_cols.items():
                     if col_idx < len(row):
