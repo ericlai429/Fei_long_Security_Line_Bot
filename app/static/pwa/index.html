@@ -60,9 +60,17 @@
             <input 
               type="password" 
               id="adminMasterPinInput" 
-              
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              oncopy="return false;"
+              oncut="return false;"
+              onpaste="return false;"
+              oncontextmenu="return false;"
               placeholder="請輸入管理員密碼 (支援英文與數字)" 
-              class="w-full h-11 bg-slate-950 border border-amber-700/80 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
+              style="-webkit-text-security: disc; -webkit-user-select: none; user-select: none;"
+              class="w-full h-11 bg-slate-950 border border-amber-700/80 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600 select-none"
             >
           </div>
 
@@ -71,9 +79,17 @@
             <input 
               type="password" 
               id="adminConfirmPinInput" 
-              
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              oncopy="return false;"
+              oncut="return false;"
+              onpaste="return false;"
+              oncontextmenu="return false;"
               placeholder="請再次輸入相同的新密碼" 
-              class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
+              style="-webkit-text-security: disc; -webkit-user-select: none; user-select: none;"
+              class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600 select-none"
             >
           </div>
         </div>
