@@ -640,11 +640,21 @@
       <!-- Right Column: Groups Table (7 cols) -->
       <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-          <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+          <div class="flex items-center gap-2">
             <i class="fa-solid fa-list text-emerald-400"></i>
-            <span>已綁定之工作群組</span>
-          </h2>
-          <span class="text-xs text-slate-400 font-mono" id="groupCountBadge">載入中...</span>
+            <h2 class="text-sm sm:text-base font-bold text-white">已綁定之工作群組</h2>
+            <span class="text-xs text-slate-400 font-mono" id="groupCountBadge">1 個群組</span>
+          </div>
+          <!-- ➕ 手動加入新工作群按鈕 -->
+          <button 
+            type="button" 
+            onclick="openNewGroupModal()" 
+            class="h-8 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer"
+            title="手動新增並綁定新工作群組"
+          >
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>加入新工作群</span>
+          </button>
         </div>
 
         <div class="space-y-3" id="groupsListContainer">
@@ -655,6 +665,120 @@
         </div>
       </div>
 
+    </div>
+
+        <!-- ➕ 手動加入新工作群組彈窗 (New Group Binding Modal) -->
+    <div id="newGroupModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-emerald-500/80 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2 text-white font-bold text-base">
+            <div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md">
+              <i class="fa-solid fa-plus"></i>
+            </div>
+            <div>
+              <div class="text-base font-bold text-white leading-tight">手動加入新工作群組</div>
+              <div class="text-[11px] text-emerald-300">智慧格式偵測 ｜ 綁定試算表分頁 ｜ 隊長認證</div>
+            </div>
+          </div>
+          <button onclick="closeNewGroupModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <form id="quickNewGroupForm" onsubmit="handleQuickNewGroupSubmit(event)" class="space-y-3.5 text-xs">
+          <!-- Group Name -->
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">
+              工作群組名稱 (LINE 群組名) <span class="text-rose-400">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="modalGroupName" 
+              placeholder="如：急診哨小隊、中控室小隊" 
+              required 
+              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-medium"
+            >
+          </div>
+
+          <!-- Google Sheet Tab Name -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-slate-300 font-bold">試算表對應分頁 <span class="text-rose-400">*</span></label>
+              <span class="text-[10px] text-sky-400">可選取下拉現有分頁</span>
+            </div>
+            <input 
+              type="text" 
+              id="modalSheetTab" 
+              list="tabSuggestions"
+              placeholder="如：4.三總工務所、5.三總重症大樓" 
+              required 
+              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-medium"
+            >
+          </div>
+
+          <!-- Group ID & Sub PIN (2 Cols) -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">群組代碼 / ID <span class="text-rose-400">*</span></label>
+              <input 
+                type="text" 
+                id="modalGroupId" 
+                placeholder="如：tsgh_icu 或 自訂ID" 
+                required 
+                class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+              >
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">小隊輔 PIN 碼 <span class="text-rose-400">*</span></label>
+              <input 
+                type="text" 
+                id="modalPinCode" 
+                maxlength="4" 
+                pattern="\d{3,4}" 
+                placeholder="如：8888" 
+                required 
+                class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm font-mono tracking-widest text-center text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-bold"
+              >
+            </div>
+          </div>
+
+          <!-- Team Leader Email with Fullwidth Auto-detection -->
+          <div>
+            <label class="block text-slate-300 font-bold mb-1 flex items-center justify-between">
+              <span>小隊長 E-mail (白名單認證)</span>
+              <span id="modalEmailWarn" class="hidden text-[10px] text-amber-300 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+                ⚠️ 自動校正全形符號
+              </span>
+            </label>
+            <input 
+              type="text" 
+              id="modalLeaderEmail" 
+              placeholder="如：leader@feilong.com" 
+              oninput="handleEmailInputWithAutoFix(this, 'modalEmailWarn')"
+              class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-mono"
+            >
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pt-3 flex gap-2">
+            <button 
+              type="submit" 
+              id="modalSubmitBtn"
+              class="flex-1 h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <i class="fa-solid fa-cloud-arrow-down"></i>
+              <span id="modalSubmitBtnText">儲存並加入群組清單</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="closeNewGroupModal()" 
+              class="h-11 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+            >
+              取消
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Minimalist Visual Guide -->
@@ -1327,6 +1451,95 @@
         openSmartInspectModal();
       } catch (err) {
         showToast('匯入失敗：' + err.message, 'error');
+      }
+    }
+
+        // ➕ 手動加入新工作群組彈窗控制
+    function openNewGroupModal() {
+      const modal = document.getElementById('newGroupModal');
+      if (modal) {
+        document.getElementById('quickNewGroupForm').reset();
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeNewGroupModal() {
+      const modal = document.getElementById('newGroupModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function handleQuickNewGroupSubmit(e) {
+      e.preventDefault();
+      const groupName = document.getElementById('modalGroupName').value.trim();
+      const sheetTab = document.getElementById('modalSheetTab').value.trim();
+      const groupId = document.getElementById('modalGroupId').value.trim();
+      const pinCode = document.getElementById('modalPinCode').value.trim();
+      const rawEmail = document.getElementById('modalLeaderEmail').value.trim();
+      const { cleaned: leaderEmail } = cleanAndCheckEmail(rawEmail);
+
+      if (!groupName || !sheetTab || !groupId || !pinCode) {
+        showToast('請完整填寫所有必填欄位！', 'error');
+        return;
+      }
+
+      const submitBtn = document.getElementById('modalSubmitBtn');
+      const submitText = document.getElementById('modalSubmitBtnText');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i><span>正在偵測並寫入設定...</span>';
+      }
+
+      const newGroupObj = {
+        group_id: groupId,
+        group_name: groupName,
+        expected_group_name: groupName,
+        leader_email: leaderEmail,
+        sheet_tab: sheetTab,
+        pin_code: pinCode,
+        is_email_verified: !!leaderEmail
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/api/admin/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newGroupObj)
+        });
+
+        // 立即更新前端名冊
+        const existIdx = currentGroups.findIndex(g => g.group_id === groupId);
+        if (existIdx >= 0) {
+          currentGroups[existIdx] = newGroupObj;
+        } else {
+          currentGroups.push(newGroupObj);
+        }
+
+        renderLeaderEmailOverview(currentGroups);
+        renderGroupsTable(currentGroups);
+        const countBadge = document.getElementById('groupCountBadge');
+        if (countBadge) countBadge.textContent = `共 ${currentGroups.length} 個群組`;
+
+        if (submitBtn) {
+          submitBtn.innerHTML = '<i class="fa-solid fa-circle-check text-base text-emerald-200 animate-bounce"></i><span>✅ 成功加入！設定已生效</span>';
+          submitBtn.className = "flex-1 h-11 bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2";
+        }
+        showToast(`🎉 成功加入工作群組「${groupName}」！`, 'success');
+
+        setTimeout(() => {
+          closeNewGroupModal();
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存並加入群組清單</span>';
+            submitBtn.className = "flex-1 h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer";
+          }
+        }, 1200);
+
+      } catch (err) {
+        showToast(`儲存失敗：${err.message}`, 'error');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存並加入群組清單</span>';
+        }
       }
     }
 
