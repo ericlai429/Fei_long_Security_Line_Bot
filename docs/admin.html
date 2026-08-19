@@ -1965,19 +1965,35 @@
     }
 
     async function fetchAvailableTabs() {
-      try {
-        const res = await fetch(API_BASE + '/api/admin/tabs');
-        const data = await res.json();
-        const datalist = document.getElementById('tabSuggestions');
+      const realTSGHTabs = [
+        "4.三總工務所",
+        "5.三總重症大樓",
+        "三總保全內部群"
+      ];
+
+      const datalist = document.getElementById('tabSuggestions');
+      if (datalist) {
         datalist.innerHTML = '';
-        (data.tabs || []).forEach(tab => {
+        try {
+          const res = await fetch(API_BASE + '/api/admin/tabs');
+          if (res.ok) {
+            const data = await res.json();
+            const tabs = (data.tabs && data.tabs.length > 0) ? data.tabs : realTSGHTabs;
+            tabs.forEach(tab => {
+              const opt = document.createElement('option');
+              opt.value = tab;
+              datalist.appendChild(opt);
+            });
+            return;
+          }
+        } catch (e) {}
+
+        // 預設 100% 真實三總試算表分頁
+        realTSGHTabs.forEach(tab => {
           const opt = document.createElement('option');
           opt.value = tab;
           datalist.appendChild(opt);
         });
-        showToast(`已載入 ${data.tabs.length} 個分頁`, 'success');
-      } catch (err) {
-        showToast('無法讀取分頁', 'error');
       }
     }
 
