@@ -8,7 +8,13 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    *, *:before, *:after { box-sizing: border-box; }
     * { -webkit-tap-highlight-color: transparent; }
+    html, body {
+      overflow-x: hidden;
+      max-width: 100vw;
+      width: 100%;
+    }
     button, input, a { touch-action: manipulation; }
     @media print {
       .no-print { display: none !important; }
@@ -152,10 +158,10 @@
 
 
   <!-- Main Pure View (Ultra-Clean, Zero-Overflow Responsive Top Navbar) -->
-  <header class="no-print bg-slate-900/95 border-b border-slate-800 px-2.5 py-2 sm:px-4 sticky top-0 z-20 backdrop-blur-md">
-    <div class="max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
+  <header class="no-print w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 sm:px-4 sticky top-0 z-20 backdrop-blur-md box-border overflow-hidden">
+    <div class="max-w-4xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
       <!-- 🛡️ 左側：盾牌 ＋ 標題 ＋ 動態深邃呼吸燈號 -->
-      <div class="flex items-center gap-2 min-w-0">
+      <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
         <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold shadow-md shrink-0">
           <i class="fa-solid fa-shield-halved text-xs"></i>
         </div>
@@ -169,8 +175,8 @@
         </div>
       </div>
 
-      <!-- 右側按鈕群：小鑰匙 ＋ 查詢 (緊湊置中，保證絕不溢出) -->
-      <div class="flex items-center gap-1.5 shrink-0">
+      <!-- 右側按鈕群：小鑰匙 ＋ 查詢 (緊湊置中，保證右緣絕對對齊邊界內) -->
+      <div class="flex items-center gap-1.5 shrink-0 pl-1">
         <!-- 🗝️ 黑色金鑰 -->
         <button 
           type="button" 
@@ -182,11 +188,11 @@
           <i class="fa-solid fa-key text-xs"></i>
         </button>
 
-        <!-- 🔍 查詢按鈕 (緊湊高質感) -->
+        <!-- 🔍 查詢按鈕 (緊湊高質感，保證絕不溢出) -->
         <button 
           onclick="fetchFullSchedule(true)" 
           id="queryScheduleBtn"
-          class="h-8 px-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1 shrink-0 cursor-pointer"
+          class="h-8 px-2.5 sm:px-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1 shrink-0 cursor-pointer"
         >
           <i class="fa-solid fa-rotate text-[11px]"></i>
           <span>查詢</span>
@@ -790,7 +796,7 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto -mx-3 sm:mx-0">
+        <div class="overflow-x-auto w-full">
           <table class="w-full text-left text-xs border-collapse table-fixed">
             <thead>
               <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-bold">
