@@ -785,7 +785,7 @@
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-table-list text-emerald-400"></i>
-            <span class="text-sm font-bold text-white">人員班表(即時雲端) <span class="text-xs text-emerald-400 font-normal">(${data.rows.length}列)</span></span>
+            <span class="text-sm font-bold text-white">人員班表(即時雲端) <span class="text-xs text-emerald-400 font-bold">(${selectedMonth === REAL_CURRENT_MONTH ? "本月" : selectedMonth + "月"}${data.rows.length}天)</span></span>
           </div>
         </div>
 
