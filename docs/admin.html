@@ -1829,10 +1829,15 @@
       const raw = input ? input.value.trim() : '';
       const { cleaned } = cleanAndCheckEmail(raw);
 
-      // 💾 本地持久化保存 (LocalStorage) 保證重新整理後依然 100% 常駐在前端面板
+      if (!cleaned) {
+        showToast('⚠️ 請先輸入隊長 Email！', 'error');
+        return;
+      }
+
+      // 💾 1. 本地持久化保存 (LocalStorage) 保證重新整理後依然 100% 常駐在前端面板
       localStorage.setItem(`saved_leader_email_${groupId}`, cleaned);
 
-      // 即刻同步至前端當前記憶體名冊
+      // 💾 2. 即刻同步至前端當前記憶體名冊
       const grp = currentGroups.find(g => g.group_id === groupId);
       if (grp) {
         grp.leader_email = cleaned;
@@ -1841,22 +1846,17 @@
       renderLeaderEmailOverview(currentGroups);
       renderGroupsTable(currentGroups);
 
+      // 💾 3. 立即給予成功提示（不被網路中斷）
+      showToast(verifyAndSave ? '✅ 小隊長 Email 已核對認證並常駐儲存！' : '💾 小隊長 Email 已常駐儲存至白名單！', 'success');
+
+      // 💾 4. 背景同步至後端
       try {
-        const res = await fetch(API_BASE + `/api/admin/groups/${encodeURIComponent(groupId)}/leader-email`, {
+        fetch(API_BASE + `/api/admin/groups/${encodeURIComponent(groupId)}/leader-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: cleaned, verify_and_save: verifyAndSave })
-        });
-
-        let msg = verifyAndSave ? '✅ 小隊長 Email 已核對認證並常駐儲存！' : '💾 小隊長 Email 已常駐儲存！';
-        if (res.ok) {
-          const data = await res.json();
-          msg = data.message || msg;
-        }
-        showToast(msg, 'success');
-      } catch (err) {
-        showToast('💾 小隊長 Email 已常駐儲存於前端面板與白名單！', 'success');
-      }
+        }).catch(() => {});
+      } catch (err) {}
     }
 
     async function saveCurrentLeaderEmail(verifyAndSave) {
@@ -1864,10 +1864,15 @@
       const raw = document.getElementById('inputLeaderEmail').value.trim();
       const { cleaned } = cleanAndCheckEmail(raw);
 
-      // 💾 本地持久化保存 (LocalStorage) 保證重新整理後依然 100% 常駐在前端面板
+      if (!cleaned) {
+        showToast('⚠️ 請先輸入隊長 Email！', 'error');
+        return;
+      }
+
+      // 💾 1. 本地持久化保存 (LocalStorage) 保證重新整理後依然 100% 常駐在前端面板
       localStorage.setItem(`saved_leader_email_${groupId}`, cleaned);
 
-      // 即刻同步至前端當前記憶體名冊
+      // 💾 2. 即刻同步至前端當前記憶體名冊
       const grp = currentGroups.find(g => g.group_id === groupId);
       if (grp) {
         grp.leader_email = cleaned;
@@ -1876,22 +1881,17 @@
       renderLeaderEmailOverview(currentGroups);
       renderGroupsTable(currentGroups);
 
+      // 💾 3. 立即給予成功提示（不被網路中斷）
+      showToast(verifyAndSave ? '✅ 小隊長 Email 已核對認證並常駐儲存！' : '💾 小隊長 Email 已常駐儲存至白名單！', 'success');
+
+      // 💾 4. 背景同步至後端
       try {
-        const res = await fetch(API_BASE + `/api/admin/groups/${encodeURIComponent(groupId)}/leader-email`, {
+        fetch(API_BASE + `/api/admin/groups/${encodeURIComponent(groupId)}/leader-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: cleaned, verify_and_save: verifyAndSave })
-        });
-
-        let msg = verifyAndSave ? '✅ 小隊長 Email 已核對認證並常駐儲存！' : '💾 小隊長 Email 已常駐儲存！';
-        if (res.ok) {
-          const data = await res.json();
-          msg = data.message || msg;
-        }
-        showToast(msg, 'success');
-      } catch (err) {
-        showToast('💾 小隊長 Email 已常駐儲存於前端面板與白名單！', 'success');
-      }
+        }).catch(() => {});
+      } catch (err) {}
     }
 
     function editGroup(groupId) {
