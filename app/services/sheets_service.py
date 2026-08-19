@@ -150,7 +150,7 @@ class SheetsService:
                 return [ws.title for ws in sh.worksheets()]
             except Exception as e:
                 logger.error(f"Error reading tabs from Google Sheets: {e}")
-        return ["三總保全內部群", "急診與中控小隊", "門診與機動小隊", "8月份總班表"]
+        return ["三總保全內部群", "4.三總工務所", "5.三總重症大樓", "急診與中控小隊", "門診與機動小隊", "8月份總班表"]
 
     def get_raw_sheet_data(self, tab_name: str) -> List[List[str]]:
         # 1. Custom loaded direct real data
