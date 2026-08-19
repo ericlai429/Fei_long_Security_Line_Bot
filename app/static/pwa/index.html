@@ -212,12 +212,39 @@
       }
     }
 
-    // 🔤 生僻字模糊輔助
-    function formatName(name) {
-      if (!name || name === '-') return '-';
-      const trimmed = name.trim();
-      if (trimmed.length <= 1) return `<b>${trimmed}</b>`;
-      return `<span class="text-base font-extrabold">${trimmed.charAt(0)}</span><span class="font-semibold">${trimmed.slice(1)}</span>`;
+    // 🔤 人員名稱格式化：隱藏電話，滑鼠懸停 / 手指觸碰時浮動顯示電話並支援一鍵撥打
+    function formatName(nameStr) {
+      if (!nameStr || nameStr === '-' || nameStr === '—') return '<span class="text-slate-600">—</span>';
+      
+      const items = nameStr.split(/[、,]+/).filter(Boolean);
+      return items.map(item => {
+        item = item.trim();
+        const phoneMatch = item.match(/09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{9,10}/);
+        const phone = phoneMatch ? phoneMatch[0] : '';
+        const cleanName = item.replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?\d{3}[\)）]?|[\(（]?\d{9,10}[\)）]?/, '').trim();
+        
+        if (!cleanName) return item;
+
+        if (phone) {
+          const telHref = `tel:${phone.replace(/[-\s]/g, '')}`;
+          return `
+            <span class="relative group inline-block my-0.5">
+              <button type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800/90 border border-slate-700/80 hover:border-amber-400 hover:bg-slate-800 text-slate-100 text-xs font-bold transition shadow-sm active:scale-95">
+                <span>${cleanName}</span>
+                <i class="fa-solid fa-phone text-[10px] text-amber-400 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition"></i>
+              </button>
+              <!-- 📱 浮動電話卡片 (手指觸碰 / 鼠標懸停) -->
+              <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-amber-500/90 text-amber-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
+                <i class="fa-solid fa-phone-volume text-emerald-400 animate-pulse"></i>
+                <a href="${telHref}" class="font-bold underline hover:text-white">${phone}</a>
+                <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">(撥打)</span>
+              </div>
+            </span>
+          `;
+        } else {
+          return `<span class="inline-block px-2.5 py-1 rounded-xl bg-slate-800/50 text-slate-200 text-xs font-bold my-0.5">${cleanName}</span>`;
+        }
+      }).join(' ');
     }
 
     function parseUniversalScheduleText(text, tab) {
