@@ -1,15 +1,6 @@
 {
   "admins": [],
   "groups": {
-    "test_sandbox": {
-      "group_id": "test_sandbox",
-      "group_name": "陳冠冠(測試視窗)",
-      "sheet_tab": "三總保全內部群",
-      "pin_code": "8888",
-      "pin_updated_at": "2026-08-19T19:52:33.169138",
-      "is_unlocked": false,
-      "unlocked_with_pin": ""
-    },
     "tsgh_internal": {
       "group_id": "tsgh_internal",
       "group_name": "三總保全內部群",
@@ -57,6 +48,32 @@
       "pin_updated_at": "2026-08-19T21:35:10.724335",
       "is_unlocked": false,
       "unlocked_with_pin": ""
+    },
+    "tsgh_eng_dept": {
+      "group_id": "tsgh_eng_dept",
+      "group_name": "三總工務所小隊",
+      "expected_group_name": "三總工務所小隊",
+      "sheet_tab": "4.三總工務所",
+      "leader_email": "ericlai429@gmail.com",
+      "is_email_verified": false,
+      "verified_leader_user_id": "",
+      "pin_code": "8888",
+      "pin_updated_at": "2026-08-19T22:23:52.928268",
+      "is_unlocked": false,
+      "unlocked_with_pin": ""
+    },
+    "tsgh_icu_bldg": {
+      "group_id": "tsgh_icu_bldg",
+      "group_name": "三總重症大樓小隊",
+      "expected_group_name": "三總重症大樓小隊",
+      "sheet_tab": "5.三總重症大樓",
+      "leader_email": "ericlai429@gmail.com",
+      "is_email_verified": false,
+      "verified_leader_user_id": "",
+      "pin_code": "8888",
+      "pin_updated_at": "2026-08-19T22:23:52.928268",
+      "is_unlocked": false,
+      "unlocked_with_pin": ""
     }
   },
   "roles": {
@@ -66,26 +83,6 @@
     "schedule_officers": [],
     "managers": []
   },
-  "schedule_snapshots": {
-    "三總保全內部群": [
-      [
-        "日期",
-        "星期",
-        "哨點/崗位",
-        "早班 (07-19)",
-        "晚班 (19-07)",
-        "機動支援",
-        "備註"
-      ],
-      [
-        "2026/08/01",
-        "六",
-        "急診哨",
-        "陳冠冠",
-        "賴冠堃",
-        "張大千",
-        "正常勤務"
-      ]
-    ]
-  }
+  "schedule_snapshots": {},
+  "schedule_change_logs": []
 }

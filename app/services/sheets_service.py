@@ -250,26 +250,4 @@ class SheetsService:
             "posts": sorted(list(posts_set))
         }
 
-    def _generate_mock_sheet_data(self, tab_name: str) -> List[List[str]]:
-        header = ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)", "機動支援", "備註"]
-        today = date.today()
-        weekdays = ["一", "二", "三", "四", "五", "六", "日"]
-        
-        sample_members = ["陳冠冠", "賴小隊", "張大千", "王小明", "李大華", "趙大同", "周小倫", "林小杰", "賴冠堃", "黃大煊"]
-        posts = ["急診哨", "大門哨", "中控室", "立體停車場", "行政大樓"]
-
-        rows = [header]
-        for day in range(1, 11):
-            cur_date = f"{today.year}/{today.month:02d}/{day:02d}"
-            w_str = weekdays[date(today.year, today.month, day).weekday()]
-            post = posts[(day - 1) % len(posts)]
-            
-            m1 = sample_members[(day * 1) % len(sample_members)]
-            m2 = sample_members[(day * 2) % len(sample_members)]
-            m3 = sample_members[(day * 3) % len(sample_members)]
-
-            rows.append([cur_date, w_str, post, m1, m2, m3, "正常勤務"])
-
-        return rows
-
 sheets_service = SheetsService()
