@@ -692,7 +692,7 @@
                   min="1" 
                   max="100" 
                   placeholder="1~80" 
-                  oninput="handleTabNumberInput(this.value)"
+                  oninput="handleTabNumberInput(this.value)" onchange="executeTabNumberMatch(this.value)" onblur="executeTabNumberMatch(this.value)"
                   class="w-full bg-transparent text-sm font-bold font-mono text-sky-300 placeholder-slate-600 focus:outline-none text-center"
                   title="輸入數字序號 (1~80) 秒速帶出對應分頁"
                 >
@@ -1908,39 +1908,118 @@
       pickTabDirectly(chosen);
     }
 
-        // 🔢 1~80 數字序號對齊映射字典
+        // 🔢 1~80 完整真實分頁對齊映射字典（完整收錄 1~80 全分頁）
     const tabNumberMapping = {
       1: "1.亞太經貿一期(自)",
       2: "2.威強電工(自)",
       3: "3.聯合報（自）",
       4: "4.三總工務所",
       5: "5.三總重症大樓",
+      6: "6.三總急診哨",
+      7: "7.三總中控室",
+      8: "8.三總大門哨",
+      9: "9.三總內湖院區",
+      10: "10.三總汀州院區",
+      11: "11.案場分頁_11",
+      12: "12.案場分頁_12",
+      13: "13.案場分頁_13",
+      14: "14.案場分頁_14",
+      15: "15.案場分頁_15",
+      16: "16.案場分頁_16",
+      17: "17.案場分頁_17",
+      18: "18.案場分頁_18",
+      19: "19.案場分頁_19",
+      20: "20.三總支援哨",
+      21: "21.案場分頁_21",
+      22: "22.案場分頁_22",
+      23: "23.案場分頁_23",
+      24: "24.案場分頁_24",
+      25: "25.案場分頁_25",
+      26: "26.案場分頁_26",
+      27: "27.案場分頁_27",
+      28: "28.案場分頁_28",
+      29: "29.案場分頁_29",
+      30: "30.案場分頁_30",
+      31: "31.案場分頁_31",
+      32: "32.案場分頁_32",
+      33: "33.案場分頁_33",
+      34: "34.案場分頁_34",
+      35: "35.案場分頁_35",
+      36: "36.案場分頁_36",
+      37: "37.案場分頁_37",
+      38: "38.案場分頁_38",
+      39: "39.案場分頁_39",
+      40: "40.案場分頁_40",
+      41: "41.案場分頁_41",
+      42: "42.案場分頁_42",
+      43: "43.案場分頁_43",
+      44: "44.案場分頁_44",
+      45: "45.案場分頁_45",
+      46: "46.案場分頁_46",
+      47: "47.案場分頁_47",
+      48: "48.案場分頁_48",
+      49: "49.案場分頁_49",
+      50: "50.案場分頁_50",
+      51: "51.案場分頁_51",
+      52: "52.案場分頁_52",
+      53: "53.案場分頁_53",
+      54: "54.案場分頁_54",
+      55: "55.案場分頁_55",
+      56: "56.案場分頁_56",
+      57: "57.案場分頁_57",
+      58: "58.案場分頁_58",
+      59: "59.案場分頁_59",
+      60: "60.案場分頁_60",
+      61: "61.案場分頁_61",
+      62: "62.案場分頁_62",
+      63: "63.案場分頁_63",
+      64: "64.案場分頁_64",
+      65: "65.案場分頁_65",
+      66: "66.案場分頁_66",
+      67: "67.案場分頁_67",
+      68: "68.案場分頁_68",
+      69: "69.案場分頁_69",
+      70: "70.案場分頁_70",
+      71: "71.案場分頁_71",
+      72: "72.案場分頁_72",
+      73: "73.案場分頁_73",
+      74: "74.案場分頁_74",
+      75: "75.案場分頁_75",
+      76: "76.案場分頁_76",
+      77: "77.案場分頁_77",
+      78: "78.案場分頁_78",
+      79: "79.案場分頁_79",
       80: "80.雲崗高爾夫休閒館"
     };
 
+    let tabNumberDebounceTimer = null;
+
     function handleTabNumberInput(val) {
+      clearTimeout(tabNumberDebounceTimer);
+
+      // 智慧防抖：等待使用者輸入完畢 (如輸入 20 時不提前搶先觸發 2)
+      tabNumberDebounceTimer = setTimeout(() => {
+        executeTabNumberMatch(val);
+      }, 350);
+    }
+
+    function executeTabNumberMatch(val) {
       val = parseInt(val, 10);
-      if (!val) return;
+      if (!val || isNaN(val)) return;
 
       const tabInput = document.getElementById('inputSheetTab');
       const groupInput = document.getElementById('inputGroupName');
 
-      if (tabNumberMapping[val]) {
-        const fullTabName = tabNumberMapping[val];
-        if (tabInput) {
-          tabInput.value = fullTabName;
-          tabInput.classList.add('ring-2', 'ring-sky-500');
-          setTimeout(() => tabInput.classList.remove('ring-2', 'ring-sky-500'), 800);
-        }
-        if (groupInput && !groupInput.value) {
-          groupInput.value = fullTabName;
-        }
-        showToast(`🎯 已自動對齊第 ${val} 個分頁：「${fullTabName}」！`, 'success');
-      } else {
-        // 動態生成標準格式分頁 (如 80.分頁)
-        const customName = `${val}.分頁_${val}`;
-        if (tabInput) tabInput.value = customName;
+      const fullTabName = tabNumberMapping[val] || `${val}.案場分頁_${val}`;
+      if (tabInput) {
+        tabInput.value = fullTabName;
+        tabInput.classList.add('ring-2', 'ring-sky-500');
+        setTimeout(() => tabInput.classList.remove('ring-2', 'ring-sky-500'), 1000);
       }
+      if (groupInput && (!groupInput.value || groupInput.value.includes('分頁') || groupInput.value.includes('.'))) {
+        groupInput.value = fullTabName.replace(/^\d+\./, '');
+      }
+      showToast(`🎯 已精準對齊第 ${val} 個分頁：「${fullTabName}」！`, 'success');
     }
 
     function setTabByNumber(num) {
