@@ -282,6 +282,92 @@ class SheetsService:
                 "posts": []
             }
 
+        # 🌟 1. 檢查是否為「矩陣式月曆排班表」(人員在 Y 軸，日期 1~31 在 X 軸)
+        date_row_idx = None
+        day_cols = {}
+        for r_idx, row in enumerate(raw_data[:8]):
+            nums = [i for i, c in enumerate(row) if str(c).strip().isdigit() and 1 <= int(str(c).strip()) <= 31]
+            if len(nums) >= 5:
+                date_row_idx = r_idx
+                break
+
+        if date_row_idx is not None:
+            # === Matrix 矩陣式月曆解析 ===
+            date_row = raw_data[date_row_idx]
+            weekday_row = raw_data[date_row_idx + 1] if date_row_idx + 1 < len(raw_data) else []
+
+            for col_idx, cell in enumerate(date_row):
+                val = str(cell).strip()
+                if val.isdigit() and 1 <= int(val) <= 31:
+                    w_val = str(weekday_row[col_idx]).strip() if col_idx < len(weekday_row) else ''
+                    day_cols[col_idx] = (int(val), w_val)
+
+            daily_schedule = {day_num: {'day': [], 'night': [], 'support': [], 'weekday': w_val} for day_num, w_val in day_cols.values()}
+            members_set = set()
+            posts_set = {tab_name.strip()}
+
+            for r_idx in range(date_row_idx + 2, len(raw_data)):
+                row = raw_data[r_idx]
+                if not row or len(row) < 2:
+                    continue
+
+                shift_col = str(row[0]).strip()
+                person_col = str(row[1]).strip() if len(row) > 1 else ''
+
+                if any(k in shift_col for k in ['總工時', '注意', '備註', '每日', '合計']):
+                    break
+                if not person_col or any(k in person_col for k in ['值勤人員', '電話', '姓名']):
+                    continue
+
+                name_clean = person_col.split('\n')[0].strip()
+                phone_match = re.search(r'09\d{2}[-\s]?\d{3}[-\s]?\d{3}', person_col)
+                phone = phone_match.group(0) if phone_match else ''
+
+                if not name_clean:
+                    continue
+
+                display_name = f"{name_clean} ({phone})" if phone else name_clean
+                members_set.add(name_clean)
+
+                for col_idx, (day_num, _) in day_cols.items():
+                    if col_idx < len(row):
+                        shift_val = str(row[col_idx]).strip().upper()
+                        if shift_val == 'A' or '日' in shift_val or '早' in shift_val:
+                            daily_schedule[day_num]['day'].append(display_name)
+                        elif shift_val == 'B' or '夜' in shift_val or '晚' in shift_val:
+                            daily_schedule[day_num]['night'].append(display_name)
+                        elif shift_val in ['機', '支', 'C']:
+                            daily_schedule[day_num]['support'].append(display_name)
+
+            standard_columns = ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)", "機動支援", "備註"]
+            standard_rows = []
+            today = date.today()
+            curr_year = today.year
+            curr_month = 8 # 8月份排班表
+
+            for day_num in sorted(daily_schedule.keys()):
+                info = daily_schedule[day_num]
+                d_str = f"{curr_year}/{curr_month:02d}/{day_num:02d}"
+                standard_rows.append({
+                    "日期": d_str,
+                    "星期": info.get('weekday', ''),
+                    "哨點/崗位": tab_name.strip(),
+                    "早班 (07-19)": "、".join(info['day']) if info['day'] else "—",
+                    "晚班 (19-07)": "、".join(info['night']) if info['night'] else "—",
+                    "機動支援": "、".join(info['support']) if info['support'] else "—",
+                    "備註": "正常勤務"
+                })
+
+            return {
+                "tab_name": tab_name,
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "columns": standard_columns,
+                "rows": standard_rows,
+                "members": sorted(list(members_set)),
+                "posts": sorted(list(posts_set))
+            }
+
+        # 🌟 2. 傳統直列式排班表解析
         header = raw_data[0]
         data_rows = raw_data[1:]
 
