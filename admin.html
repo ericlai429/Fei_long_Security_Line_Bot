@@ -198,36 +198,47 @@
             系統將引導使用幹部 Google 帳號授權唯讀存取，直接讀取您有權限開啟的雲端試算表（絕無修改與寫入權限）：
           </p>
 
-        <!-- 🔑 Google OAuth Token Direct Input Box -->
-        <div class="bg-slate-950 border border-sky-900/80 rounded-2xl p-4 space-y-2">
+        <!-- 🔑 Google OAuth Token Direct Dual Input Box -->
+        <div class="bg-slate-950 border border-sky-900/80 rounded-2xl p-4 space-y-3 shadow-xl">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
               <i class="fa-solid fa-key"></i>
-              <span>貼上 Google OAuth Access Token (ya29...)</span>
+              <span>Google OAuth 雙金鑰連線 (Access Token ＋ 永久 Refresh Token)</span>
             </span>
-            <span class="text-[10px] bg-sky-950 text-sky-300 font-bold px-2 py-0.5 rounded border border-sky-800">
-              合法讀取者授權
+            <span class="text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800">
+              24/7 背景自動續約
             </span>
           </div>
-          <p class="text-[11px] text-slate-300">
-            請將從 Google Playground 取得的 Access Token (開頭為 <code class="text-amber-300">ya29...</code>) 貼在此處：
-          </p>
-          <div class="flex items-center gap-2">
-            <input 
-              type="text" 
-              id="directOAuthTokenInput" 
-              oninput="handleTokenInput(this.value)"
-              onpaste="setTimeout(() => handleTokenInput(this.value), 50)"
-              placeholder="在此貼上 ya29.a0... (貼上即自動儲存與連線)" 
-              class="flex-1 h-10 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs text-sky-300 placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
-            >
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-slate-300">1. Access Token (短效 ya29...)</label>
+              <input 
+                type="text" 
+                id="directOAuthTokenInput" 
+                placeholder="貼上 ya29.a0..." 
+                class="w-full h-10 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs text-sky-300 placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
+              >
+            </div>
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-emerald-300">2. Refresh Token (永久刷新 1//0...)</label>
+              <input 
+                type="text" 
+                id="directRefreshTokenInput" 
+                placeholder="貼上 1//0... (永久自動換發不斷線)" 
+                class="w-full h-10 bg-slate-900 border border-emerald-700/80 rounded-xl px-3 text-xs text-emerald-300 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+              >
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-1">
             <button 
               type="button" 
               onclick="saveDirectOAuthToken()" 
-              class="h-10 px-4 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shrink-0"
+              class="h-10 px-5 bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-lg"
             >
               <i class="fa-solid fa-cloud-arrow-down"></i>
-              <span>儲存並啟用自動讀取</span>
+              <span>儲存雙金鑰並啟動 24/7 永續連線</span>
             </button>
           </div>
         </div>
