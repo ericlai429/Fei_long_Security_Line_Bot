@@ -76,7 +76,7 @@
   </header>
 
   <!-- Main Container -->
-  <main class="max-w-6xl w-full mx-auto p-3 sm:p-5 space-y-4 sm:space-y-5 flex-1">
+  <main class="max-w-6xl w-full mx-auto p-3 sm:p-4 space-y-3.5 flex-1">
 
     <!-- Toast Notification -->
     <div id="toast" class="hidden fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300"></div>
@@ -475,25 +475,28 @@
       </div>
     </div>
 
-    <!-- 📧 常駐顯示：小隊長 E-mail (白名單認證) 總覽面板 -->
-    <section class="bg-gradient-to-r from-purple-950/60 via-slate-900 to-slate-900 border border-purple-800/80 rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-2.5">
-      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+    <!-- 📧 小隊長 E-mail 白名單常駐快速面板 (極簡緊湊版) -->
+    <section class="bg-slate-900/90 border border-purple-800/70 rounded-2xl p-3 shadow-md space-y-2">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
         <div class="flex items-center gap-2">
-          <i class="fa-solid fa-envelope-circle-check text-emerald-400 text-base sm:text-lg"></i>
-          <div>
-            <h2 class="text-xs sm:text-sm font-bold text-white">小隊長 E-mail (白名單認證) 常駐管理</h2>
-            <p class="text-[11px] text-purple-300">內建全半形（＠與。）自動偵測與即時校正</p>
-          </div>
+          <i class="fa-solid fa-envelope-circle-check text-emerald-400 text-sm"></i>
+          <h2 class="text-xs font-bold text-white">小隊長 E-mail (白名單認證) 常駐面板</h2>
         </div>
-        <span class="text-[10px] bg-emerald-950 text-emerald-400 font-bold px-2 py-0.5 rounded-lg border border-emerald-800 flex items-center gap-1">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>常駐監控</span>
-        </span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="toggleExecutiveReveal()" class="text-slate-400 hover:text-slate-200 text-xs flex items-center gap-1 cursor-pointer">
+            <i class="fa-solid fa-eye text-[11px]"></i>
+            <span class="text-[10px]">切換遮蔽</span>
+          </button>
+          <span class="text-[9px] bg-emerald-950 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-800 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>24/7 常駐</span>
+          </span>
+        </div>
       </div>
 
       <!-- Quick Fast Whitelist Status Matrix -->
       <div id="leaderEmailOverview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        <div class="text-xs text-slate-500 py-2 col-span-full text-center">載入隊長白名單中...</div>
+        <div class="text-xs text-slate-500 py-1 col-span-full text-center">載入隊長白名單中...</div>
       </div>
     </section>
 
@@ -501,7 +504,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
 
       <!-- Left Form (4 cols) -->
-      <div class="lg:col-span-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+      <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-lg space-y-3">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
           <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2" id="formTitle">
             <i class="fa-solid fa-pen-to-square text-purple-400"></i>
@@ -638,7 +641,7 @@
       </div>
 
       <!-- Right Column: Groups Table (7 cols) -->
-      <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
+      <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-lg space-y-3">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-list text-emerald-400"></i>
