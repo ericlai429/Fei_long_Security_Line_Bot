@@ -106,31 +106,10 @@
         </div>
 
         <form id="whitelistForm" onsubmit="handleWhitelistModalSubmit(event)" class="space-y-3.5 text-xs">
-          <!-- 1~80 下拉選單 -->
+          <!-- 小隊長 Email 輸入框 -->
           <div>
             <label class="block text-slate-200 font-bold text-sm mb-1 flex items-center justify-between">
-              <span>1. 選擇分頁序號 (1~80) <span class="text-rose-400">*</span></span>
-              <span class="text-xs text-sky-400 font-bold">精準對齊各案場</span>
-            </label>
-            <select 
-              id="whitelistTabSelect" 
-              onchange="handleWhitelistTabChange(this.value)"
-              class="w-full h-11 bg-slate-950 border border-emerald-700/80 rounded-xl px-3 text-sm text-emerald-300 font-bold focus:outline-none focus:border-emerald-500 transition font-mono"
-            >
-              <option value="4.三總工務所">[4] 4.三總工務所</option>
-              <option value="1.亞太經貿一期(自)">[1] 1.亞太經貿一期(自)</option>
-              <option value="2.威強電工(自)">[2] 2.威強電工(自)</option>
-              <option value="3.聯合報（自）">[3] 3.聯合報（自）</option>
-              <option value="5.三總重症大樓">[5] 5.三總重症大樓</option>
-              <option value="80.雲崗高爾夫休閒館">[80] 80.雲崗高爾夫休閒館</option>
-              <option value="三總保全內部群">[0] 三總保全內部群</option>
-            </select>
-          </div>
-
-          <!-- 對應小隊長 Email 輸入框 -->
-          <div>
-            <label class="block text-slate-200 font-bold text-sm mb-1 flex items-center justify-between">
-              <span>2. 小隊長 E-mail 信箱 <span class="text-rose-400">*</span></span>
+              <span>1. 小隊長 E-mail 信箱 <span class="text-rose-400">*</span></span>
               <span id="whitelistEmailWarn" class="hidden text-[10px] text-amber-300 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
                 ⚠️ 自動校正全形符號
               </span>
@@ -138,11 +117,65 @@
             <input 
               type="text" 
               id="whitelistEmailInput" 
-              placeholder="如：leader@feilong.com 或 ericlai429@gmail.com" 
+              value="ericlai429@gmail.com"
+              placeholder="如：ericlai429@gmail.com" 
               required
-              oninput="handleEmailInputWithAutoFix(this, 'whitelistEmailWarn')"
-              class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-mono"
+              oninput="handleEmailInputWithAutoFix(this, 'whitelistEmailWarn'); onLeaderEmailChange(this.value);"
+              class="w-full h-11 bg-slate-950 border border-emerald-700/80 rounded-xl px-3 text-sm text-emerald-300 font-bold placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-mono"
             >
+          </div>
+
+          <!-- 管理之工地的對應分頁 (多選序號，如 4,5 或 1,4,80) -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-slate-200 font-bold text-sm">
+                2. 管理之工地分頁序號 <span class="text-rose-400">*</span>
+              </label>
+              <span class="text-xs text-sky-400 font-bold">支援多個序號 (如: 4, 5)</span>
+            </div>
+            
+            <input 
+              type="text" 
+              id="whitelistAssignedTabsInput" 
+              value="4, 5"
+              placeholder="輸入分頁序號，如：4, 5 或 1, 4, 80" 
+              required
+              class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-mono font-bold"
+            >
+
+            <!-- 快速點選勾選各工地分頁按鈕 -->
+            <div class="space-y-1.5 pt-2">
+              <div class="text-[11px] text-slate-400 font-bold flex items-center justify-between">
+                <span>點選快速切換分頁綁定：</span>
+                <span class="text-emerald-400">目前對應工地：<span id="selectedTabsCount" class="font-bold">2 個分頁</span></span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5" id="quickToggleTabsGrid">
+                <button type="button" onclick="toggleAssignedTab(4)" id="tabBadge_4" class="h-8 px-2.5 rounded-lg border text-xs font-bold transition flex items-center justify-between cursor-pointer bg-emerald-950/80 border-emerald-500 text-emerald-300">
+                  <span>[4] 三總工務所</span>
+                  <i class="fa-solid fa-check text-xs"></i>
+                </button>
+                <button type="button" onclick="toggleAssignedTab(5)" id="tabBadge_5" class="h-8 px-2.5 rounded-lg border text-xs font-bold transition flex items-center justify-between cursor-pointer bg-emerald-950/80 border-emerald-500 text-emerald-300">
+                  <span>[5] 三總重症大樓</span>
+                  <i class="fa-solid fa-check text-xs"></i>
+                </button>
+                <button type="button" onclick="toggleAssignedTab(1)" id="tabBadge_1" class="h-8 px-2.5 rounded-lg border text-xs font-bold transition flex items-center justify-between cursor-pointer bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700">
+                  <span>[1] 亞太經貿一期</span>
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+                <button type="button" onclick="toggleAssignedTab(2)" id="tabBadge_2" class="h-8 px-2.5 rounded-lg border text-xs font-bold transition flex items-center justify-between cursor-pointer bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700">
+                  <span>[2] 威強電工</span>
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+                <button type="button" onclick="toggleAssignedTab(3)" id="tabBadge_3" class="h-8 px-2.5 rounded-lg border text-xs font-bold transition flex items-center justify-between cursor-pointer bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700">
+                  <span>[3] 聯合報</span>
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+                <button type="button" onclick="toggleAssignedTab(80)" id="tabBadge_80" class="h-8 px-2.5 rounded-lg border text-xs font-bold transition flex items-center justify-between cursor-pointer bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700">
+                  <span>[80] 雲崗高爾夫</span>
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Action Buttons (飛龍翡翠光盾 Save 動態) -->
@@ -153,7 +186,7 @@
               class="flex-1 h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <i class="fa-solid fa-cloud-arrow-down"></i>
-              <span id="saveWhitelistBtnText">儲存隊長白名單 (Save)</span>
+              <span id="saveWhitelistBtnText">儲存隊長與工地分頁對應 (Save)</span>
             </button>
             <button 
               type="button" 
@@ -1323,11 +1356,20 @@
     }
 
     /* 📁 Google Drive Shared Files & Tabs Picker Functions */
-        // ✉️ 白名單專屬管理彈窗 (1~80 下拉與儲存)
+        // ✉️ 白名單專屬管理彈窗 (小隊長 Email 對應多工地分頁序號 4, 5, 80 等)
+    const tabFullNamesMap = {
+      1: "1.亞太經貿一期(自)",
+      2: "2.威強電工(自)",
+      3: "3.聯合報（自）",
+      4: "4.三總工務所",
+      5: "5.三總重症大樓",
+      80: "80.雲崗高爾夫休閒館"
+    };
+
     function openWhitelistModal() {
       const modal = document.getElementById('whitelistModal');
       if (modal) {
-        populateWhitelistSelect();
+        loadLeaderAssignedTabs();
         renderModalWhitelistList();
         modal.classList.remove('hidden');
       }
@@ -1338,63 +1380,98 @@
       if (modal) modal.classList.add('hidden');
     }
 
-    function populateWhitelistSelect() {
-      const sel = document.getElementById('whitelistTabSelect');
-      if (!sel) return;
+    function loadLeaderAssignedTabs() {
+      const emailInput = document.getElementById('whitelistEmailInput');
+      const email = emailInput ? emailInput.value.trim() : 'ericlai429@gmail.com';
+      const storedTabs = localStorage.getItem(`leader_assigned_tabs_${email}`) || "4, 5";
       
-      // 支援 1~80 完整分頁陣列
-      const allTabs = [
-        { no: 4, name: "4.三總工務所" },
-        { no: 1, name: "1.亞太經貿一期(自)" },
-        { no: 2, name: "2.威強電工(自)" },
-        { no: 3, name: "3.聯合報（自）" },
-        { no: 5, name: "5.三總重症大樓" },
-        { no: 80, name: "80.雲崗高爾夫休閒館" },
-        { no: 0, name: "三總保全內部群" }
-      ];
-
-      sel.innerHTML = '';
-      allTabs.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t.name;
-        opt.textContent = `[${t.no}] ${t.name}`;
-        sel.appendChild(opt);
-      });
-
-      handleWhitelistTabChange(sel.value);
+      const tabsInput = document.getElementById('whitelistAssignedTabsInput');
+      if (tabsInput) tabsInput.value = storedTabs;
+      updateTabBadgesUI(storedTabs);
     }
 
-    function handleWhitelistTabChange(tabName) {
-      const emailInput = document.getElementById('whitelistEmailInput');
-      // 檢查此分頁是否已有儲存之隊長 Email
-      const savedEmail = localStorage.getItem(`saved_leader_email_tab_${tabName}`) || 
-                         localStorage.getItem('saved_leader_email_tsgh_internal') || '';
-      if (emailInput) emailInput.value = savedEmail;
+    function onLeaderEmailChange(email) {
+      email = email.trim();
+      const storedTabs = localStorage.getItem(`leader_assigned_tabs_${email}`) || "4, 5";
+      const tabsInput = document.getElementById('whitelistAssignedTabsInput');
+      if (tabsInput) tabsInput.value = storedTabs;
+      updateTabBadgesUI(storedTabs);
+    }
+
+    function toggleAssignedTab(tabNo) {
+      const tabsInput = document.getElementById('whitelistAssignedTabsInput');
+      if (!tabsInput) return;
+      
+      let raw = tabsInput.value;
+      let parts = raw.split(/[,，\s]+/).filter(x => x.trim()).map(x => parseInt(x, 10)).filter(x => !isNaN(x));
+      
+      if (parts.includes(tabNo)) {
+        parts = parts.filter(x => x !== tabNo);
+      } else {
+        parts.push(tabNo);
+      }
+      parts.sort((a, b) => a - b);
+      
+      tabsInput.value = parts.join(', ');
+      updateTabBadgesUI(tabsInput.value);
+    }
+
+    function updateTabBadgesUI(tabsStr) {
+      const parts = tabsStr.split(/[,，\s]+/).filter(x => x.trim()).map(x => parseInt(x, 10)).filter(x => !isNaN(x));
+      const countEl = document.getElementById('selectedTabsCount');
+      if (countEl) countEl.textContent = `${parts.length} 個分頁`;
+
+      [1, 2, 3, 4, 5, 80].forEach(no => {
+        const badge = document.getElementById(`tabBadge_${no}`);
+        if (!badge) return;
+        if (parts.includes(no)) {
+          badge.className = "h-8 px-2.5 rounded-lg border text-xs font-bold transition flex items-center justify-between cursor-pointer bg-emerald-950/80 border-emerald-500 text-emerald-300 shadow-sm";
+          badge.innerHTML = `<span>[${no}] ${getTabShortName(no)}</span><i class="fa-solid fa-check text-xs"></i>`;
+        } else {
+          badge.className = "h-8 px-2.5 rounded-lg border text-xs font-bold transition flex items-center justify-between cursor-pointer bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700";
+          badge.innerHTML = `<span>[${no}] ${getTabShortName(no)}</span><i class="fa-solid fa-plus text-xs"></i>`;
+        }
+      });
+    }
+
+    function getTabShortName(no) {
+      const map = { 1: '亞太經貿一期', 2: '威強電工', 3: '聯合報', 4: '三總工務所', 5: '三總重症大樓', 80: '雲崗高爾夫' };
+      return map[no] || `分頁${no}`;
     }
 
     function handleWhitelistModalSubmit(e) {
       e.preventDefault();
-      const tabSelect = document.getElementById('whitelistTabSelect');
-      const tabName = tabSelect ? tabSelect.value : '';
       const emailInput = document.getElementById('whitelistEmailInput');
       const rawEmail = emailInput ? emailInput.value.trim() : '';
-      const { cleaned } = cleanAndCheckEmail(rawEmail);
+      const { cleaned: email } = cleanAndCheckEmail(rawEmail);
 
-      if (!cleaned) {
+      const tabsInput = document.getElementById('whitelistAssignedTabsInput');
+      const tabsStr = tabsInput ? tabsInput.value.trim() : '4, 5';
+      const parts = tabsStr.split(/[,，\s]+/).filter(x => x.trim()).map(x => parseInt(x, 10)).filter(x => !isNaN(x));
+
+      if (!email) {
         showToast('請輸入有效的小隊長 Email！', 'error');
         return;
       }
+      if (parts.length === 0) {
+        showToast('請至少指定一個管理的工地分頁序號！', 'error');
+        return;
+      }
 
-      // 1. 持久保存 (LocalStorage)
-      localStorage.setItem(`saved_leader_email_tab_${tabName}`, cleaned);
-      localStorage.setItem(`saved_leader_email_tsgh_internal`, cleaned);
+      // 1. 持久保存小隊長與多個分頁序號關聯 (LocalStorage)
+      localStorage.setItem(`leader_assigned_tabs_${email}`, parts.join(', '));
+      localStorage.setItem(`saved_leader_email_tsgh_internal`, email);
+
+      parts.forEach(p => {
+        const fullTab = tabFullNamesMap[p] || `${p}.分頁_${p}`;
+        localStorage.setItem(`saved_leader_email_tab_${fullTab}`, email);
+      });
 
       // 2. 更新主畫面 currentGroups 名冊
-      const grp = currentGroups.find(g => g.sheet_tab === tabName || g.group_id === 'tsgh_internal');
-      if (grp) {
-        grp.leader_email = cleaned;
-        grp.is_email_verified = true;
-      }
+      currentGroups.forEach(g => {
+        g.leader_email = email;
+        g.is_email_verified = true;
+      });
       renderLeaderEmailOverview(currentGroups);
       renderGroupsTable(currentGroups);
 
@@ -1402,16 +1479,16 @@
       const btn = document.getElementById('saveWhitelistBtn');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-circle-check text-base text-emerald-200 animate-bounce"></i><span>✅ 已成功寫入隊長白名單！</span>';
+        btn.innerHTML = '<i class="fa-solid fa-circle-check text-base text-emerald-200 animate-bounce"></i><span>✅ 已成功綁定隊長與管理分頁！</span>';
         btn.className = "flex-1 h-11 bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2";
       }
-      showToast(`🎉 已成功將「${cleaned}」綁定為「${tabName}」隊長白名單！`, 'success');
+      showToast(`🎉 已成功將「${email}」登記為分頁 [${parts.join(', ')}] 之小隊長白名單！`, 'success');
       renderModalWhitelistList();
 
       setTimeout(() => {
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存隊長白名單 (Save)</span>';
+          btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>儲存隊長與工地分頁對應 (Save)</span>';
           btn.className = "flex-1 h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer";
         }
       }, 2500);
@@ -1420,7 +1497,7 @@
       fetch(API_BASE + `/api/admin/groups/tsgh_internal/leader-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleaned, verify_and_save: true })
+        body: JSON.stringify({ email: email, verify_and_save: true })
       }).catch(() => {});
     }
 
@@ -1428,26 +1505,28 @@
       const container = document.getElementById('modalWhitelistListContainer');
       if (!container) return;
 
-      const allTabs = [
-        "4.三總工務所",
-        "1.亞太經貿一期(自)",
-        "2.威強電工(自)",
-        "3.聯合報（自）",
-        "5.三總重症大樓",
-        "80.雲崗高爾夫休閒館"
-      ];
+      const emailInput = document.getElementById('whitelistEmailInput');
+      const email = emailInput ? emailInput.value.trim() : 'ericlai429@gmail.com';
+      const assigned = localStorage.getItem(`leader_assigned_tabs_${email}`) || "4, 5";
+      const parts = assigned.split(/[,，\s]+/).filter(x => x.trim()).map(x => parseInt(x, 10)).filter(x => !isNaN(x));
 
-      let html = '';
-      allTabs.forEach(tab => {
-        const email = localStorage.getItem(`saved_leader_email_tab_${tab}`) || 
-                      (tab.includes('三總') ? localStorage.getItem('saved_leader_email_tsgh_internal') || 'ericlai429@gmail.com' : '');
-        html += `
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-2 flex items-center justify-between">
-            <span class="font-bold text-sky-300 text-xs">📋 ${tab}</span>
-            <span class="font-mono text-emerald-400 font-bold text-xs">${email ? (isExecutiveRevealed ? email : maskEmail(email)) : '<span class="text-slate-600">未登記</span>'}</span>
+      let html = `
+        <div class="bg-slate-950 border border-emerald-800/80 rounded-xl p-2.5 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-white text-xs flex items-center gap-1">
+              <i class="fa-solid fa-user-shield text-emerald-400"></i>
+              <span>${isExecutiveRevealed ? email : maskEmail(email)}</span>
+            </span>
+            <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-800">已認證小隊長</span>
           </div>
-        `;
-      });
+          <div class="text-[11px] text-slate-300 flex items-center gap-1.5">
+            <span class="text-slate-400">負責管理工地：</span>
+            <div class="flex flex-wrap gap-1">
+              ${parts.map(p => `<span class="bg-slate-900 text-sky-300 px-1.5 py-0.5 rounded border border-slate-700 font-mono font-bold">[${p}] ${getTabShortName(p)}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
       container.innerHTML = html;
     }
 
