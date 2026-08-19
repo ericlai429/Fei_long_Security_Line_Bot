@@ -150,48 +150,44 @@
 
 
 
-  <!-- Main Pure View -->
-  <header class="no-print bg-slate-900/95 border-b border-slate-800 px-3 py-2.5 sm:px-4 sticky top-0 z-20 backdrop-blur-md">
-    <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2 shrink-0">
-        <!-- 🛡️ 飛龍企業盾牌 (純品牌識別圖示) -->
-        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold shadow-md shrink-0">
-          <i class="fa-solid fa-shield-halved text-xs sm:text-sm"></i>
+  <!-- Main Pure View (Ultra-Clean, Zero-Overflow Responsive Top Navbar) -->
+  <header class="no-print bg-slate-900/95 border-b border-slate-800 px-2.5 py-2 sm:px-4 sticky top-0 z-20 backdrop-blur-md">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
+      <!-- 🛡️ 左側：盾牌 ＋ 標題 ＋ 動態深邃呼吸燈號 -->
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold shadow-md shrink-0">
+          <i class="fa-solid fa-shield-halved text-xs"></i>
         </div>
-        <div class="flex flex-col">
-          <div class="flex items-center gap-1.5 whitespace-nowrap">
-            <!-- 🟨 黃框：內縮精簡字「飛龍三總班表」 -->
-            <h1 class="text-sm sm:text-base font-black text-white leading-tight tracking-tight whitespace-nowrap">飛龍三總班表</h1>
-            <!-- 🟥 紅框：呼吸燈號「連線偵測」 (深邃明滅 2.6s 呼吸燈) -->
-            <div id="connectionStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-950/90 text-emerald-300 border border-emerald-500/80 shadow-[0_0_14px_rgba(16,185,129,0.35)] transition">
-              <span class="relative flex h-2.5 w-2.5 items-center justify-center">
-                <span class="deep-pulse-dot w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-              </span>
-              <span id="connectionStatusText" class="tracking-tight">連線偵測</span>
-            </div>
+        <div class="flex items-center gap-1.5 min-w-0">
+          <h1 class="text-sm sm:text-base font-black text-white leading-none whitespace-nowrap">飛龍三總班表</h1>
+          <!-- 🟢 整合式緊湊呼吸燈 -->
+          <div id="connectionStatusBadge" title="連線偵測正常" class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-950 border border-emerald-500/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)] shrink-0">
+            <span class="deep-pulse-dot w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+            <span id="connectionStatusText" class="hidden sm:inline tracking-tight">連線偵測</span>
           </div>
-          <p class="text-[10px] text-purple-300 font-bold" id="currentTabLabel">4.三總工務所</p>
         </div>
       </div>
 
+      <!-- 右側按鈕群：小鑰匙 ＋ 查詢 (緊湊置中，保證絕不溢出) -->
       <div class="flex items-center gap-1.5 shrink-0">
-        <!-- 🗝️ 黑色金屬小 Key (純小鑰匙圖示，極簡不溢出) -->
+        <!-- 🗝️ 黑色金鑰 -->
         <button 
           type="button" 
           id="secretAdminKeyBtn"
           onclick="openAdminAuthModal()" 
           title="Admin 管理員金鑰"
-          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
+          class="w-8 h-8 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
         >
-          <i class="fa-solid fa-key text-[11px]"></i>
+          <i class="fa-solid fa-key text-xs"></i>
         </button>
 
+        <!-- 🔍 查詢按鈕 (緊湊高質感) -->
         <button 
           onclick="fetchFullSchedule(true)" 
           id="queryScheduleBtn"
-          class="h-8 sm:h-9 px-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95 shrink-0"
+          class="h-8 px-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1 shrink-0 cursor-pointer"
         >
-          <i class="fa-solid fa-rotate text-xs"></i>
+          <i class="fa-solid fa-rotate text-[11px]"></i>
           <span>查詢</span>
         </button>
       </div>
