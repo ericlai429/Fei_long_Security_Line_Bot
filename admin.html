@@ -307,40 +307,49 @@
             系統將引導使用幹部 Google 帳號授權唯讀存取，直接讀取您有權限開啟的雲端試算表（絕無修改與寫入權限）：
           </p>
 
-        <!-- 🔑 Google OAuth Token Direct Dual Input Box -->
-        <div class="bg-slate-950 border border-sky-900/80 rounded-2xl p-4 space-y-3 shadow-xl">
+        <!-- 🔑 Google Sheets API & OAuth 自動偵測連線區 (API Direct Fetch Engine) -->
+        <div class="bg-slate-950 border border-emerald-700/80 rounded-2xl p-4 space-y-3 shadow-xl">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-key"></i>
-              <span>Google OAuth 雙金鑰連線 (Access Token ＋ 永久 Refresh Token)</span>
+            <span class="text-xs sm:text-sm font-bold text-emerald-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-bolt-lightning text-amber-400"></i>
+              <span>Google API 自動偵測 ＆ 雙金鑰連線 (1~80 全分頁即時抓取)</span>
             </span>
             <span class="text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800">
-              24/7 背景自動續約
+              API 自動同步
             </span>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="space-y-1">
-              <label class="text-[11px] font-bold text-slate-300">1. Access Token (短效 ya29...)</label>
+              <label class="text-[11px] font-bold text-sky-300">1. Google OAuth Token (ya29...) 或 API Key (AIza...)</label>
               <input 
                 type="text" 
                 id="directOAuthTokenInput" 
-                placeholder="貼上 ya29.a0..." 
+                placeholder="貼上 ya29.a0... 或 Google API Key" 
+                oninput="handleTokenInput(this.value)"
                 class="w-full h-10 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs text-sky-300 placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
               >
             </div>
             <div class="space-y-1">
-              <label class="text-[11px] font-bold text-emerald-300">2. Refresh Token (永久刷新 1//0...)</label>
+              <label class="text-[11px] font-bold text-emerald-300">2. Refresh Token (1//0...) 或 Apps Script 網址</label>
               <input 
                 type="text" 
                 id="directRefreshTokenInput" 
-                placeholder="貼上 1//0... (永久自動換發不斷線)" 
+                placeholder="貼上 1//0... 或 https://script.google.com/..." 
                 class="w-full h-10 bg-slate-900 border border-emerald-700/80 rounded-xl px-3 text-xs text-emerald-300 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
               >
             </div>
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-1">
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800">
+            <button 
+              type="button" 
+              onclick="triggerDirectGoogleApiFetch()" 
+              class="h-10 px-4 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
+            >
+              <i class="fa-solid fa-arrows-rotate text-amber-300"></i>
+              <span>⚡ 立即透過 Google API 偵測抓取 1~80 全分頁</span>
+            </button>
             <button 
               type="button" 
               id="saveTokensBtn"
@@ -720,7 +729,12 @@
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
               <label class="text-slate-200 font-bold text-sm">試算表分頁名稱 <span class="text-rose-400">*</span></label>
-              <span class="text-xs text-sky-300 font-bold">💡 前方輸入數字 (如: 4 或 80) 自動對齊</span>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="triggerDirectGoogleApiFetch()" class="text-xs text-emerald-300 hover:text-emerald-200 font-bold flex items-center gap-1 cursor-pointer bg-emerald-950/90 px-2.5 py-1 rounded-lg border border-emerald-700 shadow-sm transition active:scale-95">
+                  <i class="fa-solid fa-bolt-lightning text-amber-300"></i>
+                  <span>⚡ 智能偵測雲端分頁</span>
+                </button>
+              </div>
             </div>
             <div class="flex items-center gap-2">
               <!-- 🔢 數字序號輸入框 (1~80) -->
@@ -1571,6 +1585,101 @@
         </div>
       `;
       container.innerHTML = html;
+    }
+
+        // ⚡ Google Sheets API 核心全分頁偵測與抓取引擎 (Multi-Strategy Auto-Detector)
+    async function triggerDirectGoogleApiFetch() {
+      const spreadsheetId = '1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s';
+      let token = (document.getElementById('directOAuthTokenInput') ? document.getElementById('directOAuthTokenInput').value.trim() : '') || localStorage.getItem('saved_oauth_token') || '';
+      let refreshToken = (document.getElementById('directRefreshTokenInput') ? document.getElementById('directRefreshTokenInput').value.trim() : '') || localStorage.getItem('saved_refresh_token') || '';
+
+      showToast('⏳ 正在連接 Google API 偵測整份試算表所有分頁標籤...', 'info');
+
+      // Strategy 1: Google Sheets REST API v4 with OAuth Bearer Token
+      if (token) {
+        try {
+          const authHeader = token.startsWith('AIza') ? {} : { 'Authorization': `Bearer ${token}` };
+          const apiUrl = token.startsWith('AIza') 
+            ? `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title&key=${token}`
+            : `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`;
+
+          const gRes = await fetch(apiUrl, { headers: authHeader });
+          if (gRes.ok) {
+            const gData = await gRes.json();
+            const sheetTitles = (gData.sheets || []).map(s => s.properties.title);
+            if (sheetTitles.length > 0) {
+              applyFetchedSheetTitles(sheetTitles);
+              showToast(`🎉 成功透過 Google API 抓取到 ${sheetTitles.length} 個真實分頁！已全數對齊 1~80 序號！`, 'success');
+              return true;
+            }
+          }
+        } catch (err) {
+          console.debug('Google Sheets v4 API error:', err);
+        }
+      }
+
+      // Strategy 2: Google Apps Script Web App / Proxy
+      if (refreshToken && refreshToken.includes('script.google.com')) {
+        try {
+          const gasRes = await fetch(`${refreshToken}?action=getTabs`);
+          if (gasRes.ok) {
+            const gasData = await gasRes.json();
+            const sheetTitles = Array.isArray(gasData) ? gasData : (gasData.tabs || []);
+            if (sheetTitles.length > 0) {
+              applyFetchedSheetTitles(sheetTitles);
+              showToast(`🎉 成功透過 Apps Script 抓取到 ${sheetTitles.length} 個真實分頁！`, 'success');
+              return true;
+            }
+          }
+        } catch (err) {}
+      }
+
+      // Strategy 3: Server-side API /api/admin/tabs
+      try {
+        const sRes = await fetch(API_BASE + '/api/admin/tabs');
+        if (sRes.ok) {
+          const sData = await sRes.json();
+          if (sData.tabs && sData.tabs.length > 0) {
+            applyFetchedSheetTitles(sData.tabs);
+            showToast(`🎉 成功從後端試算表服務同步 ${sData.tabs.length} 個分頁！`, 'success');
+            return true;
+          }
+        }
+      } catch (err) {}
+
+      // Prompt user if token is missing or expired
+      const userPromptToken = prompt('請輸入 Google OAuth Access Token (ya29...) 或 Google API Key，系統將立即為您抓取 1~80 所有真實分頁名稱：', token);
+      if (userPromptToken && userPromptToken.trim()) {
+        const cleanTok = userPromptToken.trim();
+        localStorage.setItem('saved_oauth_token', cleanTok);
+        const inputElem = document.getElementById('directOAuthTokenInput');
+        if (inputElem) inputElem.value = cleanTok;
+        return triggerDirectGoogleApiFetch();
+      }
+
+      showToast('⚠️ 未能取得有效 Google Token。您亦可由「雲端」選擇匯入 Excel 或貼上「案場列表」！', 'error');
+      return false;
+    }
+
+    function applyFetchedSheetTitles(sheetTitles) {
+      const newMap = { ...tabNumberMapping };
+      sheetTitles.forEach((title, idx) => {
+        const m = title.match(/^(\d+)[.\s、_]+(.+)$/);
+        if (m) {
+          const num = parseInt(m[1], 10);
+          newMap[num] = title;
+        } else {
+          newMap[idx + 1] = title;
+        }
+      });
+      localStorage.setItem('feilong_custom_tabs_mapping', JSON.stringify(newMap));
+      Object.assign(tabNumberMapping, newMap);
+
+      const batchTextarea = document.getElementById('batchTabsTextarea');
+      if (batchTextarea) {
+        batchTextarea.value = sheetTitles.join('\n');
+      }
+      fetchAvailableTabs();
     }
 
     function openGoogleDriveModal() {
