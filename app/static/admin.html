@@ -2040,9 +2040,15 @@
         if (groupInput && !groupInput.value) {
           groupInput.value = fullTabName.replace(/^\d+\./, '');
         }
-        showToast(`🎯 已精準對齊第 ${val} 個真實分頁：「${fullTabName}」！`, 'success');
+        showToast(`🎯 已精準對齊第 ${val} 個分頁：「${fullTabName}」！`, 'success');
       } else {
-        showToast(`⚠️ 雲端試算表尚未同步第 ${val} 分頁之真實名稱。請由最上方「雲端」匯入或直接輸入分頁全名！`, 'info');
+        // 如果此數字尚未被 API 讀取，自動將序號帶入格式供幹部直接使用
+        const fallbackName = `${val}.案場_${val}`;
+        if (tabInput) {
+          tabInput.value = fallbackName;
+          tabInput.select();
+        }
+        showToast(`💡 已帶入序號 [${val}]！如需同步 Google 試算表完整名稱，請於「雲端」授權或匯入！`, 'info');
       }
     }
 
