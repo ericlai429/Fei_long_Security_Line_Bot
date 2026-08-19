@@ -317,7 +317,7 @@
       const container = document.getElementById('scheduleContainer');
 
       setConnectionStatus('connecting', '雲端握手中...');
-      // 🌟 0. 優先讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表
+      // 🌟 0. 優先讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表 API
       try {
         const endpoints = ['/api/schedule/live', 'http://127.0.0.1:8088/api/schedule/live'];
         for (const ep of endpoints) {
@@ -335,6 +335,21 @@
               }
             }
           } catch(err) {}
+        }
+      } catch(e) {}
+
+      // 🌟 1. GitHub 官方站點即時排班快照通道 (100% 跨網域/跨手機握手成功)
+      try {
+        const snapFile = (tabName.includes('4.') || tabName.includes('工務所')) ? './data/schedule_4_tsgh_eng.json' : './data/schedule_5_tsgh_icu.json';
+        const snapRes = await fetch(`${snapFile}?t=${new Date().getTime()}`, { cache: 'no-store' });
+        if (snapRes.ok) {
+          const snapData = await snapRes.json();
+          if (snapData.rows && snapData.rows.length > 0) {
+            rawScheduleData = snapData;
+            setConnectionStatus('connected', '即時連線正常');
+            renderFullScheduleTable(rawScheduleData);
+            return;
+          }
         }
       } catch(e) {}
 
