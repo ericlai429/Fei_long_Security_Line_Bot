@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>飛龍保全 ｜ 三總勤務排班即時系統 (多版型自適應)</title>
-  <link rel="manifest" href="/static/pwa/manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#090d16">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -137,6 +137,47 @@
     </div>
   </div>
 
+  
+  <!-- 📋 Paste Schedule Data Modal -->
+  <div id="pasteScheduleModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-purple-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl animate-fade-in">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2 text-white font-bold text-base">
+          <div class="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center text-white">
+            <i class="fa-solid fa-clipboard-list"></i>
+          </div>
+          <div>
+            <div class="text-base font-bold text-white leading-tight">匯入 / 貼上真實排班表</div>
+            <div class="text-[11px] text-purple-300">從 Google 試算表全選複製 (Ctrl+A ➔ Ctrl+C) 並貼在下方</div>
+          </div>
+        </div>
+        <button onclick="closePasteModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2">
+        <textarea 
+          id="pasteDataTextarea" 
+          rows="8" 
+          placeholder="在此按 Ctrl + V 貼上排班表內容...&#10;日期&#9;星期&#9;哨點&#9;早班 (07-19)&#9;晚班 (19-07)..."
+          class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-slate-100 font-mono focus:outline-none focus:border-purple-500 placeholder-slate-600 resize-none"
+        ></textarea>
+        <p class="text-[11px] text-slate-400">💡 支援 Excel 與 Google 試算表直接複製貼上，系統自動識別日期、哨點與早晚班。</p>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="closePasteModal()" class="flex-1 h-11 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition">
+          取消
+        </button>
+        <button onclick="handleApplyPastedSchedule()" class="flex-1 h-11 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg">
+          <i class="fa-solid fa-check"></i>
+          <span>確認載入並顯示</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Container (Adaptive to Mobile Portrait, Mobile Landscape, and PC Desktop) -->
   <main class="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-5 space-y-4">
     
@@ -257,6 +298,113 @@
 
   <script>
     let rawScheduleData = null;
+
+    // GitHub Pages Client-side CSV & Parser Support
+    
+    function openPasteModal() {
+      document.getElementById('pasteScheduleModal').classList.remove('hidden');
+      document.getElementById('pasteDataTextarea').focus();
+    }
+
+    function closePasteModal() {
+      document.getElementById('pasteScheduleModal').classList.add('hidden');
+    }
+
+    function parseUniversalScheduleText(text, tab) {
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length === 0) return null;
+      
+      const firstLine = lines[0];
+      const isTab = firstLine.includes('\t');
+      const delimiter = isTab ? '\t' : ',';
+
+      const headers = firstLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+      const rows = [];
+      const members = new Set();
+      const posts = new Set();
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''));
+        if (cols.length <= 1 && !cols[0]) continue;
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = cols[idx] || '';
+          if (h.includes('早班') || h.includes('晚班') || h.includes('機動') || h.includes('支援')) {
+            if (row[h] && row[h] !== '-' && row[h] !== '休') {
+              row[h].split(/[/、\s]+/).forEach(m => m.trim() && members.add(m.trim()));
+            }
+          }
+          if (h.includes('哨點') || h.includes('崗位')) {
+            if (row[h]) posts.add(row[h]);
+          }
+        });
+        rows.push(row);
+      }
+
+      return {
+        tab_name: tab || '三總保全內部群',
+        columns: headers,
+        rows: rows,
+        members: Array.from(members).sort(),
+        posts: Array.from(posts).sort()
+      };
+    }
+
+    function handleApplyPastedSchedule() {
+      const text = document.getElementById('pasteDataTextarea').value.trim();
+      if (!text) {
+        alert('請先貼上排班表格內容！');
+        return;
+      }
+
+      const parsed = parseUniversalScheduleText(text, tabName);
+      if (!parsed || parsed.rows.length === 0) {
+        alert('無法解析排班表內容，請確認是否包含日期、哨點與班別表頭。');
+        return;
+      }
+
+      localStorage.setItem('feilong_custom_schedule', JSON.stringify(parsed));
+      rawScheduleData = parsed;
+      closePasteModal();
+
+      document.getElementById('currentTabName').textContent = parsed.tab_name;
+      renderMemberBadges(parsed.members || []);
+      filterSchedule();
+    }
+
+    function parseClientCsv(csvText, tab) {
+      const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length === 0) return { tab_name: tab, columns: [], rows: [], members: [], posts: [] };
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const rows = [];
+      const members = new Set();
+      const posts = new Set();
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = cols[idx] || '';
+          if (h.includes('早班') || h.includes('晚班') || h.includes('機動')) {
+            if (row[h] && row[h] !== '-' && row[h] !== '休') {
+              row[h].split(/[/、\s]+/).forEach(m => m.trim() && members.add(m.trim()));
+            }
+          }
+          if (h.includes('哨點') || h.includes('崗位')) {
+            if (row[h]) posts.add(row[h]);
+          }
+        });
+        rows.push(row);
+      }
+      return {
+        tab_name: tab,
+        columns: headers,
+        rows: rows,
+        members: Array.from(members).sort(),
+        posts: Array.from(posts).sort()
+      };
+    }
+
     let currentShiftFilter = 'ALL';
     let currentLayoutMode = 'CARD'; // 'CARD' | 'MATRIX' | 'TIMELINE'
     let sessionMasterPin = '789';
@@ -311,24 +459,34 @@
       errorDiv.classList.add('hidden');
 
       try {
-        const res = await fetch('/api/auth/verify-pin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            group_id: groupId,
-            master_pin: masterPin,
-            sub_pin: subPin
-          })
-        });
+        const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+        if (isStaticHost) {
+          if (masterPin !== '789' || (subPin && subPin !== '8888')) {
+            throw new Error('主 PIN 或 輔 PIN 錯誤 (預設主PIN: 789, 輔PIN: 8888)');
+          }
+          sessionMasterPin = masterPin;
+          sessionSubPin = subPin;
+          isUnlocked = true;
+        } else {
+          const res = await fetch('/api/auth/verify-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              group_id: groupId,
+              master_pin: masterPin,
+              sub_pin: subPin
+            })
+          });
 
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || 'PIN 碼驗證失敗');
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || 'PIN 碼驗證失敗');
+          }
+
+          sessionMasterPin = masterPin;
+          sessionSubPin = subPin;
+          isUnlocked = true;
         }
-
-        sessionMasterPin = masterPin;
-        sessionSubPin = subPin;
-        isUnlocked = true;
         
         document.getElementById('authStatusText').textContent = '已解鎖';
         document.getElementById('authBtn').className = "h-10 sm:h-11 px-3 sm:px-4 bg-emerald-950 text-emerald-400 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-emerald-700 transition shadow-sm";
@@ -353,25 +511,54 @@
       const container = document.getElementById('scheduleContainer');
       
       try {
-        const timestamp = new Date().getTime();
-        const res = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}&master_pin=${encodeURIComponent(sessionMasterPin)}&sub_pin=${encodeURIComponent(sessionSubPin)}&t=${timestamp}`, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        });
+        const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+        let data = null;
 
-        if (!res.ok) {
-          if (res.status === 401) {
-            isUnlocked = false;
-            openAuthModal();
-            throw new Error('PIN 碼已變更，請重新輸入新密碼！');
+        if (isStaticHost) {
+          // GitHub Pages Mode: Direct Google Sheet fetch or local saved state
+          const savedCustom = localStorage.getItem('feilong_custom_schedule');
+          if (savedCustom) {
+            try { data = JSON.parse(savedCustom); } catch(e) {}
           }
-          throw new Error('伺服器連線失敗');
+          if (!data) {
+            try {
+              const sheetId = '1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s';
+              const gid = '1503884715';
+              const csvRes = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`);
+              if (csvRes.ok) {
+                const csvText = await csvRes.text();
+                if (!csvText.includes('<!DOCTYPE') && !csvText.includes('<html')) {
+                  data = parseClientCsv(csvText, tabName);
+                }
+              }
+            } catch(e) {
+              console.log('GitHub pages direct fetch note:', e);
+            }
+          }
+          if (!data) {
+            throw new Error('目前 Google 試算表尚未開放公開讀取，請在「管理後台」或點擊下方貼上真實排班表！');
+          }
+        } else {
+          const timestamp = new Date().getTime();
+          const res = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}&master_pin=${encodeURIComponent(sessionMasterPin)}&sub_pin=${encodeURIComponent(sessionSubPin)}&t=${timestamp}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache'
+            }
+          });
+
+          if (!res.ok) {
+            if (res.status === 401) {
+              isUnlocked = false;
+              openAuthModal();
+              throw new Error('PIN 碼已變更，請重新輸入新密碼！');
+            }
+            throw new Error('伺服器連線失敗');
+          }
+
+          data = await res.json();
         }
-
-        const data = await res.json();
         rawScheduleData = data;
 
         document.getElementById('currentTabName').textContent = data.tab_name || tabName;
@@ -381,11 +568,22 @@
       } catch (err) {
         console.error(err);
         container.innerHTML = `
-          <div class="bg-rose-950/70 border border-rose-800 rounded-3xl p-8 text-center space-y-3">
+          <div class="bg-rose-950/70 border border-rose-800 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
             <i class="fa-solid fa-triangle-exclamation text-rose-400 text-3xl"></i>
-            <p class="text-rose-200 text-base font-bold">無法取得排班資料</p>
-            <p class="text-sm text-rose-300">${err.message}</p>
-            <button onclick="openAuthModal()" class="h-12 bg-purple-700 active:bg-purple-600 text-white text-sm px-6 rounded-xl font-bold">重新驗證雙 PIN 碼</button>
+            <div>
+              <p class="text-rose-200 text-base font-bold">無法直接讀取 Google 私人試算表</p>
+              <p class="text-xs text-rose-300 mt-1 leading-relaxed">${err.message}</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+              <button onclick="openPasteModal()" class="w-full sm:w-auto h-11 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-paste"></i>
+                <span>📋 貼上真實排班表 (即刻生成)</span>
+              </button>
+              <button onclick="openAuthModal()" class="w-full sm:w-auto h-11 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-bold rounded-xl">
+                重新驗證雙 PIN 碼
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400">💡 或將 Google 試算表設為「知道連結的人均可檢視(唯讀)」，即可全自動即時連線！</p>
           </div>
         `;
       } finally {
@@ -748,12 +946,17 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch(`/api/pdf/generate?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}`);
-        const data = await res.json();
-        if (data.download_url) {
-          window.location.href = data.download_url;
+        const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+        if (isStaticHost) {
+          window.print();
         } else {
-          alert('PDF 產生失敗，請稍後再試。');
+          const res = await fetch(`/api/pdf/generate?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}`);
+          const data = await res.json();
+          if (data.download_url) {
+            window.location.href = data.download_url;
+          } else {
+            alert('PDF 產生失敗，請稍後再試。');
+          }
         }
       } catch (e) {
         alert('連線失敗：' + e.message);
