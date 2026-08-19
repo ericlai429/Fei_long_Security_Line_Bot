@@ -198,18 +198,49 @@
             系統將引導使用幹部 Google 帳號授權唯讀存取，直接讀取您有權限開啟的雲端試算表（絕無修改與寫入權限）：
           </p>
 
-          <div class="flex flex-wrap items-center gap-2">
+        <!-- 🔑 Google OAuth Token Direct Input Box -->
+        <div class="bg-slate-950 border border-sky-900/80 rounded-2xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-key"></i>
+              <span>貼上 Google OAuth Access Token (ya29...)</span>
+            </span>
+            <span class="text-[10px] bg-sky-950 text-sky-300 font-bold px-2 py-0.5 rounded border border-sky-800">
+              合法讀取者授權
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-300">
+            請將從 Google Playground 取得的 Access Token (開頭為 <code class="text-amber-300">ya29...</code>) 貼在此處：
+          </p>
+          <div class="flex items-center gap-2">
+            <input 
+              type="text" 
+              id="directOAuthTokenInput" 
+              placeholder="在此貼上 ya29.a0..." 
+              class="flex-1 h-10 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs text-sky-300 placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
+            >
             <button 
               type="button" 
-              onclick="triggerGoogleOAuthLogin()" 
-              class="h-9 px-4 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-md"
+              onclick="saveDirectOAuthToken()" 
+              class="h-10 px-4 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shrink-0"
             >
-              <i class="fa-brands fa-google"></i>
-              <span>以 Google 帳號登入授權 (一鍵讀取)</span>
+              <i class="fa-solid fa-cloud-arrow-down"></i>
+              <span>儲存並啟用自動讀取</span>
             </button>
-            <span class="text-[11px] text-slate-400">或輸入/貼上 OAuth Token 快速連線</span>
           </div>
         </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button 
+            type="button" 
+            onclick="triggerGoogleOAuthLogin()" 
+            class="h-9 px-4 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold rounded-xl text-xs transition flex items-center gap-2 border border-slate-700"
+          >
+            <i class="fa-brands fa-google"></i>
+            <span>彈窗輸入 Token</span>
+          </button>
+        </div>
+      </div>
 
         <!-- 📥 Excel (.xlsx) Multi-Tab Auto-Loader -->
         <div class="bg-gradient-to-r from-emerald-950/60 via-slate-950 to-slate-950 border border-emerald-800/80 rounded-2xl p-4 space-y-3">
@@ -1029,6 +1060,16 @@
           sendOAuthTokenToServer(token);
         }
       }
+    }
+
+    async function saveDirectOAuthToken() {
+      const tokenInput = document.getElementById('directOAuthTokenInput');
+      const token = tokenInput ? tokenInput.value.trim() : '';
+      if (!token) {
+        showToast('請先在輸入框貼上 Google OAuth Access Token (ya29...)！', 'error');
+        return;
+      }
+      await sendOAuthTokenToServer(token);
     }
 
     async function sendOAuthTokenToServer(token) {
