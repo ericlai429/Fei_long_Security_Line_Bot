@@ -90,7 +90,8 @@
   <header class="no-print bg-slate-900/90 border-b border-slate-800 p-3 sm:p-4 sticky top-0 z-20 backdrop-blur-md">
     <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center text-white font-bold">
+        <!-- 🛡️ 盾牌點擊亦可快捷進入 Admin -->
+        <div onclick="openAdminAuthModal()" title="點擊進行管理員登入" class="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold cursor-pointer hover:scale-105 transition shadow-md active:scale-95">
           <i class="fa-solid fa-shield-halved text-sm"></i>
         </div>
         <div>
@@ -110,15 +111,16 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <!-- 🗝️ 秘密黑色小 Key (Admin 專屬入口) -->
+        <!-- 🗝️ 黑色金屬小 Key (Admin 專屬入口，醒目黑曜石金邊) -->
         <button 
           type="button" 
           id="secretAdminKeyBtn"
           onclick="openAdminAuthModal()" 
-          title="管理員驗證入口"
-          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/80 text-slate-600 hover:text-amber-400 transition flex items-center justify-center shadow-inner active:scale-90"
+          title="Admin 管理員金鑰入口"
+          class="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5 shadow-md active:scale-90 cursor-pointer"
         >
-          <i class="fa-solid fa-key text-xs"></i>
+          <i class="fa-solid fa-key text-xs text-amber-400"></i>
+          <span class="text-[11px] font-bold tracking-tight">Admin</span>
         </button>
 
         <button 
