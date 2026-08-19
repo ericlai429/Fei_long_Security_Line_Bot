@@ -2029,27 +2029,17 @@
       const groupInput = document.getElementById('inputGroupName');
 
       const activeMap = getPersistedTabsMapping();
+      const fullTabName = activeMap[val] || `${val}.案場分頁_${val}`;
       
-      if (activeMap[val]) {
-        const fullTabName = activeMap[val];
-        if (tabInput) {
-          tabInput.value = fullTabName;
-          tabInput.classList.add('ring-2', 'ring-sky-500');
-          setTimeout(() => tabInput.classList.remove('ring-2', 'ring-sky-500'), 1000);
-        }
-        if (groupInput && !groupInput.value) {
-          groupInput.value = fullTabName.replace(/^\d+\./, '');
-        }
-        showToast(`🎯 已精準對齊第 ${val} 個分頁：「${fullTabName}」！`, 'success');
-      } else {
-        // 如果此數字尚未被 API 讀取，自動將序號帶入格式供幹部直接使用
-        const fallbackName = `${val}.案場_${val}`;
-        if (tabInput) {
-          tabInput.value = fallbackName;
-          tabInput.select();
-        }
-        showToast(`💡 已帶入序號 [${val}]！如需同步 Google 試算表完整名稱，請於「雲端」授權或匯入！`, 'info');
+      if (tabInput) {
+        tabInput.value = fullTabName;
+        tabInput.classList.add('ring-2', 'ring-sky-500');
+        setTimeout(() => tabInput.classList.remove('ring-2', 'ring-sky-500'), 1000);
       }
+      if (groupInput && !groupInput.value) {
+        groupInput.value = fullTabName.replace(/^\d+\./, '');
+      }
+      showToast(`🎯 已快速對齊第 ${val} 個分頁：「${fullTabName}」！`, 'success');
     }
 
     function setTabByNumber(num) {
