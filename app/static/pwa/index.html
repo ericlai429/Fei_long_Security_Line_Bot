@@ -78,36 +78,7 @@
     </div>
   </div>
 
-  <!-- 📋 Paste Schedule Modal -->
-  <div id="pasteScheduleModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-purple-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div class="flex items-center gap-2 text-white font-bold text-base">
-          <i class="fa-solid fa-clipboard-list text-purple-400"></i>
-          <span>貼上試算表內容 (更新全哨排班)</span>
-        </div>
-        <button onclick="closePasteModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <textarea 
-        id="pasteDataTextarea" 
-        rows="8" 
-        placeholder="在 Google 試算表中按 Ctrl+A ➔ Ctrl+C 複製，並在此處按 Ctrl+V 貼上..."
-        class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-slate-100 font-mono focus:outline-none focus:border-purple-500 placeholder-slate-600 resize-none"
-      ></textarea>
-
-      <div class="flex gap-2">
-        <button onclick="closePasteModal()" class="flex-1 h-10 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition">
-          取消
-        </button>
-        <button onclick="handleApplyPastedSchedule()" class="flex-1 h-10 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl transition shadow-lg">
-          確認更新並產製
-        </button>
-      </div>
-    </div>
-  </div>
+  
 
   <!-- 🖨️ Printable Header for Official PDF -->
   <div class="print-header p-4 text-center border-b-2 border-black mb-4">
@@ -243,14 +214,7 @@
       document.getElementById('authModal').classList.add('hidden');
     }
 
-    function openPasteModal() {
-      document.getElementById('pasteScheduleModal').classList.remove('hidden');
-      document.getElementById('pasteDataTextarea').focus();
-    }
-
-    function closePasteModal() {
-      document.getElementById('pasteScheduleModal').classList.add('hidden');
-    }
+    
 
     function handlePinUnlock(e) {
       e.preventDefault();
@@ -307,49 +271,7 @@
       }).join(' ');
     }
 
-    function parseUniversalScheduleText(text, tab) {
-      const lines = text.split(/\\r?\\n/).map(l => l.trim()).filter(l => l.length > 0);
-      if (lines.length === 0) return null;
-      
-      const delimiter = lines[0].includes('\\t') ? '\\t' : ',';
-      const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
-      const rows = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''));
-        if (cols.length <= 1 && !cols[0]) continue;
-        const row = {};
-        headers.forEach((h, idx) => {
-          row[h] = cols[idx] || '';
-        });
-        rows.push(row);
-      }
-
-      return {
-        tab_name: tab || '三總保全內部群',
-        columns: headers,
-        rows: rows
-      };
-    }
-
-    function handleApplyPastedSchedule() {
-      const text = document.getElementById('pasteDataTextarea').value.trim();
-      if (!text) {
-        alert('請先貼上排班表格內容！');
-        return;
-      }
-
-      const parsed = parseUniversalScheduleText(text, tabName);
-      if (!parsed || parsed.rows.length === 0) {
-        alert('無法解析排班表內容，請確認是否包含表頭與排班列。');
-        return;
-      }
-
-      localStorage.setItem('feilong_custom_schedule', JSON.stringify(parsed));
-      rawScheduleData = parsed;
-      closePasteModal();
-      renderFullScheduleTable(parsed);
-    }
+    
 
     async function fetchFullSchedule(isManualQuery = false) {
       const qBtn = document.getElementById('queryScheduleBtn');
@@ -406,21 +328,30 @@
         }
       } catch(e) {}
 
-      // 3. Fallback: Prompt user to paste schedule table directly
+      // 3. 雲端資料讀取失敗 (未能完成連線握手)
+      setConnectionStatus('failed', '雲端資料讀取失敗');
       container.innerHTML = `
-        <div class="text-center py-10 space-y-4">
-          <div class="w-14 h-14 rounded-2xl bg-amber-950/80 border border-amber-800 text-amber-400 flex items-center justify-center mx-auto text-2xl">
-            <i class="fa-solid fa-file-circle-plus"></i>
+        <div class="text-center py-12 space-y-4">
+          <div class="w-14 h-14 rounded-2xl bg-rose-950/80 border border-rose-800 text-rose-400 flex items-center justify-center mx-auto text-2xl shadow-lg">
+            <i class="fa-solid fa-cloud-bolt"></i>
           </div>
-          <div>
-            <h2 class="text-base font-bold text-white">點擊下方按鈕貼上排班表</h2>
-            <p class="text-xs text-slate-400 mt-1">從 Google 試算表全選複製 (Ctrl+A ➔ Ctrl+C)，貼上即可 1 秒直出全哨排班 PDF！</p>
+          <div class="space-y-1.5">
+            <h3 class="text-base font-bold text-rose-400">雲端資料讀取失敗</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto">
+              未能與 Google 雲端 / 後端伺服器完成「${tabName}」即時握手連線。
+            </p>
           </div>
-          <button onclick="openPasteModal()" class="h-11 px-6 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg transition">
-            📋 貼上排班表 (即刻輸出 PDF)
+          <button onclick="fetchFullSchedule(true)" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-2 mx-auto shadow-md">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>重試連線握手</span>
           </button>
         </div>
       `;
+      const qBtnEnd = document.getElementById('queryScheduleBtn');
+      if (qBtnEnd) {
+        qBtnEnd.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
+        qBtnEnd.disabled = false;
+      }
     }
 
     function renderFullScheduleTable(data) {
