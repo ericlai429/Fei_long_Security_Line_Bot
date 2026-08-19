@@ -146,6 +146,35 @@
       </button>
     </div>
 
+    <!-- 📅 Month Navigator (自動對齊本月 ｜ 左右切換上/下月份) -->
+    <div class="no-print flex items-center justify-between bg-slate-900 border border-slate-800 rounded-2xl p-2 shadow-md">
+      <button 
+        type="button" 
+        id="prevMonthBtn"
+        onclick="changeMonth(-1)" 
+        class="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5"
+      >
+        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+        <span>上個月</span>
+      </button>
+
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-calendar-days text-purple-400 text-sm"></i>
+        <span id="currentMonthDisplay" class="font-extrabold text-sm sm:text-base text-white font-mono tracking-wide">2026 年 8 月</span>
+        <span id="monthTag" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-800">本月即時</span>
+      </div>
+
+      <button 
+        type="button" 
+        id="nextMonthBtn"
+        onclick="changeMonth(1)" 
+        class="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5"
+      >
+        <span>下個月</span>
+        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+      </button>
+    </div>
+
     <!-- 📄 Full Detachment Personnel Schedule Table (Print Ready) -->
     <div id="scheduleContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
       <div class="text-center py-16 text-slate-400 space-y-3">
@@ -236,8 +265,8 @@
       }
     }
 
-    // 🔤 人員名稱格式化：加大50% (17px 粗黑體)、緊縮手機寬度、隱藏電話浮動顯示
-    function formatName(nameStr) {
+    // 🔤 人員名稱格式化：加大50% (17px 粗黑體)；若是上個月/歷史資料，不出現電話撥出與浮窗提示
+    function formatName(nameStr, isHistorical = false) {
       if (!nameStr || nameStr === '-' || nameStr === '—') return '<span class="text-slate-600 font-bold">—</span>';
       
       const items = nameStr.split(/[、,]+/).filter(Boolean);
@@ -249,6 +278,12 @@
         
         if (!cleanName) return item;
 
+        // 🌟 若為歷史月份 (例如上個月 7 月)，純文字大字顯示，不顯示撥號與浮窗
+        if (isHistorical) {
+          return `<span class="inline-block px-2 py-0.5 rounded-lg bg-slate-800/50 text-slate-200 text-[16px] sm:text-[17px] font-black tracking-wide whitespace-nowrap">${cleanName}</span>`;
+        }
+
+        // 🌟 本月即時排班：具備電話浮動提示與一鍵撥打
         if (phone) {
           const telHref = `tel:${phone.replace(/[-\s]/g, '')}`;
           return `
@@ -287,7 +322,7 @@
         const endpoints = ['/api/schedule/live', 'http://127.0.0.1:8088/api/schedule/live'];
         for (const ep of endpoints) {
           try {
-            const apiRes = await fetch(`${ep}?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}&master_pin=789&sub_pin=8888&t=${new Date().getTime()}`, {
+            const apiRes = await fetch(`${ep}?group_id=${encodeURIComponent(groupId)}&tab=${encodeURIComponent(tabName)}&year=${selectedYear}&month=${selectedMonth}&master_pin=789&sub_pin=8888&t=${new Date().getTime()}`, {
               cache: 'no-store'
             });
             if (apiRes.ok) {
@@ -412,14 +447,15 @@
           rowClass = 'bg-rose-950/25 hover:bg-rose-900/40';
         }
 
+        const isHistorical = !(selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH);
         html += `
           <tr class="${rowClass} transition border-b border-slate-800/80">
             <td class="py-2.5 px-2 font-mono font-extrabold text-slate-100 whitespace-nowrap text-center text-xs sm:text-sm">${dateStr}</td>
             <td class="py-2.5 px-1.5 whitespace-nowrap text-center">
               <span class="px-1.5 py-0.5 rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>
             </td>
-            <td class="py-2.5 px-2 whitespace-nowrap font-medium">${formatName(early)}</td>
-            <td class="py-2.5 px-2 whitespace-nowrap font-medium">${formatName(late)}</td>
+            <td class="py-2.5 px-2 whitespace-nowrap font-medium">${formatName(early, isHistorical)}</td>
+            <td class="py-2.5 px-2 whitespace-nowrap font-medium">${formatName(late, isHistorical)}</td>
           </tr>
         `;
       });

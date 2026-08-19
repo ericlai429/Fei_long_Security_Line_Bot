@@ -270,11 +270,19 @@ class SheetsService:
 
         return []
 
-    def get_parsed_schedule(self, tab_name: str) -> Dict[str, Any]:
+    def get_parsed_schedule(self, tab_name: str, year: int = None, month: int = None) -> Dict[str, Any]:
+        today = date.today()
+        target_year = year or today.year
+        target_month = month or 8 # 預設當前排班月份為 8月
+        is_current = (target_year == today.year and target_month == 8)
+
         raw_data = self.get_raw_sheet_data(tab_name)
         if not raw_data:
             return {
                 "tab_name": tab_name,
+                "year": target_year,
+                "month": target_month,
+                "is_current_month": is_current,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "columns": [],
                 "rows": [],
@@ -341,13 +349,10 @@ class SheetsService:
 
             standard_columns = ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"]
             standard_rows = []
-            today = date.today()
-            curr_year = today.year
-            curr_month = 8 # 8月份排班表
 
             for day_num in sorted(daily_schedule.keys()):
                 info = daily_schedule[day_num]
-                d_str = f"{curr_year}/{curr_month:02d}/{day_num:02d}"
+                d_str = f"{target_year}/{target_month:02d}/{day_num:02d}"
                 standard_rows.append({
                     "日期": d_str,
                     "星期": info.get('weekday', ''),
@@ -358,6 +363,9 @@ class SheetsService:
 
             return {
                 "tab_name": tab_name,
+                "year": target_year,
+                "month": target_month,
+                "is_current_month": is_current,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "columns": standard_columns,
                 "rows": standard_rows,

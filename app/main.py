@@ -444,7 +444,9 @@ def get_live_schedule(
     group_id: str = "tsgh_internal",
     tab: Optional[str] = None,
     master_pin: Optional[str] = None,
-    sub_pin: Optional[str] = None
+    sub_pin: Optional[str] = None,
+    year: Optional[int] = None,
+    month: Optional[int] = None
 ):
     group = db.get_group(group_id)
     if not group:
@@ -455,13 +457,16 @@ def get_live_schedule(
             raise HTTPException(status_code=401, detail="主 PIN 碼或輔 PIN 碼不符合！")
 
     target_tab = tab or group.get("sheet_tab", "三總保全內部群")
-    schedule = sheets_service.get_parsed_schedule(target_tab)
+    schedule = sheets_service.get_parsed_schedule(target_tab, year=year, month=month)
 
     return JSONResponse(
         content={
             "group_id": group_id,
             "group_name": group.get("group_name", "三總保全內部群"),
             "tab_name": target_tab,
+            "year": schedule.get("year", 2026),
+            "month": schedule.get("month", 8),
+            "is_current_month": schedule.get("is_current_month", True),
             "updated_at": schedule.get("updated_at"),
             "columns": schedule.get("columns", []),
             "rows": schedule.get("rows", []),
