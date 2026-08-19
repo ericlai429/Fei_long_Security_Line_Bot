@@ -274,6 +274,8 @@ class GoogleOAuthPayload(BaseModel):
 
 @app.post("/api/admin/google/oauth-token")
 def set_google_user_oauth(payload: GoogleOAuthPayload):
+    from app.services.google_auth_service import save_user_access_token
+    save_user_access_token(payload.token)
     success, msg = sheets_service.set_user_oauth_token(payload.token, payload.user_email or "ericlai429@gmail.com")
     if not success:
         raise HTTPException(status_code=400, detail=msg)
