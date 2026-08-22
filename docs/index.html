@@ -2553,7 +2553,7 @@
                   <span>${greenT5NightCount * 12}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
                 </div>
                 <div class="text-[9px] text-emerald-300 font-mono font-bold">
-                  外加 (${greenT5NightCount}班 = 84h)
+                  外加 (${greenT5NightCount}班 = ${greenT5NightCount * 12}h)
                 </div>
               </div>
             </div>
@@ -2562,7 +2562,7 @@
               <!-- 總計小時數輸入/顯示欄 -->
               <div class="bg-slate-900/90 border border-indigo-700/60 rounded-xl p-2.5 space-y-1">
                 <div class="text-[11px] font-bold text-indigo-300 flex items-center justify-between">
-                  <span>⏱️ 資水總時數 (SUM 354h + T5外加 84h)</span>
+                  <span>⏱️ 資水總時數 (SUM 354h + T5外加 ${greenT5NightCount * 12}h)</span>
                   <span class="text-[9px] text-slate-400">可微調</span>
                 </div>
                 <div class="flex items-center gap-1.5">
@@ -2604,7 +2604,7 @@
             </div>
 
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1 pt-0.5 border-t border-slate-900/80">
-              <span>💡 精準公式: SUM(G12:AK12) 354h + 外加 T5夜 84h = 438h (含零散班 5.5h 公司進位算 6h)</span>
+              <span>💡 精準公式: SUM(G12:AK12) 354h + 外加 T5夜 ${greenT5NightCount * 12}h = ${354 + (greenT5NightCount * 12)}h (對應 ${((354 + (greenT5NightCount * 12))/12).toFixed(1)} 班)</span>
               <button 
                 type="button" 
                 onclick="recalculateDefaultAuditHours()" 
