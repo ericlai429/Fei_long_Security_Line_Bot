@@ -1975,15 +1975,26 @@
                 <span class="text-[10px] text-slate-400 font-mono font-normal">(x=30 收入曲線 ｜ 精度至分)</span>
               </div>
               
-              <!-- 💓 1 分鐘心跳脈搏時鐘 -->
-              <div class="flex items-center gap-2 bg-rose-950/80 border border-rose-600/80 px-3 py-1 rounded-full text-xs font-mono shadow-md">
-                <span class="flex items-center gap-1 text-rose-300 font-bold">
-                  <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                  <span>💓 1分心跳:</span>
-                  <span id="heartbeatCountdown" class="text-amber-300 font-black">60秒</span>
-                </span>
-                <span class="text-slate-500">|</span>
-                <span class="text-emerald-300 font-bold">+$2.5元 / 分</span>
+              <div class="flex flex-wrap items-center gap-2">
+                <!-- 💓 1 分鐘心跳脈搏時鐘 -->
+                <div class="flex items-center gap-2 bg-rose-950/80 border border-rose-600/80 px-3 py-1 rounded-full text-xs font-mono shadow-md">
+                  <span class="flex items-center gap-1 text-rose-300 font-bold">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                    <span>💓 1分心跳:</span>
+                    <span id="heartbeatCountdown" class="text-amber-300 font-black">60秒</span>
+                  </span>
+                  <span class="text-slate-500">|</span>
+                  <span class="text-emerald-300 font-bold">+$2.5元 / 分</span>
+                </div>
+
+                <!-- 💰 1日至今此刻累積資產 (紅色底色網格標籤 搬移至 1分心跳 右側) -->
+                <div class="flex items-center gap-1.5 bg-rose-950/90 border border-rose-500/80 px-3 py-1 rounded-full text-xs font-mono shadow-md">
+                  <span class="text-rose-300 font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
+                    <span>1日至今此刻累積:</span>
+                  </span>
+                  <span id="liveCumulativeAssetDisplay" class="font-black text-amber-300 text-xs">$0 元</span>
+                </div>
               </div>
             </div>
 
@@ -2014,9 +2025,9 @@
                 <div class="text-[9px] text-slate-400">1分鐘心跳算力</div>
                 <div id="liveMinuteRateDisplay" class="font-black text-rose-400 text-xs">$2.5元 / 分</div>
               </div>
-              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
-                <div class="text-[9px] text-slate-400">1日至今此刻累積資產</div>
-                <div id="liveCumulativeAssetDisplay" class="font-black text-amber-300 text-xs">$0 元</div>
+              <div class="bg-rose-950/60 border border-rose-800/80 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-rose-300 font-bold">全月金庫總目標</div>
+                <div class="font-black text-yellow-300 text-xs">$56,900 元</div>
               </div>
             </div>
 
