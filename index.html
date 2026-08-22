@@ -2444,107 +2444,115 @@
             </div>
           </div>
 
-          <!-- 四大勤務類別資產明細 (包含 M6 綠色底色 T5 商業大樓 ＆ 🛵 機動支援哨) -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <!-- 四大勤務類別資產明細 (緊湊滿版設計 ｜ 防換行疊字) -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
             <!-- 常規早班 -->
-            <div class="bg-slate-950 border border-amber-900/60 rounded-2xl p-3 space-y-1.5">
-              <div class="flex items-center justify-between text-xs font-bold text-amber-300">
-                <span>☀️ 常規早班</span>
-                <div class="flex items-center gap-1">
+            <div class="bg-slate-950 border border-amber-900/60 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm">
+              <div class="flex items-center justify-between text-xs font-bold text-amber-300 gap-1">
+                <span class="truncate whitespace-nowrap">☀️ 常規早班</span>
+                <div class="flex items-center gap-0.5 shrink-0">
                   <input 
                     type="number" 
                     value="${tsghDayCount}" 
                     onchange="updateAdminVaultShiftCounts(this.value, null)"
-                    class="w-10 h-5 bg-slate-900 border border-amber-700 rounded text-center font-mono text-amber-200 text-[11px] font-bold"
+                    class="w-9 h-5 bg-slate-900 border border-amber-700 rounded text-center font-mono text-amber-200 text-xs font-bold focus:outline-none focus:border-amber-400"
                   >
-                  <span class="font-mono text-amber-200">班</span>
+                  <span class="font-mono text-amber-200 text-[11px]">班</span>
                 </div>
               </div>
-              <div class="text-base font-black text-amber-300 font-mono">$${tsghDayTotal.toLocaleString()}</div>
-              <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單班:</span>
-                <input 
-                  type="number" 
-                  value="${dayRate}" 
-                  onchange="updateAdminVaultRates(this.value, null, null, null, null)"
-                  class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-amber-300 text-[11px]"
-                >
+              <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
+                <div class="text-sm sm:text-base font-black text-amber-300 font-mono whitespace-nowrap">$${tsghDayTotal.toLocaleString()}</div>
+                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
+                  <span class="whitespace-nowrap">單班:</span>
+                  <input 
+                    type="number" 
+                    value="${dayRate}" 
+                    onchange="updateAdminVaultRates(this.value, null, null, null, null)"
+                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-amber-300 text-[11px] focus:outline-none focus:border-amber-400"
+                  >
+                </div>
               </div>
             </div>
 
             <!-- 常規夜(B)班 -->
-            <div class="bg-slate-950 border border-indigo-900/60 rounded-2xl p-3 space-y-1.5">
-              <div class="flex items-center justify-between text-xs font-bold text-indigo-300">
-                <span>🌙 常規夜(B)班</span>
-                <div class="flex items-center gap-1">
+            <div class="bg-slate-950 border border-indigo-900/60 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm">
+              <div class="flex items-center justify-between text-xs font-bold text-indigo-300 gap-1">
+                <span class="truncate whitespace-nowrap">🌙 常規夜(B)班</span>
+                <div class="flex items-center gap-0.5 shrink-0">
                   <input 
                     type="number" 
                     value="${tsghNightCount}" 
                     onchange="updateAdminVaultShiftCounts(null, this.value)"
-                    class="w-10 h-5 bg-slate-900 border border-indigo-700 rounded text-center font-mono text-indigo-200 text-[11px] font-bold"
+                    class="w-9 h-5 bg-slate-900 border border-indigo-700 rounded text-center font-mono text-indigo-200 text-xs font-bold focus:outline-none focus:border-indigo-400"
                   >
-                  <span class="font-mono text-indigo-200">班</span>
+                  <span class="font-mono text-indigo-200 text-[11px]">班</span>
                 </div>
               </div>
-              <div class="text-base font-black text-indigo-300 font-mono">$${tsghNightTotal.toLocaleString()}</div>
-              <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單班:</span>
-                <input 
-                  type="number" 
-                  value="${nightRate}" 
-                  onchange="updateAdminVaultRates(null, this.value, null, null, null)"
-                  class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-indigo-300 text-[11px]"
-                >
+              <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
+                <div class="text-sm sm:text-base font-black text-indigo-300 font-mono whitespace-nowrap">$${tsghNightTotal.toLocaleString()}</div>
+                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
+                  <span class="whitespace-nowrap">單班:</span>
+                  <input 
+                    type="number" 
+                    value="${nightRate}" 
+                    onchange="updateAdminVaultRates(null, this.value, null, null, null)"
+                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-indigo-300 text-[11px] focus:outline-none focus:border-indigo-400"
+                  >
+                </div>
               </div>
             </div>
 
             <!-- 🟩 T5夜班 -->
-            <div class="bg-slate-950 border border-emerald-800/80 rounded-2xl p-3 space-y-1.5">
-              <div class="flex items-center justify-between text-xs font-bold text-emerald-300">
-                <span class="flex items-center gap-1">
-                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <div class="bg-slate-950 border border-emerald-800/80 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm">
+              <div class="flex items-center justify-between text-xs font-bold text-emerald-300 gap-1">
+                <span class="flex items-center gap-1 truncate whitespace-nowrap">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
                   <span>🟩 T5夜班</span>
                 </span>
-                <span id="t5GreenCountDisplay" class="font-mono text-emerald-200">${greenT5NightCount} 班</span>
+                <span id="t5GreenCountDisplay" class="font-mono text-emerald-200 text-xs shrink-0">${greenT5NightCount} 班</span>
               </div>
-              <div id="t5GreenTotalDisplay" class="text-base font-black text-emerald-300 font-mono">$${greenT5Total.toLocaleString()}</div>
-              <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單班:</span>
-                <input 
-                  type="number" 
-                  value="${greenT5Rate}" 
-                  onchange="updateAdminVaultRates(null, null, this.value, null, null)"
-                  class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-emerald-300 text-[11px]"
-                >
+              <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
+                <div id="t5GreenTotalDisplay" class="text-sm sm:text-base font-black text-emerald-300 font-mono whitespace-nowrap">$${greenT5Total.toLocaleString()}</div>
+                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
+                  <span class="whitespace-nowrap">單班:</span>
+                  <input 
+                    type="number" 
+                    value="${greenT5Rate}" 
+                    onchange="updateAdminVaultRates(null, null, this.value, null, null)"
+                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-emerald-300 text-[11px] focus:outline-none focus:border-emerald-400"
+                  >
+                </div>
               </div>
             </div>
 
-            <!-- 🛵 機動支援哨 (聯合報/福清...) -->
-            <div class="bg-slate-950 border border-purple-800/80 rounded-2xl p-3 space-y-1.5">
-              <div class="flex items-center justify-between text-xs font-bold text-purple-300">
-                <span class="flex items-center gap-1" title="機動支援據點：例如聯合報 2班 B班 + 福清 2班 夜班 + 東方 1班 夜班 = 5 班">
-                  <i class="fa-solid fa-motorcycle text-purple-400 text-xs"></i>
+            <!-- 🛵 機動支援哨 -->
+            <div class="bg-slate-950 border border-purple-800/80 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm">
+              <div class="flex items-center justify-between text-xs font-bold text-purple-300 gap-1">
+                <span class="flex items-center gap-1 truncate whitespace-nowrap" title="機動支援據點：例如聯合報 2班 B班 + 福清 2班 夜班 + 東方 1班 夜班 = 5 班">
+                  <i class="fa-solid fa-motorcycle text-purple-400 text-xs shrink-0"></i>
                   <span>🛵 機動支援哨</span>
                 </span>
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-0.5 shrink-0">
                   <input 
                     type="number" 
                     value="${mobileSupportCount}" 
                     onchange="updateAdminVaultRates(null, null, null, null, this.value)"
-                    class="w-10 h-5 bg-slate-900 border border-purple-700 rounded text-center font-mono text-purple-300 text-[11px] font-bold"
+                    class="w-9 h-5 bg-slate-900 border border-purple-700 rounded text-center font-mono text-purple-300 text-xs font-bold focus:outline-none focus:border-purple-400"
                   >
-                  <span class="font-mono text-purple-200">班</span>
+                  <span class="font-mono text-purple-200 text-[11px]">班</span>
                 </div>
               </div>
-              <div class="text-base font-black text-purple-300 font-mono">$${mobileSupportTotal.toLocaleString()}</div>
-              <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單班:</span>
-                <input 
-                  type="number" 
-                  value="${mobileSupportRate}" 
-                  onchange="updateAdminVaultRates(null, null, null, this.value, null)"
-                  class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-purple-300 text-[11px]"
-                >
+              <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
+                <div class="text-sm sm:text-base font-black text-purple-300 font-mono whitespace-nowrap">$${mobileSupportTotal.toLocaleString()}</div>
+                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
+                  <span class="whitespace-nowrap">單班:</span>
+                  <input 
+                    type="number" 
+                    value="${mobileSupportRate}" 
+                    onchange="updateAdminVaultRates(null, null, null, this.value, null)"
+                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-purple-300 text-[11px] focus:outline-none focus:border-purple-400"
+                  >
+                </div>
               </div>
             </div>
           </div>
