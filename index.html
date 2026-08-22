@@ -1235,13 +1235,64 @@
       if (modal) modal.style.display = 'none';
     }
 
+    function parseDatesCount(str) {
+      if (!str || !str.trim()) return 0;
+      const items = str.split(/[,、\s]+/).filter(Boolean);
+      return items.length;
+    }
+
+    function resetDefaultT5GreenDates() {
+      const defaultStr = '3,6,13,17,22,24,29';
+      localStorage.setItem('admin_t5_green_dates', defaultStr);
+      playCoinDropSound();
+      triggerCoinRain();
+      renderAdminVaultView();
+      showToast('🟩 已還原 8 月預設綠底日期 (3,6,13,17,22,24,29)', 'success');
+    }
+
+    function updateT5GreenDatesRecord(datesStr) {
+      localStorage.setItem('admin_t5_green_dates', datesStr);
+      const count = parseDatesCount(datesStr);
+      const rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1500', 10);
+      const dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
+      const nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
+
+      const greenTotal = count * rate;
+      
+      const subtotalEl = document.getElementById('t5GreenDaysSubtotal');
+      const countCardEl = document.getElementById('t5GreenCountDisplay');
+      const greenTotalEl = document.getElementById('t5GreenTotalDisplay');
+      const hintTotalEl = document.getElementById('t5GreenHintTotalDisplay');
+
+      if (subtotalEl) subtotalEl.textContent = count;
+      if (countCardEl) countCardEl.textContent = `${count} 天`;
+      if (greenTotalEl) greenTotalEl.textContent = `$${greenTotal.toLocaleString()}`;
+      if (hintTotalEl) hintTotalEl.textContent = `共 $${greenTotal.toLocaleString()} 元`;
+
+      // 即時連動更新總收入巨型展示
+      const dayCount = parseInt(document.getElementById('tsghDayCountVal')?.dataset.count || '12', 10);
+      const nightCount = parseInt(document.getElementById('tsghNightCountVal')?.dataset.count || '10', 10);
+      
+      const grandTotal = (dayCount * dayRate) + (nightCount * nightRate) + greenTotal;
+      const grandEl = document.getElementById('adminTotalAssetDisplay');
+      if (grandEl) grandEl.textContent = grandTotal.toLocaleString();
+    }
+
     function renderAdminVaultView() {
       const container = document.getElementById('adminVaultContentArea');
       if (!container) return;
 
       let tsghDayCount = 0;
       let tsghNightCount = 0;
-      let greenT5NightCount = 0; // M6 綠色底色 (T5商業大樓夜班 $1500/Day)
+
+      // 載入綠底夜班日期紀錄 (預設 8 月份: 3,6,13,17,22,24,29)
+      let greenT5DatesStr = localStorage.getItem('admin_t5_green_dates');
+      if (greenT5DatesStr === null) {
+        greenT5DatesStr = '3,6,13,17,22,24,29';
+        localStorage.setItem('admin_t5_green_dates', greenT5DatesStr);
+      }
+
+      const greenT5NightCount = parseDatesCount(greenT5DatesStr);
 
       // 掃描動態與靜態班表資料
       const datasets = [EMBEDDED_SCHEDULE_DATA_8];
@@ -1256,7 +1307,6 @@
           if (!tabData || !tabData.rows || !Array.isArray(tabData.rows)) return;
 
           tabData.rows.forEach(r => {
-            const dateStr = r['日期'] || '';
             const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
             const dayVal = r['早班 (07-19)'] || '';
             const nightVal = r['晚班 (19-07)'] || '';
@@ -1267,22 +1317,17 @@
               tsghDayCount++;
             }
 
-            if (nightVal.trim()) {
-              if (isGreenT5 || nightVal.includes('T5') || nightVal.includes('綠色')) {
-                greenT5NightCount++;
-              } else if (nightVal.includes('管理') || matchGuardInCell('賴鯤仲', nightVal) || nightVal.includes('黃')) {
-                tsghNightCount++;
-              }
+            if (nightVal.trim() && !isGreenT5 && !nightVal.includes('T5') && (nightVal.includes('管理') || matchGuardInCell('賴鯤仲', nightVal) || nightVal.includes('黃'))) {
+              tsghNightCount++;
             }
           });
         });
       });
 
-      // 預設統計天數 (若資料庫尚未連線時)
-      if (tsghDayCount === 0 && tsghNightCount === 0 && greenT5NightCount === 0) {
+      // 預設統計天數
+      if (tsghDayCount === 0 && tsghNightCount === 0) {
         tsghDayCount = 12;
         tsghNightCount = 10;
-        greenT5NightCount = 8;
       }
 
       let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
@@ -1337,7 +1382,7 @@
             <div class="bg-slate-950 border border-amber-900/60 rounded-2xl p-3 space-y-1.5">
               <div class="flex items-center justify-between text-xs font-bold text-amber-300">
                 <span>☀️ 常規早班</span>
-                <span class="font-mono text-amber-200">${tsghDayCount} 天</span>
+                <span id="tsghDayCountVal" data-count="${tsghDayCount}" class="font-mono text-amber-200">${tsghDayCount} 天</span>
               </div>
               <div class="text-base font-black text-amber-300 font-mono">$${tsghDayTotal.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
@@ -1355,7 +1400,7 @@
             <div class="bg-slate-950 border border-indigo-900/60 rounded-2xl p-3 space-y-1.5">
               <div class="flex items-center justify-between text-xs font-bold text-indigo-300">
                 <span>🌙 常規晚班</span>
-                <span class="font-mono text-indigo-200">${tsghNightCount} 天</span>
+                <span id="tsghNightCountVal" data-count="${tsghNightCount}" class="font-mono text-indigo-200">${tsghNightCount} 天</span>
               </div>
               <div class="text-base font-black text-indigo-300 font-mono">$${tsghNightTotal.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
@@ -1374,11 +1419,11 @@
               <div class="flex items-center justify-between text-xs font-bold text-emerald-300">
                 <span class="flex items-center gap-1">
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>🟩 T5夜班(綠色M6)</span>
+                  <span>🟩 T5夜班(綠底)</span>
                 </span>
-                <span class="font-mono text-emerald-200">${greenT5NightCount} 天</span>
+                <span id="t5GreenCountDisplay" class="font-mono text-emerald-200">${greenT5NightCount} 天</span>
               </div>
-              <div class="text-base font-black text-emerald-300 font-mono">$${greenT5Total.toLocaleString()}</div>
+              <div id="t5GreenTotalDisplay" class="text-base font-black text-emerald-300 font-mono">$${greenT5Total.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
                 <span>單日:</span>
                 <input 
@@ -1388,6 +1433,43 @@
                   class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-emerald-300 text-[11px]"
                 >
               </div>
+            </div>
+          </div>
+
+          <!-- 🟩 T5 綠底夜班日期紀錄與天數小計 (M6 欄位) -->
+          <div class="bg-gradient-to-r from-emerald-950/90 to-slate-950 border border-emerald-600/80 rounded-2xl p-3.5 space-y-2 shadow-lg">
+            <div class="flex items-center justify-between">
+              <div class="text-xs font-extrabold text-emerald-300 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>🟩 T5 綠底夜班執勤日期紀錄 (M6 欄位)</span>
+              </div>
+              <div class="text-xs font-mono font-black text-emerald-300 bg-emerald-950 border border-emerald-700 px-2.5 py-0.5 rounded-full shadow-inner">
+                小計 <span id="t5GreenDaysSubtotal" class="text-amber-300 text-sm font-black">${greenT5NightCount}</span> 日
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-0.5">
+              <input 
+                type="text" 
+                id="t5GreenDatesInput" 
+                value="${greenT5DatesStr}" 
+                placeholder="請輸入日期，例如: 3,6,13,17,22,24,29" 
+                oninput="updateT5GreenDatesRecord(this.value)"
+                class="flex-1 h-9 bg-slate-900 border border-emerald-700/80 rounded-xl px-3 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400 placeholder-slate-600 shadow-inner"
+              >
+              <button 
+                type="button" 
+                onclick="resetDefaultT5GreenDates()" 
+                title="還原 8 月預設日期 (3,6,13,17,22,24,29)"
+                class="h-9 px-3 bg-emerald-900 hover:bg-emerald-800 text-emerald-200 text-xs font-bold rounded-xl border border-emerald-700 transition shrink-0 cursor-pointer active:scale-95 flex items-center gap-1"
+              >
+                <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                <span>預設(8月)</span>
+              </button>
+            </div>
+            <div class="text-[11px] text-slate-400 flex items-center justify-between px-1">
+              <span>💡 8月紀錄範例: 3,6,13,17,22,24,29 (以逗號區隔)</span>
+              <span id="t5GreenHintTotalDisplay" class="font-mono text-emerald-300 font-bold">共 $${greenT5Total.toLocaleString()} 元</span>
             </div>
           </div>
 
