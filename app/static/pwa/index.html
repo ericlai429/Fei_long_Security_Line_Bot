@@ -101,6 +101,41 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
 
+  <!-- 🎬 GIF 動態圖預覽與一鍵下載 Modal -->
+  <div id="gifPreviewModal" style="display: none;" class="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl relative text-center">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2 text-white font-bold text-sm">
+          <i class="fa-solid fa-file-video text-amber-400"></i>
+          <span>🎬 GIF 動態報表檔產出成功</span>
+        </div>
+        <button type="button" onclick="closeGifPreviewModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div id="gifPreviewContainer" class="w-full flex justify-center py-2">
+        <!-- GIF 動態圖顯影位置 -->
+      </div>
+
+      <div class="space-y-2.5">
+        <a 
+          id="gifDownloadBtn" 
+          href="#" 
+          download="115年8月份_管理者資產動態報表.gif"
+          class="w-full h-11 bg-gradient-to-r from-amber-500 via-yellow-400 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+        >
+          <i class="fa-solid fa-download text-sm"></i>
+          <span>📥 下載 GIF 動態圖檔 (.gif)</span>
+        </a>
+        
+        <p class="text-[11px] text-amber-300/80 font-mono">
+          💡 手機用戶 (iOS Safari / Android) 亦可直接「長按上方 GIF 圖片」選擇「儲存影像」加入相簿！
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- 🗝️ iOS 完全相容：主管登入 / 管理控制台選單 Modal -->
   <div id="adminAuthModal" style="display: none;" class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-amber-500 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
@@ -2447,14 +2482,11 @@
               interval: 0.18,
               numFrames: frames.length
             }, function(obj) {
-              if (!obj.error) {
-                const downloadLink = document.createElement('a');
-                downloadLink.href = obj.image;
-                downloadLink.download = `115年8月份_管理者資產動態報表.gif`;
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                downloadLink.remove();
-                showToast('🎬 已成功產出並下載『K線+資產總合 GIF 動態圖』！', 'success');
+              if (!obj.error && obj.image) {
+                openGifPreviewModal(obj.image);
+                showToast('🎬 已成功產出『K線+資產總合 GIF 動態圖』！', 'success');
+              } else {
+                showToast('⚠️ GIF 產出失敗，請再試一次', 'error');
               }
               if (btn) {
                 btn.innerHTML = '<i class="fa-solid fa-file-video text-xs"></i><span>🎬 產生 K線+資產總合 GIF 動態圖</span>';
@@ -2462,12 +2494,7 @@
               }
             });
           } else {
-            const downloadLink = document.createElement('a');
-            downloadLink.href = frames[frames.length - 1];
-            downloadLink.download = `115年8月份_管理者資產總合報表.png`;
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            downloadLink.remove();
+            openGifPreviewModal(frames[frames.length - 1]);
             showToast('📷 已產出高畫質資產總合報表圖！', 'success');
             if (btn) {
               btn.innerHTML = '<i class="fa-solid fa-file-video text-xs"></i><span>🎬 產生 K線+資產總合 GIF 動態圖</span>';
@@ -2483,6 +2510,61 @@
           }
         }
       }, 100);
+    }
+
+    function dataURLtoBlob(dataurl) {
+      try {
+        const arr = dataurl.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--){
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], {type:mime});
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function openGifPreviewModal(imgDataUrl) {
+      const modal = document.getElementById('gifPreviewModal');
+      const container = document.getElementById('gifPreviewContainer');
+      const downloadBtn = document.getElementById('gifDownloadBtn');
+
+      if (container) {
+        container.innerHTML = `<img src="${imgDataUrl}" class="max-h-[60vh] w-auto rounded-2xl border border-amber-500/80 shadow-2xl object-contain block mx-auto animate-fade-in" alt="管理者資產GIF動態報表">`;
+      }
+
+      const blob = dataURLtoBlob(imgDataUrl);
+      if (blob) {
+        const blobUrl = URL.createObjectURL(blob);
+        if (downloadBtn) {
+          downloadBtn.href = blobUrl;
+          downloadBtn.download = `115年8月份_管理者資產動態報表.gif`;
+        }
+
+        // 自動觸發 Blob 檔名下載
+        try {
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = `115年8月份_管理者資產動態報表.gif`;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => a.remove(), 300);
+        } catch(err) {}
+      } else if (downloadBtn) {
+        downloadBtn.href = imgDataUrl;
+        downloadBtn.download = `115年8月份_管理者資產動態報表.gif`;
+      }
+
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeGifPreviewModal() {
+      const modal = document.getElementById('gifPreviewModal');
+      if (modal) modal.style.display = 'none';
     }
 
     // 🗝️ iOS 友善 Admin 彈窗與持久登入保持 (嚴格資料比對保護)
