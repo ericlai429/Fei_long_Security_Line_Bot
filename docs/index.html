@@ -2636,7 +2636,7 @@
                 <span class="text-[10px] text-amber-400/90 font-mono">(會計逗號格式)</span>
               </div>
               
-              <div class="flex items-center gap-1.5 flex-wrap">
+              <div class="flex items-center gap-1.5">
                 <button 
                   type="button" 
                   onclick="fetchCloudVaultAssets(true)" 
@@ -2650,21 +2650,11 @@
                 <button 
                   type="button" 
                   onclick="saveAndSyncManualVaultAssets()" 
-                  class="h-7 px-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                  class="h-7 px-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
                   title="點擊儲存 4 大欄位並同步寫入 GitHub"
                 >
                   <i class="fa-solid fa-floppy-disk text-slate-950"></i>
                   <span>💾 儲存至雲端</span>
-                </button>
-
-                <button 
-                  type="button" 
-                  onclick="showVaultQRCode()" 
-                  class="h-7 px-2.5 bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 text-white font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="產生 QR Code，iPhone 相機一掃 0.001 秒直接帶入金額"
-                >
-                  <i class="fa-solid fa-qrcode text-white"></i>
-                  <span>📱 掃碼</span>
                 </button>
               </div>
             </div>
