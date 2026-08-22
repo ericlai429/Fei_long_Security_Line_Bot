@@ -1343,6 +1343,17 @@
       const candleWidth = Math.max(3, (chartWidth / numDays) * 0.6);
       const slotWidth = chartWidth / numDays;
 
+      // 垂直網格線 (Vertical Grid Lines 1..31)
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 0.5;
+      dailyKLines.forEach((k, i) => {
+        const x = padding.left + i * slotWidth + slotWidth / 2;
+        ctx.beginPath();
+        ctx.moveTo(x, padding.top);
+        ctx.lineTo(x, height - padding.bottom);
+        ctx.stroke();
+      });
+
       dailyKLines.forEach((k, i) => {
         const x = padding.left + i * slotWidth + slotWidth / 2;
 
@@ -1368,12 +1379,11 @@
 
         ctx.fillRect(x - candleWidth / 2, topY, candleWidth, bodyHeight);
 
-        // 標記日期 (每 3 天標示一次)
-        if ((i + 1) % 3 === 1 || i === numDays - 1) {
-          ctx.fillStyle = '#94a3b8';
-          ctx.textAlign = 'center';
-          ctx.fillText(`${i + 1}`, x, height - padding.bottom + 14);
-        }
+        // 標記日期 X 軸 (明顯清晰顯示 1, 2, 3, 4 ... 直到 31)
+        ctx.fillStyle = (i + 1 === 22) ? '#f59e0b' : '#e2e8f0';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${i + 1}`, x, height - padding.bottom + 16);
       });
 
       // 疊加資產累積走勢金黃色折線 (Golden Asset Curve Overlay)
