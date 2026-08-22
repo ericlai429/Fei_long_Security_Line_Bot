@@ -66,3 +66,16 @@
 
 - **⚔️ 降妖除魔 (Solution)**：
   地毯式拔除全站重複的多餘 `<i class="...">` 標籤，保持單一簡潔優雅的 Emoji 標誌與文字。
+
+---
+
+## 👻 鬼故事 6：iOS Safari 靜默阻擋非同步下載的「消失的 GIF 彈窗」
+
+- **👻 鬼故事現象**：
+  在電腦版（Chrome / Edge）點擊產生 GIF 時能順利彈出檔名下載，但 iPhone (iOS Safari) 使用者按下按鈕後，卻完全沒有跳出下載提示或檔案下載通知，讓人誤以為功能失效或 GitHub 不支援。
+
+- **🕵️‍♂️ 作祟原委 (Root Cause)**：
+  iOS Safari 基於高強度安全防禦機制，規定觸發檔案下載的 `a.click()` 必須與「使用者手動點擊」在同一同步線程（Synchronous Event）中。若下載動作是在非同步線程（如 `setTimeout` 或 Canvas 繪圖 LZW 編碼完成後）才執行，Safari 會將其判定為隱形彈窗/背景惡意下載並進行靜默攔截（Silent Intercept）。
+
+- **⚔️ 降妖除魔 (Solution)**：
+  導入 **全平台雙重顯影防禦機制**——除了背地裡嘗試觸發預設 `a.click()` 下載外，同步開啟滿版 HTML GIF 動態預覽 Modal 視窗，並標示提示，讓 iOS Safari / Android 手機用戶可直接**「長按圖片 1 秒 ➔ 選擇加入照片/儲存影像」**直奔手機相簿，徹底突破 iOS 的靜默攔截牆。
