@@ -1855,20 +1855,16 @@
       }
     }
 
-    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/vault_assets.json';
-    const GITHUB_API_URL = 'https://api.github.com/repos/ericlai429/Fei_long_Security_Line_Bot/contents/docs/vault_assets.json';
-
-    function getGithubToken() {
-      return localStorage.getItem('admin_github_pat') || '';
-    }
+    const CLOUD_SYNC_API_URL = 'https://api.restful-api.dev/objects/ff8081819ff5b11001a029e0aebb78fe';
 
     async function fetchCloudVaultAssets(showToastNotice = false) {
       try {
-        const res = await fetch(GITHUB_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) throw new Error('fetch failed');
-        const data = await res.json();
+        const res = await fetch(CLOUD_SYNC_API_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('cloud fetch failed');
+        const json = await res.json();
+        const data = json.data || json;
 
-        if (data && (data.cash !== undefined)) {
+        if (data && (data.cash !== undefined || data.bangbang !== undefined)) {
           localStorage.setItem('admin_vault_cash', data.cash || 0);
           localStorage.setItem('admin_vault_bangbang', data.bangbang || 0);
           localStorage.setItem('admin_vault_paipai', data.paipai || 0);
@@ -1879,72 +1875,51 @@
           if (showToastNotice) {
             playCoinDropSound();
             triggerCoinRain();
-            const ts = data.updated_at ? `（更新時間：${new Date(data.updated_at).toLocaleString('zh-TW')}）` : '';
-            showToast(`☁️ 已從 GitHub 讀取最新資產金額！${ts}`, 'success');
+            showToast(`☁️ 已成功從雲端同步最新資產！(現金:$${(data.cash||0).toLocaleString()}, 邦邦:$${(data.bangbang||0).toLocaleString()})`, 'success');
           }
+        } else if (showToastNotice) {
+          showToast('☁️ 目前雲端無最新同步紀錄', 'info');
         }
       } catch(e) {
-        if (showToastNotice) showToast('❌ 讀取失敗，請確認網路連線', 'error');
+        if (showToastNotice) showToast('❌ 讀取雲端失敗，請確認網路連線', 'error');
       }
     }
 
     async function saveAndSyncManualVaultAssets() {
       updateManualVaultAssets(false);
 
-      const token = getGithubToken();
-      if (!token) {
-        const t = prompt('請輸入 GitHub Personal Access Token（只需輸入一次，之後自動記住）：\n\n到 github.com → Settings → Developer settings → Personal access tokens → Fine-grained tokens\n權限只需勾選此 Repo 的 Contents: Read and write');
-        if (!t || !t.trim()) { showToast('❌ 未輸入 Token，無法儲存至 GitHub', 'error'); return; }
-        localStorage.setItem('admin_github_pat', t.trim());
-      }
+      const cashVal = parseFloat(localStorage.getItem('admin_vault_cash') || '0') || 0;
+      const bangbangVal = parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0;
+      const paipaiVal = parseFloat(localStorage.getItem('admin_vault_paipai') || '0') || 0;
+      const tuotuoVal = parseFloat(localStorage.getItem('admin_vault_tuotuo') || '0') || 0;
 
-      const pat = getGithubToken();
       const payload = {
-        cash: parseFloat(localStorage.getItem('admin_vault_cash') || '0') || 0,
-        bangbang: parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0,
-        paipai: parseFloat(localStorage.getItem('admin_vault_paipai') || '0') || 0,
-        tuotuo: parseFloat(localStorage.getItem('admin_vault_tuotuo') || '0') || 0,
-        updated_at: new Date().toISOString()
+        name: 'feilong_vault_assets',
+        data: {
+          cash: cashVal,
+          bangbang: bangbangVal,
+          paipai: paipaiVal,
+          tuotuo: tuotuoVal,
+          updated_at: new Date().toISOString()
+        }
       };
 
       try {
-        // 先取得目前檔案的 SHA（GitHub API 更新需要）
-        const shaRes = await fetch(GITHUB_API_URL, {
-          headers: { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json' }
-        });
-        const shaData = await shaRes.json();
-        const sha = shaData.sha;
-
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
-        const putRes = await fetch(GITHUB_API_URL, {
+        const res = await fetch(CLOUD_SYNC_API_URL, {
           method: 'PUT',
-          headers: {
-            'Authorization': `token ${pat}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            message: `vault: 更新額外資產 ${new Date().toLocaleString('zh-TW')}`,
-            content,
-            sha
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
 
-        if (putRes.ok) {
+        if (res.ok) {
           playCoinDropSound();
           triggerCoinRain();
-          showToast('💾 已成功寫入 GitHub，手機開頁後讀取雲端即可同步！', 'success');
+          showToast('💾 已成功儲存 4 大資產，並同步推送到雲端！', 'success');
         } else {
-          const err = await putRes.json();
-          if (putRes.status === 401) {
-            localStorage.removeItem('admin_github_pat');
-            showToast('❌ Token 無效，已清除，請重新儲存並輸入正確 Token', 'error');
-          } else {
-            showToast(`❌ 儲存失敗：${err.message || putRes.status}`, 'error');
-          }
+          showToast('⚠️ 已儲存至本地，雲端同步失敗', 'warning');
         }
       } catch(e) {
-        showToast('❌ 網路錯誤，無法儲存至 GitHub', 'error');
+        showToast('⚠️ 已儲存至本地，雲端連線失敗', 'warning');
       }
     }
 
@@ -2496,7 +2471,7 @@
                   type="button" 
                   onclick="fetchCloudVaultAssets(true)" 
                   class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] rounded-lg border border-sky-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="從 GitHub 讀取最新資產金額（NB 和手機共用同一份資料）"
+                  title="從雲端讀取 NB 最新資產金額（NB 與手機共用同一份資料）"
                 >
                   <i class="fa-solid fa-cloud-arrow-down text-sky-400"></i>
                   <span>☁️ 讀取雲端</span>
@@ -2506,10 +2481,10 @@
                   type="button" 
                   onclick="saveAndSyncManualVaultAssets()" 
                   class="h-7 px-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="儲存金額並寫入 GitHub（需要一次性輸入 PAT Token）"
+                  title="點擊儲存 4 大欄位並同步至雲端（手機隨時可讀取）"
                 >
-                  <i class="fa-brands fa-github text-slate-950"></i>
-                  <span>💾 儲存至 GitHub</span>
+                  <i class="fa-solid fa-floppy-disk text-slate-950"></i>
+                  <span>💾 儲存並同步雲端</span>
                 </button>
               </div>
             </div>
