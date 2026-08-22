@@ -2068,7 +2068,7 @@
             const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
 
             if (dayVal.trim()) {
-              if (matchGuardInCell(cleanManager, dayVal) || matchGuardInCell('賴鯤仲', dayVal) || matchGuardInCell('周有輝', dayVal)) {
+              if (matchGuardInCell(cleanManager, dayVal) || matchGuardInCell('賴鯤仲', dayVal)) {
                 const dKey = `${dateStr}_DAY_${postName}`;
                 if (!shiftDedupe.has(dKey)) {
                   shiftDedupe.add(dKey);
@@ -2078,7 +2078,7 @@
             }
 
             if (nightVal.trim() && !isGreenT5 && !nightVal.includes('T5')) {
-              if (matchGuardInCell(cleanManager, nightVal) || matchGuardInCell('賴鯤仲', nightVal) || matchGuardInCell('周有輝', nightVal)) {
+              if (matchGuardInCell(cleanManager, nightVal) || matchGuardInCell('賴鯤仲', nightVal)) {
                 const nKey = `${dateStr}_NIGHT_${postName}`;
                 if (!shiftDedupe.has(nKey)) {
                   shiftDedupe.add(nKey);
