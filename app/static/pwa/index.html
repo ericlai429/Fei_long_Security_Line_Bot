@@ -1861,6 +1861,45 @@
       }
     }
 
+    const CLOUD_KV_SYNC_URLS = [
+      '/api/admin/vault-assets',
+      'https://api.counterapi.dev/v1/feilong_security/vault_assets_v1',
+      'https://keyvalue.impersonate.workers.dev/feilong_vault_assets_v2'
+    ];
+
+    async function saveAndSyncManualVaultAssets() {
+      updateManualVaultAssets(false);
+
+      const cashVal = localStorage.getItem('admin_vault_cash') || '0';
+      const bangbangVal = localStorage.getItem('admin_vault_bangbang') || '0';
+      const paipaiVal = localStorage.getItem('admin_vault_paipai') || '0';
+      const tuotuoVal = localStorage.getItem('admin_vault_tuotuo') || '0';
+
+      const payload = {
+        cash: parseFloat(cashVal) || 0,
+        bangbang: parseFloat(bangbangVal) || 0,
+        paipai: parseFloat(paipaiVal) || 0,
+        tuotuo: parseFloat(tuotuoVal) || 0,
+        updated_at: new Date().toISOString()
+      };
+
+      let successCount = 0;
+      for (const url of CLOUD_KV_SYNC_URLS) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) successCount++;
+        } catch(e) {}
+      }
+
+      playCoinDropSound();
+      triggerCoinRain();
+      showToast('💾 已成功儲存 4 大資產金額，並同步推送到雲端！', 'success');
+    }
+
     async function syncManualVaultAssetsToCloud() {
       const cashVal = localStorage.getItem('admin_vault_cash') || '0';
       const bangbangVal = localStorage.getItem('admin_vault_bangbang') || '0';
@@ -1875,21 +1914,15 @@
         updated_at: new Date().toISOString()
       };
 
-      try {
-        await fetch('/api/admin/vault-assets', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } catch (e) {}
-
-      try {
-        await fetch('https://keyvalue.impersonate.workers.dev/feilong_vault_assets', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } catch(e) {}
+      for (const url of CLOUD_KV_SYNC_URLS) {
+        try {
+          await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } catch(e) {}
+      }
     }
 
     let isFetchingCloudVault = false;
@@ -1899,23 +1932,14 @@
 
       try {
         let data = null;
-        try {
-          const res = await fetch('/api/admin/vault-assets');
-          if (res.ok) {
-            const json = await res.json();
-            if (json && (json.cash > 0 || json.bangbang > 0 || json.paipai > 0 || json.tuotuo > 0)) {
-              data = json;
-            }
-          }
-        } catch(e) {}
-
-        if (!data) {
+        for (const url of CLOUD_KV_SYNC_URLS) {
           try {
-            const res = await fetch('https://keyvalue.impersonate.workers.dev/feilong_vault_assets');
+            const res = await fetch(url);
             if (res.ok) {
               const json = await res.json();
               if (json && (json.cash > 0 || json.bangbang > 0 || json.paipai > 0 || json.tuotuo > 0)) {
                 data = json;
+                break;
               }
             }
           } catch(e) {}
@@ -1942,7 +1966,7 @@
           if (showToastNotice) {
             playCoinDropSound();
             triggerCoinRain();
-            showToast('☁️ 已成功連線同步 NB / 電腦端輸入之 4 大資產金額！', 'success');
+            showToast(`☁️ 已成功從雲端讀取 NB 最新資料！(現金:$${(data.cash||0).toLocaleString()}, 邦邦:$${(data.bangbang||0).toLocaleString()})`, 'success');
           }
         } else if (showToastNotice) {
           showToast('☁️ 目前雲端無最新同步紀錄', 'info');
@@ -1952,6 +1976,47 @@
         isFetchingCloudVault = false;
       }
     }
+
+    function copyVaultSyncUrl() {
+      const cashVal = localStorage.getItem('admin_vault_cash') || '0';
+      const bangbangVal = localStorage.getItem('admin_vault_bangbang') || '0';
+      const paipaiVal = localStorage.getItem('admin_vault_paipai') || '0';
+      const tuotuoVal = localStorage.getItem('admin_vault_tuotuo') || '0';
+
+      const syncObj = { c: cashVal, b: bangbangVal, p: paipaiVal, t: tuotuoVal };
+      const hashStr = encodeURIComponent(btoa(JSON.stringify(syncObj)));
+      const syncUrl = `${window.location.origin}${window.location.pathname}#vault_sync=${hashStr}`;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(syncUrl).then(() => {
+          showToast('🔗 已複製 NB 同步網址！傳送至手機開啟即可秒速帶入金額', 'success');
+        }).catch(() => {
+          prompt('請複製以下同步網址並傳至手機開啟：', syncUrl);
+        });
+      } else {
+        prompt('請複製以下同步網址並傳至手機開啟：', syncUrl);
+      }
+    }
+
+    function checkUrlVaultSync() {
+      if (window.location.hash && window.location.hash.includes('vault_sync=')) {
+        try {
+          const rawHash = window.location.hash.split('vault_sync=')[1];
+          const jsonStr = atob(decodeURIComponent(rawHash));
+          const decoded = JSON.parse(jsonStr);
+          if (decoded) {
+            if (decoded.c !== undefined) localStorage.setItem('admin_vault_cash', decoded.c);
+            if (decoded.b !== undefined) localStorage.setItem('admin_vault_bangbang', decoded.b);
+            if (decoded.p !== undefined) localStorage.setItem('admin_vault_paipai', decoded.p);
+            if (decoded.t !== undefined) localStorage.setItem('admin_vault_tuotuo', decoded.t);
+            showToast('📱 已成功從 NB 專屬同步網址帶入 4 大資產金額！', 'success');
+            history.replaceState(null, '', window.location.pathname);
+          }
+        } catch(e) {}
+      }
+    }
+    window.addEventListener('DOMContentLoaded', checkUrlVaultSync);
+    window.addEventListener('hashchange', checkUrlVaultSync);
 
     function renderAdminVaultView() {
       const container = document.getElementById('adminVaultContentArea');
@@ -2325,21 +2390,33 @@
 
           <!-- 💼 4大額外資產手動記帳欄位 (現金, 邦邦, 派派, 託託) -->
           <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-3 shadow-xl">
-            <div class="text-xs font-bold text-slate-200 flex items-center justify-between">
-              <span class="flex items-center gap-1.5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 pb-2">
+              <div class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
                 <i class="fa-solid fa-wallet text-amber-400"></i>
                 <span>💼 額外資產手動記帳欄位</span>
-              </span>
-              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-amber-400/90 font-mono">(會計逗號格式)</span>
+              </div>
+              
+              <div class="flex items-center gap-1.5">
                 <button 
                   type="button" 
                   onclick="fetchCloudVaultAssets(true)" 
-                  class="text-sky-400 hover:text-sky-300 text-[11px] font-bold underline flex items-center gap-1 cursor-pointer"
+                  class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] rounded-lg border border-sky-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                  title="從雲端抓取 NB 最新數值"
                 >
-                  <i class="fa-solid fa-cloud-arrow-down"></i>
-                  <span>☁️ 跨裝置雲端同步</span>
+                  <i class="fa-solid fa-cloud-arrow-down text-sky-400"></i>
+                  <span>讀取雲端</span>
                 </button>
-                <span class="text-[10px] text-slate-400 font-mono">(NB/手機雙向同步)</span>
+
+                <button 
+                  type="button" 
+                  onclick="saveAndSyncManualVaultAssets()" 
+                  class="h-7 px-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                  title="點擊儲存 4 大欄位並同步雲端"
+                >
+                  <i class="fa-solid fa-floppy-disk text-slate-950"></i>
+                  <span>💾 儲存並同步雲端</span>
+                </button>
               </div>
             </div>
 
@@ -2407,6 +2484,22 @@
                   class="w-full h-8 bg-slate-950 border border-purple-600/70 rounded-lg px-2 text-center text-xs font-black font-mono text-purple-300 focus:outline-none focus:border-purple-400"
                 >
               </div>
+            </div>
+
+            <!-- 🔗 跨裝置連動工具欄 -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-2 flex flex-wrap items-center justify-between gap-1.5 text-[11px] font-mono text-slate-400">
+              <span class="flex items-center gap-1 text-slate-300">
+                <i class="fa-solid fa-share-nodes text-amber-400"></i>
+                <span>雙向同步：點擊右上角「💾 儲存」或複製專屬連結</span>
+              </span>
+              <button 
+                type="button" 
+                onclick="copyVaultSyncUrl()" 
+                class="text-amber-400 hover:text-amber-300 font-bold underline flex items-center gap-1 cursor-pointer"
+              >
+                <i class="fa-solid fa-link text-[10px]"></i>
+                <span>🔗 複製 NB 同步網址傳送至手機</span>
+              </button>
             </div>
           </div>
 
