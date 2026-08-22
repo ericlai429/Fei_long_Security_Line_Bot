@@ -118,9 +118,19 @@
         </div>
 
         <div class="flex flex-col gap-2 pt-1">
+          <!-- 👑 管理者金庫入口按鈕 (七色彩虹炫光圈效果) -->
+          <button 
+            type="button" 
+            onclick="closeAdminAuthModal(); openAdminVaultModal();" 
+            class="rainbow-glow-btn w-full h-11 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-xl active:scale-98 cursor-pointer"
+          >
+            <i class="fa-solid fa-crown text-yellow-300 animate-pulse text-sm"></i>
+            <span>👑 開啟管理者金庫 (當月獨立收入試算)</span>
+          </button>
+          
           <a 
             href="./admin.html" 
-            class="w-full h-12 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-lg active:scale-98"
+            class="w-full h-11 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-lg active:scale-98"
           >
             <i class="fa-solid fa-sliders text-sm"></i>
             <span>進入幹部管理控制台</span>
@@ -180,8 +190,20 @@
           class="w-full h-12 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-[0.98] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2"
         >
           <i class="fa-solid fa-lock-open text-xs"></i>
-          <span>登入</span>
+          <span>登入主管選單</span>
         </button>
+
+        <div class="pt-2 border-t border-slate-800 space-y-2">
+          <!-- 🌈 直接開啟管理者金庫 -->
+          <button 
+            type="button" 
+            onclick="closeAdminAuthModal(); openAdminVaultModal();" 
+            class="rainbow-glow-btn w-full h-11 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-xl active:scale-98 cursor-pointer"
+          >
+            <i class="fa-solid fa-crown text-yellow-300 animate-pulse text-sm"></i>
+            <span>👑 直接開啟管理者金庫 (當月獨立收入)</span>
+          </button>
+        </div>
 
         <div class="flex items-center justify-center text-[11px] text-slate-500 pt-1">
           <button type="button" onclick="showChangePinView()" class="text-slate-400 hover:text-amber-300 transition underline">
