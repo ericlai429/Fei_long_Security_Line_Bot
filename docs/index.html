@@ -905,23 +905,23 @@
           <div class="bg-gradient-to-br from-amber-950/60 to-slate-950 border border-amber-500/50 rounded-2xl p-3 text-center space-y-1 shadow-sm">
             <div class="text-[11px] font-bold text-amber-300 flex items-center justify-center gap-1">
               <i class="fa-solid fa-sun text-amber-400"></i>
-              <span>早班天數</span>
+              <span>早班班次</span>
             </div>
-            <div class="text-xl font-black text-amber-200 font-mono">${totalDayShifts} <span class="text-xs font-normal">天</span></div>
+            <div class="text-xl font-black text-amber-200 font-mono">${totalDayShifts} <span class="text-xs font-normal">班</span></div>
           </div>
           <div class="bg-gradient-to-br from-indigo-950/60 to-slate-950 border border-indigo-500/50 rounded-2xl p-3 text-center space-y-1 shadow-sm">
             <div class="text-[11px] font-bold text-indigo-300 flex items-center justify-center gap-1">
               <i class="fa-solid fa-moon text-indigo-400"></i>
-              <span>晚班天數</span>
+              <span>晚班班次</span>
             </div>
-            <div class="text-xl font-black text-indigo-200 font-mono">${totalNightShifts} <span class="text-xs font-normal">天</span></div>
+            <div class="text-xl font-black text-indigo-200 font-mono">${totalNightShifts} <span class="text-xs font-normal">班</span></div>
           </div>
           <div class="bg-gradient-to-br from-emerald-950/60 to-slate-950 border border-emerald-500/50 rounded-2xl p-3 text-center space-y-1 shadow-sm">
             <div class="text-[11px] font-bold text-emerald-300 flex items-center justify-center gap-1">
               <i class="fa-solid fa-calendar-check text-emerald-400"></i>
               <span>當月執勤總數</span>
             </div>
-            <div class="text-xl font-black text-emerald-200 font-mono">${totalShifts} <span class="text-xs font-normal">天</span></div>
+            <div class="text-xl font-black text-emerald-200 font-mono">${totalShifts} <span class="text-xs font-normal">班</span></div>
           </div>
         </div>
 
@@ -1171,11 +1171,11 @@
             <div class="bg-slate-950 border border-amber-900/60 rounded-2xl p-3.5 space-y-2">
               <div class="flex items-center justify-between text-xs font-bold text-amber-300">
                 <span class="flex items-center gap-1"><i class="fa-solid fa-sun text-amber-400"></i> 早班累計</span>
-                <span class="font-mono text-amber-200">${totalDay} 天</span>
+                <span class="font-mono text-amber-200">${totalDay} 班</span>
               </div>
               <div class="text-lg font-black text-amber-300 font-mono">$${dayAsset.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[11px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單日薪資:</span>
+                <span>單班薪資:</span>
                 <input 
                   type="number" 
                   id="vaultDayRateInput" 
@@ -1190,11 +1190,11 @@
             <div class="bg-slate-950 border border-indigo-900/60 rounded-2xl p-3.5 space-y-2">
               <div class="flex items-center justify-between text-xs font-bold text-indigo-300">
                 <span class="flex items-center gap-1"><i class="fa-solid fa-moon text-indigo-400"></i> 晚班累計</span>
-                <span class="font-mono text-indigo-200">${totalNight} 天</span>
+                <span class="font-mono text-indigo-200">${totalNight} 班</span>
               </div>
               <div class="text-lg font-black text-indigo-300 font-mono">$${nightAsset.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[11px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單日薪資:</span>
+                <span>單班薪資:</span>
                 <input 
                   type="number" 
                   id="vaultNightRateInput" 
@@ -2240,11 +2240,11 @@
             <div class="bg-slate-950 border border-amber-900/60 rounded-2xl p-3 space-y-1.5">
               <div class="flex items-center justify-between text-xs font-bold text-amber-300">
                 <span>☀️ 常規早班</span>
-                <span id="tsghDayCountVal" data-count="${tsghDayCount}" class="font-mono text-amber-200">${tsghDayCount} 天</span>
+                <span id="tsghDayCountVal" data-count="${tsghDayCount}" class="font-mono text-amber-200">${tsghDayCount} 班</span>
               </div>
               <div class="text-base font-black text-amber-300 font-mono">$${tsghDayTotal.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單日:</span>
+                <span>單班:</span>
                 <input 
                   type="number" 
                   value="${dayRate}" 
@@ -2258,11 +2258,11 @@
             <div class="bg-slate-950 border border-indigo-900/60 rounded-2xl p-3 space-y-1.5">
               <div class="flex items-center justify-between text-xs font-bold text-indigo-300">
                 <span>🌙 常規晚班</span>
-                <span id="tsghNightCountVal" data-count="${tsghNightCount}" class="font-mono text-indigo-200">${tsghNightCount} 天</span>
+                <span id="tsghNightCountVal" data-count="${tsghNightCount}" class="font-mono text-indigo-200">${tsghNightCount} 班</span>
               </div>
               <div class="text-base font-black text-indigo-300 font-mono">$${tsghNightTotal.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單日:</span>
+                <span>單班:</span>
                 <input 
                   type="number" 
                   value="${nightRate}" 
@@ -2279,11 +2279,11 @@
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   <span>🟩 T5夜班</span>
                 </span>
-                <span id="t5GreenCountDisplay" class="font-mono text-emerald-200">${greenT5NightCount} 天</span>
+                <span id="t5GreenCountDisplay" class="font-mono text-emerald-200">${greenT5NightCount} 班</span>
               </div>
               <div id="t5GreenTotalDisplay" class="text-base font-black text-emerald-300 font-mono">$${greenT5Total.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                <span>單日:</span>
+                <span>單班:</span>
                 <input 
                   type="number" 
                   value="${greenT5Rate}" 
@@ -2302,7 +2302,7 @@
                 <span>🟩 T5夜班執勤日期紀錄</span>
               </div>
               <div class="text-xs font-mono font-black text-emerald-300 bg-emerald-950 border border-emerald-700 px-2.5 py-0.5 rounded-full shadow-inner">
-                小計 <span id="t5GreenDaysSubtotal" class="text-amber-300 text-sm font-black">${greenT5NightCount}</span> 日
+                小計 <span id="t5GreenDaysSubtotal" class="text-amber-300 text-sm font-black">${greenT5NightCount}</span> 班
               </div>
             </div>
 
@@ -2322,7 +2322,7 @@
             </div>
           </div>
 
-          <!-- 📊 當月資水檢查欄位 (總小時數 SUM(G12:AK12) / 12 = 上班天數) -->
+          <!-- 📊 當月資水檢查欄位 (總小時數 SUM(G12:AK12) / 12 = 上班班次) -->
           <div class="bg-gradient-to-r from-indigo-950/90 via-slate-950 to-purple-950/90 border border-indigo-500/80 rounded-2xl p-3.5 space-y-2.5 shadow-xl">
             <div class="flex items-center justify-between">
               <div class="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
@@ -2330,7 +2330,7 @@
                 <span>📊 當月資水檢查欄位 <span class="text-[10px] text-slate-400 font-mono font-normal">=SUM(G12:AK12)</span></span>
               </div>
               <div class="text-xs font-mono font-black text-amber-300 bg-indigo-950 border border-indigo-700 px-2.5 py-0.5 rounded-full shadow-inner">
-                檢查結果: <span id="auditDaysResultDisplay" class="text-emerald-300 text-sm font-black">${auditDaysResult}</span> 天
+                檢查結果: <span id="auditDaysResultDisplay" class="text-emerald-300 text-sm font-black">${auditDaysResult}</span> 班
               </div>
             </div>
 
@@ -2363,13 +2363,13 @@
                   <span id="auditFormulaHours" class="text-amber-300">${auditTotalHours}</span>
                   <span class="text-slate-400">÷ 12 =</span>
                   <span id="auditFormulaDays" class="text-emerald-300 text-sm">${auditDaysResult}</span>
-                  <span class="text-slate-300">天</span>
+                  <span class="text-slate-300">班</span>
                 </div>
               </div>
             </div>
 
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1 pt-0.5 border-t border-slate-900/80">
-              <span>💡 公式說明: =SUM(G12:AK12) 雲端試算表常規(354h) + T5夜班(84h) = 438 小時 (對應 36.5 天)</span>
+              <span>💡 公式說明: =SUM(G12:AK12) 雲端試算表常規(354h) + T5夜班(84h) = 438 小時 (對應 36.5 班)</span>
               <button 
                 type="button" 
                 onclick="recalculateDefaultAuditHours()" 
