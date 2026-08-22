@@ -546,6 +546,14 @@
     }
 
     // 🏦 個人金庫 (個人專屬班表查詢系統) 邏輯引擎
+    function cleanPersonName(raw) {
+      if (!raw) return '';
+      return raw
+        .replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?[0-9]{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?/g, '')
+        .replace(/[\s\u00a0]+/g, '')
+        .trim();
+    }
+
     function extractGuardNames() {
       const names = new Set();
       const sources = [EMBEDDED_SCHEDULE_DATA_8];
@@ -556,20 +564,26 @@
       sources.forEach(source => {
         if (!source) return;
         Object.values(source).forEach(tabObj => {
-          if (tabObj && tabObj.members) {
+          if (tabObj && tabObj.members && Array.isArray(tabObj.members)) {
             tabObj.members.forEach(m => {
-              if (m && m.trim()) names.add(m.trim());
+              const clean = cleanPersonName(m);
+              if (clean && clean.length >= 2 && clean !== '-' && clean !== '—') {
+                names.add(clean);
+              }
             });
           }
-          if (tabObj && tabObj.rows) {
+          if (tabObj && tabObj.rows && Array.isArray(tabObj.rows)) {
             tabObj.rows.forEach(r => {
               ['早班 (07-19)', '晚班 (19-07)'].forEach(col => {
                 const val = r[col];
                 if (val) {
-                  const clean = val.replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?[0-9]{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?/g, '').trim();
-                  if (clean && clean !== '-' && clean !== '—') {
-                    names.add(clean);
-                  }
+                  const items = val.split(/[、,\s]+/).filter(Boolean);
+                  items.forEach(item => {
+                    const clean = cleanPersonName(item);
+                    if (clean && clean.length >= 2 && clean !== '-' && clean !== '—') {
+                      names.add(clean);
+                    }
+                  });
                 }
               });
             });
@@ -578,6 +592,19 @@
       });
 
       return Array.from(names).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+    }
+
+    function matchGuardInCell(targetName, cellVal) {
+      if (!targetName || !cellVal) return false;
+      const cleanTarget = cleanPersonName(targetName);
+      if (!cleanTarget) return false;
+
+      const items = cellVal.split(/[、,\s\(\)（）]+/).filter(Boolean);
+      for (const item of items) {
+        const cleanItem = cleanPersonName(item);
+        if (cleanItem === cleanTarget) return true;
+      }
+      return cellVal.includes(cleanTarget);
     }
 
     function openPersonalVaultModal() {
@@ -624,7 +651,9 @@
       const container = document.getElementById('vaultContentArea');
       if (!container) return;
 
-      if (!targetName) {
+      const cleanTarget = cleanPersonName(targetName);
+
+      if (!cleanTarget) {
         container.innerHTML = `
           <div class="text-center py-12 text-slate-400 space-y-2">
             <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-500 flex items-center justify-center mx-auto text-xl">
@@ -639,45 +668,57 @@
       let totalDayShifts = 0;
       let totalNightShifts = 0;
       const userShifts = [];
+      const shiftKeys = new Set();
 
       const datasets = [EMBEDDED_SCHEDULE_DATA_8];
+      if (rawScheduleData && rawScheduleData.rows) {
+        datasets.push({ [currentTabName || 'current']: rawScheduleData });
+      }
 
       datasets.forEach(dataObj => {
         if (!dataObj) return;
         Object.keys(dataObj).forEach(tabKey => {
           const tabData = dataObj[tabKey];
-          if (!tabData || !tabData.rows) return;
+          if (!tabData || !tabData.rows || !Array.isArray(tabData.rows)) return;
 
           tabData.rows.forEach(r => {
             const dateStr = r['日期'] || '';
             const dayOfWeek = r['星期'] || '';
-            const postName = r['哨點/崗位'] || tabKey;
+            const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
 
             const dayVal = r['早班 (07-19)'] || '';
             const nightVal = r['晚班 (19-07)'] || '';
 
-            if (dayVal.includes(targetName)) {
-              totalDayShifts++;
-              userShifts.push({
-                date: dateStr,
-                weekday: dayOfWeek,
-                shiftType: '早班 (07:00-19:00)',
-                isDay: true,
-                post: postName,
-                raw: dayVal
-              });
+            if (matchGuardInCell(cleanTarget, dayVal)) {
+              const dedupeKey = `${dateStr}_DAY_${postName}`;
+              if (!shiftKeys.has(dedupeKey)) {
+                shiftKeys.add(dedupeKey);
+                totalDayShifts++;
+                userShifts.push({
+                  date: dateStr,
+                  weekday: dayOfWeek,
+                  shiftType: '早班 (07:00-19:00)',
+                  isDay: true,
+                  post: postName,
+                  raw: dayVal
+                });
+              }
             }
 
-            if (nightVal.includes(targetName)) {
-              totalNightShifts++;
-              userShifts.push({
-                date: dateStr,
-                weekday: dayOfWeek,
-                shiftType: '晚班 (19:00-07:00)',
-                isDay: false,
-                post: postName,
-                raw: nightVal
-              });
+            if (matchGuardInCell(cleanTarget, nightVal)) {
+              const dedupeKey = `${dateStr}_NIGHT_${postName}`;
+              if (!shiftKeys.has(dedupeKey)) {
+                shiftKeys.add(dedupeKey);
+                totalNightShifts++;
+                userShifts.push({
+                  date: dateStr,
+                  weekday: dayOfWeek,
+                  shiftType: '晚班 (19:00-07:00)',
+                  isDay: false,
+                  post: postName,
+                  raw: nightVal
+                });
+              }
             }
           });
         });
