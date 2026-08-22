@@ -1606,15 +1606,20 @@
         ctx.textAlign = 'center';
         ctx.fillText(`$${Math.round(displayAsset).toLocaleString()}`, width - padding.right + 32, anchorY + 4);
 
-        // 5. 更新頂部提示欄，顯示台北時間 (早/晚班時段對照 ｜ 精度至1分鐘)
+        // 5. 更新頂部與右下角提示欄，精準加總 1 日至今日此刻 (對齊至目前時間/分鐘)
+        const liveAssetEl = document.getElementById('liveCumulativeAssetDisplay');
+        if (liveAssetEl && activeIndex === null) {
+          liveAssetEl.textContent = `$${Math.round(displayAsset).toLocaleString()} 元`;
+        }
+
         const detailEl = document.getElementById('klineTooltipDetail');
         if (detailEl && activeIndex === null) {
           const timeStr = `${String(tHour).padStart(2,'0')}:${String(tMinute).padStart(2,'0')}`;
           let shiftNameTag = '非執勤時段';
-          if (tHour >= 7 && tHour < 19) shiftNameTag = '☀️ 早班時段 (07:00-19:00)';
-          else shiftNameTag = '🌙 晚班時段 (19:00-07:00)';
+          if (tHour >= 7 && tHour < 19) shiftNameTag = '☀️ 早班時段';
+          else shiftNameTag = '🌙 晚班時段';
 
-          detailEl.innerHTML = `🇹🇼 台北時間: <span class="text-white font-bold">8月${tDate}日 ${timeStr}</span> (${shiftNameTag}) ｜ 算力累積: <span class="text-amber-300 font-black">$${Math.round(displayAsset).toLocaleString()} 元</span>`;
+          detailEl.innerHTML = `🇹🇼 1日至今日此刻累積 (8月${tDate}日 ${timeStr} ｜ ${shiftNameTag}) ｜ 動態累積資產: <span class="text-amber-300 font-black">$${Math.round(displayAsset).toLocaleString()} 元</span>`;
         }
       }
     }
@@ -1929,8 +1934,8 @@
                 <div id="liveMinuteRateDisplay" class="font-black text-rose-400 text-xs">$2.361 元/分</div>
               </div>
               <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
-                <div class="text-[9px] text-slate-400">當月每分鐘累積總合</div>
-                <div id="liveCumulativeAssetDisplay" class="font-black text-yellow-300 text-xs">$50,150 元</div>
+                <div class="text-[9px] text-slate-400">1日至今此刻累積資產</div>
+                <div id="liveCumulativeAssetDisplay" class="font-black text-amber-300 text-xs">$0 元</div>
               </div>
             </div>
 
