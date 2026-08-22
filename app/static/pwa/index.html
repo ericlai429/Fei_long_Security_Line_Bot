@@ -2013,6 +2013,8 @@
     }
 
     function showVaultQRCode() {
+      updateManualVaultAssets(false);
+
       const cashVal = localStorage.getItem('admin_vault_cash') || '0';
       const bangbangVal = localStorage.getItem('admin_vault_bangbang') || '0';
       const paipaiVal = localStorage.getItem('admin_vault_paipai') || '0';
@@ -2083,6 +2085,8 @@
     }
 
     function copyVaultSyncUrl() {
+      updateManualVaultAssets(false);
+
       const cashVal = localStorage.getItem('admin_vault_cash') || '0';
       const bangbangVal = localStorage.getItem('admin_vault_bangbang') || '0';
       const paipaiVal = localStorage.getItem('admin_vault_paipai') || '0';
@@ -2580,22 +2584,22 @@
               <div class="flex items-center gap-1.5">
                 <button 
                   type="button" 
-                  onclick="fetchCloudVaultAssets(true)" 
-                  class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] rounded-lg border border-sky-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="從雲端讀取 NB 最新資產金額（NB 與手機共用同一份資料）"
+                  onclick="showVaultQRCode()" 
+                  class="h-7 px-3 bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 text-white font-black text-[11px] rounded-lg shadow-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+                  title="產生 QR Code，iPhone 相機一掃 0.001 秒直接帶入金額"
                 >
-                  <i class="fa-solid fa-cloud-arrow-down text-sky-400"></i>
-                  <span>☁️ 讀取雲端</span>
+                  <i class="fa-solid fa-qrcode text-white"></i>
+                  <span>📱 iPhone 掃碼秒速同步</span>
                 </button>
 
                 <button 
                   type="button" 
-                  onclick="saveAndSyncManualVaultAssets()" 
-                  class="h-7 px-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="點擊儲存 4 大欄位並同步至雲端（手機隨時可讀取）"
+                  onclick="copyVaultSyncUrl()" 
+                  class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] rounded-lg border border-sky-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                  title="複製同步網址，傳至 iPhone 點開即可秒速帶入"
                 >
-                  <i class="fa-solid fa-floppy-disk text-slate-950"></i>
-                  <span>💾 儲存並同步雲端</span>
+                  <i class="fa-solid fa-copy text-sky-400"></i>
+                  <span>複製網址</span>
                 </button>
               </div>
             </div>
