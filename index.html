@@ -1848,24 +1848,15 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2 pt-0.5">
+            <div class="pt-0.5">
               <input 
                 type="text" 
                 id="t5GreenDatesInput" 
                 value="${greenT5DatesStr}" 
                 placeholder="請輸入日期，例如: 3,6,13,17,22,24,29" 
                 oninput="updateT5GreenDatesRecord(this.value)"
-                class="flex-1 h-9 bg-slate-900 border border-emerald-700/80 rounded-xl px-3 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400 placeholder-slate-600 shadow-inner"
+                class="w-full h-9 bg-slate-900 border border-emerald-700/80 rounded-xl px-3 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400 placeholder-slate-600 shadow-inner"
               >
-              <button 
-                type="button" 
-                onclick="resetDefaultT5GreenDates()" 
-                title="還原 8 月預設日期 (3,6,13,17,22,24,29)"
-                class="h-9 px-3 bg-emerald-900 hover:bg-emerald-800 text-emerald-200 text-xs font-bold rounded-xl border border-emerald-700 transition shrink-0 cursor-pointer active:scale-95 flex items-center gap-1"
-              >
-                <i class="fa-solid fa-rotate-left text-[10px]"></i>
-                <span>預設(8月)</span>
-              </button>
             </div>
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1">
               <span>💡 8月紀錄範例: 3,6,13,17,22,24,29 (以逗號區隔)</span>
