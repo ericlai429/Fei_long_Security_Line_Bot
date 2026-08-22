@@ -2814,7 +2814,7 @@
         buf[p++] = 33; buf[p++] = 255; buf[p++] = 11;
         buf[p++] = 78; buf[p++] = 69; buf[p++] = 84; buf[p++] = 83;
         buf[p++] = 67; buf[p++] = 65; buf[p++] = 80; buf[p++] = 69;
-        buf[p++] = 50; buf[p++] = 46; buf[p++] = 48;
+        buf[p++] = 50; buf[p++] = 48; buf[p++] = 48;
         buf[p++] = 3; buf[p++] = 1;
         buf[p++] = loop & 255; buf[p++] = (loop >> 8) & 255;
         buf[p++] = 0;
@@ -2939,8 +2939,8 @@
       showToast('🎬 正在生成『K線+資產總合 GIF 動態圖檔』並觸發下載...', 'info');
 
       try {
-        const width = 560;
-        const height = 840;
+        const width = 280;
+        const height = 420;
         const klines = globalDailyKLines && globalDailyKLines.length > 0 ? globalDailyKLines : [];
         const numFrames = 10;
 
