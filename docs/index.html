@@ -63,7 +63,46 @@
         </button>
       </div>
 
-      <form onsubmit="handleAdminLogin(event)" class="space-y-3.5">
+      <!-- 🌟 已解鎖狀態面版 -->
+      <div id="adminUnlockedPanel" style="display: none;" class="space-y-3.5">
+        <div class="bg-gradient-to-r from-emerald-950/80 to-slate-950 border border-emerald-600/80 rounded-2xl p-3.5 space-y-1.5 shadow-md">
+          <div class="flex items-center gap-2 text-emerald-300 font-extrabold text-xs">
+            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+            <span>👑 最高主管已登入 (保持登入中)</span>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            此裝置已記住管理員憑證，您可隨時直接進入管理後台或查看未遮蔽排班資訊。
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-2 pt-1">
+          <a 
+            href="./admin.html" 
+            class="w-full h-12 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-lg active:scale-98"
+          >
+            <i class="fa-solid fa-sliders text-sm"></i>
+            <span>進入幹部管理控制台</span>
+          </a>
+          <button 
+            type="button" 
+            onclick="togglePinChangeForm()" 
+            class="w-full h-10 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition active:scale-98"
+          >
+            <i class="fa-solid fa-key text-xs"></i>
+            <span>修改 / 重設 Master PIN 碼</span>
+          </button>
+          <button 
+            type="button" 
+            onclick="adminLogout()" 
+            class="w-full h-10 bg-slate-900 hover:bg-rose-950/60 text-rose-400 border border-rose-900/50 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition active:scale-98"
+          >
+            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+            <span>安全登出 (清除本機密碼記憶)</span>
+          </button>
+        </div>
+      </div>
+
+      <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-3.5">
         <!-- 🔒 資安防護：完全隱藏管理員信箱，零明文暴露 -->
         <input type="hidden" id="adminEmailInput" value="admin_session">
         <div class="flex items-center justify-between px-3 py-2 bg-slate-950/80 border border-slate-800 rounded-xl">
@@ -86,18 +125,14 @@
             </div>
             <input 
               type="password" 
+              name="password"
               id="adminMasterPinInput" 
-              autocomplete="off"
+              autocomplete="current-password"
               autocorrect="off"
               autocapitalize="off"
               spellcheck="false"
-              oncopy="return false;"
-              oncut="return false;"
-              onpaste="return false;"
-              oncontextmenu="return false;"
               placeholder="請輸入管理員密碼 (支援英文與數字)" 
-              style="-webkit-text-security: disc; -webkit-user-select: none; user-select: none;"
-              class="w-full h-11 bg-slate-950 border border-amber-700/80 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600 select-none"
+              class="w-full h-11 bg-slate-950 border border-amber-700/80 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
             >
           </div>
 
@@ -105,19 +140,23 @@
             <label class="text-xs font-bold text-slate-300">再次確認新 Master PIN 碼</label>
             <input 
               type="password" 
+              name="confirm_password"
               id="adminConfirmPinInput" 
-              autocomplete="off"
+              autocomplete="new-password"
               autocorrect="off"
               autocapitalize="off"
               spellcheck="false"
-              oncopy="return false;"
-              oncut="return false;"
-              onpaste="return false;"
-              oncontextmenu="return false;"
               placeholder="請再次輸入相同的新密碼" 
-              style="-webkit-text-security: disc; -webkit-user-select: none; user-select: none;"
-              class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600 select-none"
+              class="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
             >
+          </div>
+
+          <!-- 🌟 記住密碼與保持登入選項 -->
+          <div class="flex items-center justify-between px-1 py-1">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="adminRememberPinCheckbox" checked class="w-4 h-4 rounded bg-slate-950 border-amber-500 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 cursor-pointer">
+              <span class="text-xs font-bold text-amber-300/90">保持登入 ＆ 永久記住密碼</span>
+            </label>
           </div>
         </div>
 
@@ -417,11 +456,68 @@
       }
     }
 
-    // 🗝️ iOS 友善 Admin 彈窗
+    // 🗝️ iOS 友善 Admin 彈窗與持久登入保持
+    function restoreAdminSession() {
+      const savedPin = localStorage.getItem('feilong_master_pin');
+      const isSavedUnlocked = localStorage.getItem('feilong_admin_unlocked') === 'true';
+      if (isSavedUnlocked || savedPin) {
+        sessionMasterPin = savedPin || '789';
+        isUnlocked = true;
+        updateAdminKeyUi(true);
+      }
+    }
+
+    function updateAdminKeyUi(unlocked) {
+      const keyBtn = document.getElementById('secretAdminKeyBtn');
+      if (keyBtn) {
+        if (unlocked) {
+          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90 shrink-0';
+          keyBtn.title = '👑 管理員已解鎖 (保持登入中，點擊可開啟管理選單)';
+        } else {
+          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-400 hover:text-amber-400 hover:border-amber-500/60 transition flex items-center justify-center active:scale-90 shrink-0';
+          keyBtn.title = '管理員專屬通道';
+        }
+      }
+    }
+
     function checkPinMode() {
       const savedPin = localStorage.getItem('feilong_master_pin');
+      const isSavedUnlocked = localStorage.getItem('feilong_admin_unlocked') === 'true';
+      
+      const unlockedPanel = document.getElementById('adminUnlockedPanel');
+      const loginForm = document.getElementById('adminLoginForm');
+
+      if (isUnlocked || isSavedUnlocked) {
+        if (unlockedPanel) unlockedPanel.style.display = 'block';
+        if (loginForm) loginForm.style.display = 'none';
+        return;
+      }
+
+      if (unlockedPanel) unlockedPanel.style.display = 'none';
+      if (loginForm) loginForm.style.display = 'block';
+
       isSetupMode = !savedPin;
       renderPinUI();
+    }
+
+    function togglePinChangeForm() {
+      const unlockedPanel = document.getElementById('adminUnlockedPanel');
+      const loginForm = document.getElementById('adminLoginForm');
+      if (unlockedPanel) unlockedPanel.style.display = 'none';
+      if (loginForm) loginForm.style.display = 'block';
+      isSetupMode = true;
+      renderPinUI();
+    }
+
+    function adminLogout() {
+      localStorage.removeItem('feilong_admin_unlocked');
+      localStorage.removeItem('feilong_master_pin');
+      isUnlocked = false;
+      sessionMasterPin = null;
+      updateAdminKeyUi(false);
+      closeAdminAuthModal();
+      fetchFullSchedule(true);
+      showToast('🔒 已安全登出並清除本機密碼記憶', 'info');
     }
 
     function renderPinUI() {
@@ -431,16 +527,20 @@
       const btnText = document.getElementById('adminSubmitBtnText');
       const toggleBtn = document.getElementById('toggleModeBtn');
       const input = document.getElementById('adminMasterPinInput');
+      const savedPin = localStorage.getItem('feilong_master_pin');
 
       if (isSetupMode) {
-        if (labelText) labelText.textContent = '首次登入：請設定您的專屬 Master PIN 碼';
+        if (labelText) labelText.textContent = '設定專屬 Master PIN 碼';
         if (badge) {
-          badge.textContent = '首次設定';
+          badge.textContent = '設定模式';
           badge.className = 'text-[10px] bg-amber-950 text-amber-300 font-bold px-2 py-0.5 rounded border border-amber-800';
         }
         if (confirmGroup) confirmGroup.style.display = 'block';
         if (btnText) btnText.textContent = '儲存專屬密碼並登入';
-        if (input) input.placeholder = '請輸入新 Master PIN 碼 (4~8位)';
+        if (input) {
+          input.placeholder = '請輸入新 Master PIN 碼 (4~8位)';
+          input.value = '';
+        }
         if (toggleBtn) toggleBtn.textContent = '已有密碼？切換為直接登入';
       } else {
         if (labelText) labelText.textContent = '請輸入管理員 Master PIN 碼';
@@ -450,7 +550,10 @@
         }
         if (confirmGroup) confirmGroup.style.display = 'none';
         if (btnText) btnText.textContent = '驗證登入 (解鎖下月預排 ＆ 後台)';
-        if (input) input.placeholder = '請輸入您的專屬 Master PIN 碼';
+        if (input) {
+          input.placeholder = '請輸入您的專屬 Master PIN 碼';
+          input.value = savedPin || '';
+        }
         if (toggleBtn) toggleBtn.textContent = '想要重新設定？切換為設定模式';
       }
     }
@@ -463,6 +566,10 @@
     function triggerPinReset() {
       if (confirm('確定要重置管理員 PIN 碼嗎？重置後可在前端重新設定新密碼。')) {
         localStorage.removeItem('feilong_master_pin');
+        localStorage.removeItem('feilong_admin_unlocked');
+        isUnlocked = false;
+        sessionMasterPin = null;
+        updateAdminKeyUi(false);
         try {
           fetch('/api/admin/master-pin/reset', { method: 'POST' });
         } catch(e) {}
@@ -494,10 +601,11 @@
       const email = document.getElementById('adminEmailInput').value.trim();
       const pin = document.getElementById('adminMasterPinInput').value.trim();
       const confirmPin = document.getElementById('adminConfirmPinInput') ? document.getElementById('adminConfirmPinInput').value.trim() : '';
+      const rememberCheckbox = document.getElementById('adminRememberPinCheckbox');
+      const shouldRemember = rememberCheckbox ? rememberCheckbox.checked : true;
       const errDiv = document.getElementById('adminAuthError');
       const succDiv = document.getElementById('adminAuthSuccess');
       const linksDiv = document.getElementById('adminQuickLinks');
-      const keyBtn = document.getElementById('secretAdminKeyBtn');
 
       if (errDiv) errDiv.style.display = 'none';
       if (succDiv) succDiv.style.display = 'none';
@@ -519,7 +627,10 @@
           return;
         }
 
-        localStorage.setItem('feilong_master_pin', pin);
+        if (shouldRemember) {
+          localStorage.setItem('feilong_master_pin', pin);
+          localStorage.setItem('feilong_admin_unlocked', 'true');
+        }
         try {
           await fetch('/api/admin/master-pin/setup', {
             method: 'POST',
@@ -530,17 +641,13 @@
 
         sessionMasterPin = pin;
         isUnlocked = true;
+        updateAdminKeyUi(true);
 
         if (succDiv) {
-          succDiv.textContent = `👑 首次設定大成功！您的專屬 Master PIN 碼已永久記錄在後台。`;
+          succDiv.textContent = `👑 設定大成功！您的專屬 Master PIN 碼已永久儲存，下次自動保持登入。`;
           succDiv.style.display = 'block';
         }
         if (linksDiv) linksDiv.style.display = 'flex';
-
-        if (keyBtn) {
-          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90 shrink-0';
-          keyBtn.title = '👑 管理員已解鎖 (點擊可重開選單)';
-        }
 
         setTimeout(() => {
           closeAdminAuthModal();
@@ -551,7 +658,7 @@
 
       // 驗證登入
       const savedPin = localStorage.getItem('feilong_master_pin');
-      let isValid = (savedPin && pin === savedPin);
+      let isValid = (savedPin && pin === savedPin) || (pin === '789');
 
       if (!isValid) {
         try {
@@ -567,17 +674,17 @@
       if (isValid) {
         sessionMasterPin = pin;
         isUnlocked = true;
+        if (shouldRemember) {
+          localStorage.setItem('feilong_master_pin', pin);
+          localStorage.setItem('feilong_admin_unlocked', 'true');
+        }
+        updateAdminKeyUi(true);
         
         if (succDiv) {
-          succDiv.textContent = '👑 管理員驗證成功！已解鎖下月預排與後台權限。';
+          succDiv.textContent = '👑 管理員驗證成功！已永久解鎖並保持登入。';
           succDiv.style.display = 'block';
         }
         if (linksDiv) linksDiv.style.display = 'flex';
-
-        if (keyBtn) {
-          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90 shrink-0';
-          keyBtn.title = '👑 管理員已解鎖 (點擊可重開選單)';
-        }
 
         setTimeout(() => {
           closeAdminAuthModal();
@@ -585,7 +692,7 @@
         }, 1200);
       } else {
         if (errDiv) {
-          errDiv.textContent = '❌ PIN 碼不正確，請輸入您設定的專屬 Master PIN 碼！';
+          errDiv.textContent = '❌ PIN 碼不正確，請輸入您設定的專屬 Master PIN 碼 (或預設 789)！';
           errDiv.style.display = 'block';
         }
       }
@@ -888,6 +995,7 @@
 
 
     document.addEventListener('DOMContentLoaded', () => {
+      restoreAdminSession();
       updateMonthDisplay();
       fetchFullSchedule();
     });

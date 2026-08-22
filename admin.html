@@ -3093,10 +3093,27 @@
       }
     }
 
+    function initPersistedKeys() {
+      const savedApiKey = localStorage.getItem('google_api_key');
+      const apiKeyInput = document.getElementById('googleApiKeyInput');
+      const btnText = document.getElementById('saveApiKeyBtnText');
+      if (apiKeyInput && savedApiKey && !apiKeyInput.value) {
+        apiKeyInput.value = savedApiKey;
+        if (btnText) btnText.textContent = '✅ 已載入金鑰 (點擊重新抓取)';
+      }
+      const savedToken = localStorage.getItem('saved_oauth_token');
+      const savedRefresh = localStorage.getItem('saved_refresh_token');
+      const tokenInput = document.getElementById('directOAuthTokenInput');
+      const refreshInput = document.getElementById('directRefreshTokenInput');
+      if (tokenInput && savedToken && !tokenInput.value) tokenInput.value = savedToken;
+      if (refreshInput && savedRefresh && !refreshInput.value) refreshInput.value = savedRefresh;
+    }
+
     // Ping heartbeat every 30 seconds
     setInterval(sendAdminHeartbeat, 30000);
     sendAdminHeartbeat();
 
+    initPersistedKeys();
     loadGroupList();
     fetchAvailableTabs();
   </script>
