@@ -1708,35 +1708,27 @@
       playCoinDropSound();
       triggerCoinRain();
       renderAdminVaultView();
+      generateAndDrawRedKLineChart();
       showToast('🟩 已還原 8 月預設綠底日期 (3,6,13,17,22,24,29)', 'success');
     }
 
     function updateT5GreenDatesRecord(datesStr) {
       localStorage.setItem('admin_t5_green_dates', datesStr);
-      const count = parseDatesCount(datesStr);
-      const rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1700', 10);
-      const dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
-      const nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
 
-      const greenTotal = count * rate;
-      
-      const subtotalEl = document.getElementById('t5GreenDaysSubtotal');
-      const countCardEl = document.getElementById('t5GreenCountDisplay');
-      const greenTotalEl = document.getElementById('t5GreenTotalDisplay');
-      const hintTotalEl = document.getElementById('t5GreenHintTotalDisplay');
+      const inputEl = document.getElementById('t5GreenDatesInput');
+      const cursorStart = inputEl ? inputEl.selectionStart : null;
+      const cursorEnd = inputEl ? inputEl.selectionEnd : null;
 
-      if (subtotalEl) subtotalEl.textContent = count;
-      if (countCardEl) countCardEl.textContent = `${count} 天`;
-      if (greenTotalEl) greenTotalEl.textContent = `$${greenTotal.toLocaleString()}`;
-      if (hintTotalEl) hintTotalEl.textContent = `共 $${greenTotal.toLocaleString()} 元`;
+      // 重繪全介面 (包含上下表格資料、資水拆解網格與總時數)
+      renderAdminVaultView();
+      // 重繪 K 線圖 (包含 31 號當天若新增為 T5 夜班的即時 K 棒柱體與算力)
+      generateAndDrawRedKLineChart();
 
-      // 即時連動更新總收入巨型展示
-      const dayCount = parseInt(document.getElementById('tsghDayCountVal')?.dataset.count || '12', 10);
-      const nightCount = parseInt(document.getElementById('tsghNightCountVal')?.dataset.count || '10', 10);
-      
-      const grandTotal = (dayCount * dayRate) + (nightCount * nightRate) + greenTotal;
-      const grandEl = document.getElementById('adminTotalAssetDisplay');
-      if (grandEl) grandEl.textContent = grandTotal.toLocaleString();
+      const newInputEl = document.getElementById('t5GreenDatesInput');
+      if (newInputEl && cursorStart !== null) {
+        newInputEl.focus();
+        newInputEl.setSelectionRange(cursorStart, cursorEnd);
+      }
     }
 
     function updateSalaryAuditHours(hoursVal) {
@@ -2791,6 +2783,7 @@
       playCoinDropSound();
       triggerCoinRain();
       renderAdminVaultView();
+      generateAndDrawRedKLineChart();
       showToast('💰 單價與機動支援哨數值已即時更新！', 'success');
     }
 
@@ -2801,6 +2794,7 @@
       playCoinDropSound();
       triggerCoinRain();
       renderAdminVaultView();
+      generateAndDrawRedKLineChart();
       showToast('💰 常規夜(B)班數量已更新！', 'success');
     }
 
