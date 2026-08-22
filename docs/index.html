@@ -2090,16 +2090,16 @@
         });
       });
 
-      // 讀取/設定常規夜(B)班數量 (預設 19 班 = 三總夜班 14 班 ＋ 機動支援夜/B班 5 班)
+      // 常規夜班預設為三總實際排班 14 班 (4 班工務所 ＋ 10 班重症大樓)，避免與 5 班機動支援哨重複計算
       let customNightCount = localStorage.getItem('admin_custom_night_count');
-      if (customNightCount !== null) {
+      if (customNightCount !== null && customNightCount !== '19') {
         const parsed = parseInt(customNightCount, 10);
         if (!isNaN(parsed) && parsed > 0) {
           tsghNightCount = parsed;
         }
       } else {
-        tsghNightCount = 19;
-        localStorage.setItem('admin_custom_night_count', 19);
+        localStorage.removeItem('admin_custom_night_count');
+        if (tsghNightCount === 0) tsghNightCount = 14;
       }
 
       if (tsghDayCount === 0) {
