@@ -1288,6 +1288,12 @@
       setupKLineHoverInspector('redKLineCanvas', globalDailyKLines);
     }
 
+    function getTaipeiNow() {
+      const now = new Date();
+      const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+      return new Date(utcMs + (8 * 3600000));
+    }
+
     let activeKLineHoverIndex = null;
 
     function drawRedKLineChart(canvasId, dailyKLines, activeIndex = null) {
@@ -1344,6 +1350,22 @@
       const candleWidth = Math.max(3, (chartWidth / numDays) * 0.6);
       const slotWidth = chartWidth / numDays;
 
+      // 讀取當前台北時間 (Asia/Taipei UTC+8)，預設錨定當台北時間當前日期與分鐘
+      const tNow = getTaipeiNow();
+      const tYear = tNow.getFullYear();
+      const tMonth = tNow.getMonth() + 1;
+      const tDate = tNow.getDate();
+      const tHour = tNow.getHours();
+      const tMinute = tNow.getMinutes();
+
+      let defaultDayIdx = (tYear === 2026 && tMonth === 8) ? (tDate - 1) : (numDays - 1);
+      if (defaultDayIdx < 0) defaultDayIdx = 0;
+      if (defaultDayIdx >= numDays) defaultDayIdx = numDays - 1;
+
+      const activeIdxToUse = (activeIndex !== null && activeIndex >= 0 && activeIndex < numDays) 
+        ? activeIndex 
+        : defaultDayIdx;
+
       // 垂直網格線 (Vertical Grid Lines 1..31)
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 0.5;
@@ -1381,8 +1403,8 @@
         ctx.fillRect(x - candleWidth / 2, topY, candleWidth, bodyHeight);
 
         // 標記日期 X 軸 (明顯清晰顯示 1, 2, 3, 4 ... 直到 31)
-        ctx.fillStyle = (i === activeIndex) ? '#f59e0b' : '#e2e8f0';
-        ctx.font = (i === activeIndex) ? 'bold 10px monospace' : '9px monospace';
+        ctx.fillStyle = (i === activeIdxToUse) ? '#f59e0b' : '#e2e8f0';
+        ctx.font = (i === activeIdxToUse) ? 'bold 10px monospace' : '9px monospace';
         ctx.textAlign = 'center';
         ctx.fillText(`${i + 1}`, x, height - padding.bottom + 16);
       });
@@ -1399,15 +1421,25 @@
       });
       ctx.stroke();
 
-      // 🎯 垂直橫移虛線 ＆ 金庫收入曲線錨定點 (Crosshair & Anchor Cursor)
-      const targetIdx = (activeIndex !== null && activeIndex >= 0 && activeIndex < dailyKLines.length) 
-        ? activeIndex 
-        : dailyKLines.length - 1;
-
-      const targetItem = dailyKLines[targetIdx];
+      // 🎯 讀取台北時間精度至 1 分鐘，動態錨定於 K 線收入曲線上
+      const targetItem = dailyKLines[activeIdxToUse];
       if (targetItem) {
-        const anchorX = padding.left + targetIdx * slotWidth + slotWidth / 2;
-        const anchorY = padding.top + chartHeight * (1 - (targetItem.close - minVal) / (maxVal - minVal));
+        let anchorX = padding.left + activeIdxToUse * slotWidth + slotWidth / 2;
+        let displayAsset = targetItem.close;
+
+        // 若為預設當前台北時間（未懸停狀態），計算當天內每分鐘精度累積動態 Asset
+        if (activeIndex === null && activeIdxToUse === defaultDayIdx) {
+          const minuteInDay = tHour * 60 + tMinute;
+          const minuteFraction = Math.min(1.0, Math.max(0.0, minuteInDay / 1440)); // 24h 分鐘佔比
+          anchorX = padding.left + activeIdxToUse * slotWidth + (slotWidth * minuteFraction);
+
+          // 當天每分鐘算力加算 ($1700 / 12 / 60 = $2.3611/分)
+          const todayDutyMinutes = targetItem.hoursWorked * 60;
+          const currentPassedDutyMinutes = Math.min(todayDutyMinutes, Math.floor((minuteInDay / 1440) * todayDutyMinutes));
+          displayAsset = targetItem.open + (currentPassedDutyMinutes * (1700 / 720));
+        }
+
+        const anchorY = padding.top + chartHeight * (1 - (displayAsset - minVal) / (maxVal - minVal));
 
         // 1. 垂直橫移虛線 (Vertical Dotted Cursor Line)
         ctx.save();
@@ -1420,7 +1452,7 @@
         ctx.stroke();
         ctx.restore();
 
-        // 2. 水平對照虛線 (Horizontal Price Dotted Line)
+        // 2. 水平金額對照虛線 (Horizontal Price Dotted Line)
         ctx.save();
         ctx.setLineDash([3, 3]);
         ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
@@ -1432,7 +1464,7 @@
         ctx.restore();
 
         // 3. 金庫收入曲線光圈錨定點 (Glowing Golden Anchor Circle on Curve)
-        ctx.fillStyle = 'rgba(245, 158, 11, 0.35)';
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
         ctx.beginPath();
         ctx.arc(anchorX, anchorY, 8, 0, Math.PI * 2);
         ctx.fill();
@@ -1451,7 +1483,14 @@
         ctx.fillStyle = '#0f172a';
         ctx.font = 'black 10px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(`$${Math.round(targetItem.close).toLocaleString()}`, width - padding.right + 32, anchorY + 4);
+        ctx.fillText(`$${Math.round(displayAsset).toLocaleString()}`, width - padding.right + 32, anchorY + 4);
+
+        // 5. 更新頂部提示欄，顯示台北時間精度至 1 分鐘之即時資訊
+        const detailEl = document.getElementById('klineTooltipDetail');
+        if (detailEl && activeIndex === null) {
+          const timeStr = `${String(tHour).padStart(2,'0')}:${String(tMinute).padStart(2,'0')}`;
+          detailEl.innerHTML = `🇹🇼 台北時間: <span class="text-white font-bold">8月${tDate}日 ${timeStr}</span> (精度1分) ｜ 當前累積動態資產: <span class="text-amber-300 font-black">$${Math.round(displayAsset).toLocaleString()} 元</span>`;
+        }
       }
     }
 
