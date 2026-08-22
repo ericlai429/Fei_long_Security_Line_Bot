@@ -2043,10 +2043,17 @@
       let greenT5Rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1700', 10);
 
       const cloudRegularHours = 354; // 雲端試算表常規班表總時數
-      const defaultCalculatedHours = cloudRegularHours + (greenT5NightCount * 12); // 354 + 84 = 438 小時
+      const defaultCalculatedHours = cloudRegularHours + (greenT5NightCount * 12); // 354 + (7 * 12 = 84) = 438 小時
 
       let storedAuditHours = localStorage.getItem('admin_salary_audit_hours');
-      let auditTotalHours = storedAuditHours !== null ? parseFloat(storedAuditHours) : defaultCalculatedHours;
+      let auditTotalHours = defaultCalculatedHours;
+      if (storedAuditHours !== null) {
+        const parsed = parseFloat(storedAuditHours);
+        if (!isNaN(parsed) && parsed >= defaultCalculatedHours) {
+          auditTotalHours = parsed;
+        }
+      }
+      localStorage.setItem('admin_salary_audit_hours', auditTotalHours);
       let auditDaysResult = (auditTotalHours / 12).toFixed(1);
 
       const tsghDayTotal = tsghDayCount * dayRate;
