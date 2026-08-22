@@ -2516,7 +2516,7 @@
           </div>
 
           <!-- 📊 當月資水檢查欄位 (總小時數 SUM(G12:AK12) / 12 = 上班班次) -->
-          <div class="bg-gradient-to-r from-indigo-950/90 via-slate-950 to-purple-950/90 border border-indigo-500/80 rounded-2xl p-3.5 space-y-2.5 shadow-xl">
+          <div class="bg-gradient-to-r from-indigo-950/90 via-slate-950 to-purple-950/90 border border-indigo-500/80 rounded-2xl p-3.5 space-y-3 shadow-xl">
             <div class="flex items-center justify-between">
               <div class="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
                 <i class="fa-solid fa-calculator text-amber-400 text-sm"></i>
@@ -2524,6 +2524,65 @@
               </div>
               <div class="text-xs font-mono font-black text-amber-300 bg-indigo-950 border border-indigo-700 px-2.5 py-0.5 rounded-full shadow-inner">
                 檢查結果: <span id="auditDaysResultDisplay" class="text-emerald-300 text-sm font-black">${auditDaysResult}</span> 班
+              </div>
+            </div>
+
+            <!-- 4大勤務類別時數拆解細分網格 -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+              <!-- 常規班(時) -->
+              <div class="bg-slate-900/90 border border-sky-600/50 rounded-xl p-2 space-y-0.5">
+                <div class="text-[10px] font-bold text-sky-300 flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-sun text-amber-400 text-[9px]"></i>
+                  <span>常規班(時)</span>
+                </div>
+                <div class="text-xs font-black font-mono text-sky-200">
+                  <span>${(tsghDayCount + tsghNightCount) * 12}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
+                </div>
+                <div class="text-[9px] text-slate-400 font-mono">
+                  (${tsghDayCount + tsghNightCount}班 = 早${tsghDayCount}+夜${tsghNightCount})
+                </div>
+              </div>
+
+              <!-- 機動班(時) -->
+              <div class="bg-slate-900/90 border border-amber-600/50 rounded-xl p-2 space-y-0.5">
+                <div class="text-[10px] font-bold text-amber-300 flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-motorcycle text-amber-400 text-[9px]"></i>
+                  <span>機動班(時)</span>
+                </div>
+                <div class="text-xs font-black font-mono text-amber-200">
+                  <span>${mobileSupportCount * 12}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
+                </div>
+                <div class="text-[9px] text-slate-400 font-mono">
+                  (${mobileSupportCount} 班機動支援)
+                </div>
+              </div>
+
+              <!-- T5夜(時) -->
+              <div class="bg-slate-900/90 border border-emerald-600/50 rounded-xl p-2 space-y-0.5">
+                <div class="text-[10px] font-bold text-emerald-300 flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-moon text-emerald-400 text-[9px]"></i>
+                  <span>T5夜(時)</span>
+                </div>
+                <div class="text-xs font-black font-mono text-emerald-200">
+                  <span>${greenT5NightCount * 12}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
+                </div>
+                <div class="text-[9px] text-slate-400 font-mono">
+                  (${greenT5NightCount} 班綠底T5)
+                </div>
+              </div>
+
+              <!-- 總上班(時) -->
+              <div class="bg-slate-900/90 border border-purple-600/50 rounded-xl p-2 space-y-0.5">
+                <div class="text-[10px] font-bold text-purple-300 flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-calculator text-purple-400 text-[9px]"></i>
+                  <span>總上班(時)</span>
+                </div>
+                <div class="text-xs font-black font-mono text-purple-200">
+                  <span>${((tsghDayCount + tsghNightCount) * 12) + (mobileSupportCount * 12) + (greenT5NightCount * 12)}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
+                </div>
+                <div class="text-[9px] text-slate-400 font-mono">
+                  (${tsghDayCount + tsghNightCount + mobileSupportCount + greenT5NightCount} 班總次)
+                </div>
               </div>
             </div>
 
@@ -2562,7 +2621,7 @@
             </div>
 
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1 pt-0.5 border-t border-slate-900/80">
-              <span>💡 公式說明: =SUM(G12:AK12) 雲端試算表常規(354h) + T5夜班(84h) = 438 小時 (對應 36.5 班)</span>
+              <span>💡 細分拆解: 常規(${(tsghDayCount + tsghNightCount) * 12}h) + 機動(${mobileSupportCount * 12}h) + T5夜(${greenT5NightCount * 12}h) = ${((tsghDayCount + tsghNightCount) * 12) + (mobileSupportCount * 12) + (greenT5NightCount * 12)} 小時</span>
               <button 
                 type="button" 
                 onclick="recalculateDefaultAuditHours()" 
