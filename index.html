@@ -8,6 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/gifshot@0.3.2/build/gifshot.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     *, *:before, *:after { box-sizing: border-box; }
     * { -webkit-tap-highlight-color: transparent; }
@@ -1854,76 +1855,96 @@
       }
     }
 
-    const CLOUD_KV_SYNC_URLS = [
-      '/api/admin/vault-assets',
-      'https://api.counterapi.dev/v1/feilong_security/vault_assets_v1',
-      'https://keyvalue.impersonate.workers.dev/feilong_vault_assets_v2'
-    ];
+    const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/vault_assets.json';
+    const GITHUB_API_URL = 'https://api.github.com/repos/ericlai429/Fei_long_Security_Line_Bot/contents/docs/vault_assets.json';
+
+    function getGithubToken() {
+      return localStorage.getItem('admin_github_pat') || '';
+    }
+
+    async function fetchCloudVaultAssets(showToastNotice = false) {
+      try {
+        const res = await fetch(GITHUB_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('fetch failed');
+        const data = await res.json();
+
+        if (data && (data.cash !== undefined)) {
+          localStorage.setItem('admin_vault_cash', data.cash || 0);
+          localStorage.setItem('admin_vault_bangbang', data.bangbang || 0);
+          localStorage.setItem('admin_vault_paipai', data.paipai || 0);
+          localStorage.setItem('admin_vault_tuotuo', data.tuotuo || 0);
+
+          renderAdminVaultView();
+
+          if (showToastNotice) {
+            playCoinDropSound();
+            triggerCoinRain();
+            const ts = data.updated_at ? `（更新時間：${new Date(data.updated_at).toLocaleString('zh-TW')}）` : '';
+            showToast(`☁️ 已從 GitHub 讀取最新資產金額！${ts}`, 'success');
+          }
+        }
+      } catch(e) {
+        if (showToastNotice) showToast('❌ 讀取失敗，請確認網路連線', 'error');
+      }
+    }
 
     async function saveAndSyncManualVaultAssets() {
       updateManualVaultAssets(false);
 
-      const cashVal = localStorage.getItem('admin_vault_cash') || '0';
-      const bangbangVal = localStorage.getItem('admin_vault_bangbang') || '0';
-      const paipaiVal = localStorage.getItem('admin_vault_paipai') || '0';
-      const tuotuoVal = localStorage.getItem('admin_vault_tuotuo') || '0';
+      const token = getGithubToken();
+      if (!token) {
+        const t = prompt('請輸入 GitHub Personal Access Token（只需輸入一次，之後自動記住）：\n\n到 github.com → Settings → Developer settings → Personal access tokens → Fine-grained tokens\n權限只需勾選此 Repo 的 Contents: Read and write');
+        if (!t || !t.trim()) { showToast('❌ 未輸入 Token，無法儲存至 GitHub', 'error'); return; }
+        localStorage.setItem('admin_github_pat', t.trim());
+      }
 
+      const pat = getGithubToken();
       const payload = {
-        cash: parseFloat(cashVal) || 0,
-        bangbang: parseFloat(bangbangVal) || 0,
-        paipai: parseFloat(paipaiVal) || 0,
-        tuotuo: parseFloat(tuotuoVal) || 0,
+        cash: parseFloat(localStorage.getItem('admin_vault_cash') || '0') || 0,
+        bangbang: parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0,
+        paipai: parseFloat(localStorage.getItem('admin_vault_paipai') || '0') || 0,
+        tuotuo: parseFloat(localStorage.getItem('admin_vault_tuotuo') || '0') || 0,
         updated_at: new Date().toISOString()
       };
 
-      let successCount = 0;
-      for (const url of CLOUD_KV_SYNC_URLS) {
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (res.ok) successCount++;
-        } catch(e) {}
-      }
+      try {
+        // 先取得目前檔案的 SHA（GitHub API 更新需要）
+        const shaRes = await fetch(GITHUB_API_URL, {
+          headers: { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        const shaData = await shaRes.json();
+        const sha = shaData.sha;
 
-      playCoinDropSound();
-      triggerCoinRain();
-      showToast('💾 已成功儲存 4 大資產金額，並同步推送到雲端！', 'success');
-    }
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+        const putRes = await fetch(GITHUB_API_URL, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${pat}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `vault: 更新額外資產 ${new Date().toLocaleString('zh-TW')}`,
+            content,
+            sha
+          })
+        });
 
-    async function syncManualVaultAssetsToCloud() {
-      const cashVal = localStorage.getItem('admin_vault_cash') || '0';
-      const bangbangVal = localStorage.getItem('admin_vault_bangbang') || '0';
-      const paipaiVal = localStorage.getItem('admin_vault_paipai') || '0';
-      const tuotuoVal = localStorage.getItem('admin_vault_tuotuo') || '0';
-
-      const payload = {
-        cash: parseFloat(cashVal) || 0,
-        bangbang: parseFloat(bangbangVal) || 0,
-        paipai: parseFloat(paipaiVal) || 0,
-        tuotuo: parseFloat(tuotuoVal) || 0,
-        updated_at: new Date().toISOString()
-      };
-
-      for (const url of CLOUD_KV_SYNC_URLS) {
-        try {
-          await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        } catch(e) {}
-      }
-    }
-
-    function fetchCloudVaultAssets(showToastNotice = false) {
-      // 由於 GitHub Pages 為靜態主機，無法使用傳統雲端 API
-      // 改以「URL Hash 帶入法」實現 100% NB → 手機 同步
-      // 此功能引導用戶在 NB 上點選 🔗 複製 NB 同步網址，然後傳給手機
-      if (showToastNotice) {
-        showVaultSyncGuideModal();
+        if (putRes.ok) {
+          playCoinDropSound();
+          triggerCoinRain();
+          showToast('💾 已成功寫入 GitHub，手機開頁後讀取雲端即可同步！', 'success');
+        } else {
+          const err = await putRes.json();
+          if (putRes.status === 401) {
+            localStorage.removeItem('admin_github_pat');
+            showToast('❌ Token 無效，已清除，請重新儲存並輸入正確 Token', 'error');
+          } else {
+            showToast(`❌ 儲存失敗：${err.message || putRes.status}`, 'error');
+          }
+        }
+      } catch(e) {
+        showToast('❌ 網路錯誤，無法儲存至 GitHub', 'error');
       }
     }
 
@@ -2475,20 +2496,20 @@
                   type="button" 
                   onclick="fetchCloudVaultAssets(true)" 
                   class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] rounded-lg border border-sky-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="從雲端抓取 NB 最新數值"
+                  title="從 GitHub 讀取最新資產金額（NB 和手機共用同一份資料）"
                 >
                   <i class="fa-solid fa-cloud-arrow-down text-sky-400"></i>
-                  <span>讀取雲端</span>
+                  <span>☁️ 讀取雲端</span>
                 </button>
 
                 <button 
                   type="button" 
                   onclick="saveAndSyncManualVaultAssets()" 
                   class="h-7 px-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="點擊儲存 4 大欄位並同步雲端"
+                  title="儲存金額並寫入 GitHub（需要一次性輸入 PAT Token）"
                 >
-                  <i class="fa-solid fa-floppy-disk text-slate-950"></i>
-                  <span>💾 儲存並同步雲端</span>
+                  <i class="fa-brands fa-github text-slate-950"></i>
+                  <span>💾 儲存至 GitHub</span>
                 </button>
               </div>
             </div>
