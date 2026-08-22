@@ -1288,7 +1288,9 @@
       setupKLineHoverInspector('redKLineCanvas', globalDailyKLines);
     }
 
-    function drawRedKLineChart(canvasId, dailyKLines) {
+    let activeKLineHoverIndex = null;
+
+    function drawRedKLineChart(canvasId, dailyKLines, activeIndex = null) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -1310,32 +1312,31 @@
       ctx.fillStyle = '#090d16';
       ctx.fillRect(0, 0, width, height);
 
-      const padding = { top: 25, right: 55, bottom: 30, left: 15 };
+      const padding = { top: 25, right: 65, bottom: 30, left: 15 };
       const chartWidth = width - padding.left - padding.right;
       const chartHeight = height - padding.top - padding.bottom;
 
-      const maxVal = Math.max(...dailyKLines.map(k => k.high), 55000);
+      // Y 軸刻度：以每 $5,000 為一分隔，最高對齊至 $55,000
+      const stepVal = 5000;
+      const rawMax = Math.max(...dailyKLines.map(k => k.high), 50000);
+      const maxVal = Math.ceil(rawMax / stepVal) * stepVal;
       const minVal = 0;
 
-      // 網格線 (Horizontal Grid)
+      // 網格線：每 5,000 元顯示一條水平分隔線與標籤
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 1;
-
-      const gridRows = 5;
       ctx.font = '10px monospace';
       ctx.fillStyle = '#64748b';
       ctx.textAlign = 'left';
 
-      for (let i = 0; i <= gridRows; i++) {
-        const y = padding.top + (chartHeight / gridRows) * i;
-        const val = maxVal - (maxVal / gridRows) * i;
-
+      for (let v = 0; v <= maxVal; v += stepVal) {
+        const y = padding.top + chartHeight * (1 - (v - minVal) / (maxVal - minVal));
         ctx.beginPath();
         ctx.moveTo(padding.left, y);
         ctx.lineTo(width - padding.right, y);
         ctx.stroke();
 
-        ctx.fillText(`$${Math.round(val).toLocaleString()}`, width - padding.right + 6, y + 3);
+        ctx.fillText(`$${v.toLocaleString()}`, width - padding.right + 6, y + 3);
       }
 
       // 繪製 31 根紅色 K 線棒 (Red Candlesticks)
@@ -1380,8 +1381,8 @@
         ctx.fillRect(x - candleWidth / 2, topY, candleWidth, bodyHeight);
 
         // 標記日期 X 軸 (明顯清晰顯示 1, 2, 3, 4 ... 直到 31)
-        ctx.fillStyle = (i + 1 === 22) ? '#f59e0b' : '#e2e8f0';
-        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = (i === activeIndex) ? '#f59e0b' : '#e2e8f0';
+        ctx.font = (i === activeIndex) ? 'bold 10px monospace' : '9px monospace';
         ctx.textAlign = 'center';
         ctx.fillText(`${i + 1}`, x, height - padding.bottom + 16);
       });
@@ -1397,6 +1398,61 @@
         else ctx.lineTo(x, y);
       });
       ctx.stroke();
+
+      // 🎯 垂直橫移虛線 ＆ 金庫收入曲線錨定點 (Crosshair & Anchor Cursor)
+      const targetIdx = (activeIndex !== null && activeIndex >= 0 && activeIndex < dailyKLines.length) 
+        ? activeIndex 
+        : dailyKLines.length - 1;
+
+      const targetItem = dailyKLines[targetIdx];
+      if (targetItem) {
+        const anchorX = padding.left + targetIdx * slotWidth + slotWidth / 2;
+        const anchorY = padding.top + chartHeight * (1 - (targetItem.close - minVal) / (maxVal - minVal));
+
+        // 1. 垂直橫移虛線 (Vertical Dotted Cursor Line)
+        ctx.save();
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(anchorX, padding.top);
+        ctx.lineTo(anchorX, height - padding.bottom);
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. 水平對照虛線 (Horizontal Price Dotted Line)
+        ctx.save();
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, anchorY);
+        ctx.lineTo(width - padding.right, anchorY);
+        ctx.stroke();
+        ctx.restore();
+
+        // 3. 金庫收入曲線光圈錨定點 (Glowing Golden Anchor Circle on Curve)
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.35)';
+        ctx.beginPath();
+        ctx.arc(anchorX, anchorY, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(anchorX, anchorY, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 4. 右側 Y 軸錨定金額浮動標籤 (Floating Y-Axis Price Pill)
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(width - padding.right + 2, anchorY - 9, 60, 18);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'black 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`$${Math.round(targetItem.close).toLocaleString()}`, width - padding.right + 32, anchorY + 4);
+      }
     }
 
     function setupKLineHoverInspector(canvasId, klines) {
@@ -1410,7 +1466,7 @@
         const xPos = clientX - rect.left;
 
         const paddingLeft = 15;
-        const paddingRight = 55;
+        const paddingRight = 65;
         const chartWidth = rect.width - paddingLeft - paddingRight;
         const slotWidth = chartWidth / klines.length;
 
@@ -1418,10 +1474,13 @@
         if (index < 0) index = 0;
         if (index >= klines.length) index = klines.length - 1;
 
+        activeKLineHoverIndex = index;
+        drawRedKLineChart(canvasId, klines, index);
+
         const item = klines[index];
         const detailEl = document.getElementById('klineTooltipDetail');
         if (detailEl && item) {
-          detailEl.innerHTML = `📅 8月${item.day}日 ｜ 執勤 ${item.minutesWorked} 分 (${item.hoursWorked}h) ｜ 累積 ${item.totalAccumulatedMinutes.toLocaleString()} 分鐘 ｜ 收盤資產: <span class="text-amber-300">$${Math.round(item.close).toLocaleString()} 元</span>`;
+          detailEl.innerHTML = `📅 8月${item.day}日 ｜ 執勤 ${item.minutesWorked} 分 (${item.hoursWorked}h) ｜ 累積 ${item.totalAccumulatedMinutes.toLocaleString()} 分鐘 ｜ 收盤資產: <span class="text-amber-300 font-black">$${Math.round(item.close).toLocaleString()} 元</span>`;
         }
       };
 
