@@ -657,6 +657,37 @@ def trigger_group_name_check():
     result = scheduler_service.check_all_group_names_and_alert()
     return result
 
+@app.get("/api/admin/vault-assets")
+def get_vault_assets_api():
+    vault_file = os.path.join("app", "data", "vault_assets.json")
+    if os.path.exists(vault_file):
+        try:
+            with open(vault_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to read vault_assets.json: {e}")
+    return {"cash": 0, "bangbang": 0, "paipai": 0, "tuotuo": 0}
+
+@app.post("/api/admin/vault-assets")
+async def save_vault_assets_api(request: Request):
+    try:
+        body = await request.json()
+        os.makedirs(os.path.join("app", "data"), exist_ok=True)
+        vault_file = os.path.join("app", "data", "vault_assets.json")
+        data = {
+            "cash": float(body.get("cash", 0) or 0),
+            "bangbang": float(body.get("bangbang", 0) or 0),
+            "paipai": float(body.get("paipai", 0) or 0),
+            "tuotuo": float(body.get("tuotuo", 0) or 0),
+            "updated_at": body.get("updated_at", "")
+        }
+        with open(vault_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return {"status": "success", "data": data}
+    except Exception as e:
+        logger.error(f"Failed to save vault assets: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=settings.PORT, reload=True)

@@ -1795,7 +1795,8 @@
       showToast(`📊 已連動計算: SUM(G12:AK12) = 354h + ${t5Hours}h = ${calcHours} 小時 (${(calcHours / 12).toFixed(1)} 天)`, 'success');
     }
 
-    function updateManualVaultAssets() {
+    let syncCloudDebounceTimer = null;
+    function updateManualVaultAssets(triggerCloud = true) {
       const cashVal = document.getElementById('manualCashInput')?.value || '';
       const bangbangVal = document.getElementById('manualBangBangInput')?.value || '';
       const paipaiVal = document.getElementById('manualPaiPaiInput')?.value || '';
@@ -1823,6 +1824,105 @@
       const displayEl = document.getElementById('finalVaultGrandTotalDisplay');
       if (displayEl) {
         displayEl.textContent = Math.round(finalTotal).toLocaleString();
+      }
+
+      if (triggerCloud) {
+        if (syncCloudDebounceTimer) clearTimeout(syncCloudDebounceTimer);
+        syncCloudDebounceTimer = setTimeout(() => {
+          syncManualVaultAssetsToCloud();
+        }, 600);
+      }
+    }
+
+    async function syncManualVaultAssetsToCloud() {
+      const cashVal = localStorage.getItem('admin_vault_cash') || '0';
+      const bangbangVal = localStorage.getItem('admin_vault_bangbang') || '0';
+      const paipaiVal = localStorage.getItem('admin_vault_paipai') || '0';
+      const tuotuoVal = localStorage.getItem('admin_vault_tuotuo') || '0';
+
+      const payload = {
+        cash: parseFloat(cashVal) || 0,
+        bangbang: parseFloat(bangbangVal) || 0,
+        paipai: parseFloat(paipaiVal) || 0,
+        tuotuo: parseFloat(tuotuoVal) || 0,
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        await fetch('/api/admin/vault-assets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+
+      try {
+        await fetch('https://keyvalue.impersonate.workers.dev/feilong_vault_assets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch(e) {}
+    }
+
+    let isFetchingCloudVault = false;
+    async function fetchCloudVaultAssets(showToastNotice = false) {
+      if (isFetchingCloudVault) return;
+      isFetchingCloudVault = true;
+
+      try {
+        let data = null;
+        try {
+          const res = await fetch('/api/admin/vault-assets');
+          if (res.ok) {
+            const json = await res.json();
+            if (json && (json.cash > 0 || json.bangbang > 0 || json.paipai > 0 || json.tuotuo > 0)) {
+              data = json;
+            }
+          }
+        } catch(e) {}
+
+        if (!data) {
+          try {
+            const res = await fetch('https://keyvalue.impersonate.workers.dev/feilong_vault_assets');
+            if (res.ok) {
+              const json = await res.json();
+              if (json && (json.cash > 0 || json.bangbang > 0 || json.paipai > 0 || json.tuotuo > 0)) {
+                data = json;
+              }
+            }
+          } catch(e) {}
+        }
+
+        if (data) {
+          localStorage.setItem('admin_vault_cash', data.cash || 0);
+          localStorage.setItem('admin_vault_bangbang', data.bangbang || 0);
+          localStorage.setItem('admin_vault_paipai', data.paipai || 0);
+          localStorage.setItem('admin_vault_tuotuo', data.tuotuo || 0);
+
+          const inCash = document.getElementById('manualCashInput');
+          const inBang = document.getElementById('manualBangBangInput');
+          const inPai = document.getElementById('manualPaiPaiInput');
+          const inTuo = document.getElementById('manualTuoTuoInput');
+
+          if (inCash) inCash.value = data.cash || '';
+          if (inBang) inBang.value = data.bangbang || '';
+          if (inPai) inPai.value = data.paipai || '';
+          if (inTuo) inTuo.value = data.tuotuo || '';
+
+          updateManualVaultAssets(false);
+
+          if (showToastNotice) {
+            playCoinDropSound();
+            triggerCoinRain();
+            showToast('☁️ 已成功連線同步 NB / 電腦端輸入之 4 大資產金額！', 'success');
+          }
+        } else if (showToastNotice) {
+          showToast('☁️ 目前雲端無最新同步紀錄', 'info');
+        }
+      } catch(e) {
+      } finally {
+        isFetchingCloudVault = false;
       }
     }
 
@@ -2191,7 +2291,17 @@
                 <i class="fa-solid fa-wallet text-amber-400"></i>
                 <span>💼 額外資產手動記帳欄位</span>
               </span>
-              <span class="text-[10px] text-slate-400 font-mono">(微調自動存檔)</span>
+              <div class="flex items-center gap-2">
+                <button 
+                  type="button" 
+                  onclick="fetchCloudVaultAssets(true)" 
+                  class="text-sky-400 hover:text-sky-300 text-[11px] font-bold underline flex items-center gap-1 cursor-pointer"
+                >
+                  <i class="fa-solid fa-cloud-arrow-down"></i>
+                  <span>☁️ 跨裝置雲端同步</span>
+                </button>
+                <span class="text-[10px] text-slate-400 font-mono">(NB/手機雙向同步)</span>
+              </div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -2297,6 +2407,10 @@
           </div>
         </div>
       `;
+
+      setTimeout(() => {
+        fetchCloudVaultAssets(false);
+      }, 100);
     }
 
     function updateAdminVaultRates(dRate, nRate, gRate) {
