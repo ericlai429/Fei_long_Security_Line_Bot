@@ -1795,22 +1795,49 @@
       showToast(`📊 已連動計算: SUM(G12:AK12) = 354h + ${t5Hours}h = ${calcHours} 小時 (${(calcHours / 12).toFixed(1)} 天)`, 'success');
     }
 
+    function formatAccountingInput(inputEl) {
+      if (!inputEl) return;
+      const cursorStart = inputEl.selectionStart;
+      const rawVal = inputEl.value.replace(/[^\d]/g, '');
+      if (!rawVal) {
+        inputEl.value = '';
+        return;
+      }
+      const parsed = parseInt(rawVal, 10);
+      if (isNaN(parsed)) {
+        inputEl.value = '';
+        return;
+      }
+      const formatted = parsed.toLocaleString('en-US');
+      inputEl.value = formatted;
+    }
+
+    function parseInputValue(inputEl) {
+      if (!inputEl) return 0;
+      const cleanVal = inputEl.value.replace(/,/g, '').trim();
+      return parseFloat(cleanVal) || 0;
+    }
+
     let syncCloudDebounceTimer = null;
-    function updateManualVaultAssets(triggerCloud = true) {
-      const cashVal = document.getElementById('manualCashInput')?.value || '';
-      const bangbangVal = document.getElementById('manualBangBangInput')?.value || '';
-      const paipaiVal = document.getElementById('manualPaiPaiInput')?.value || '';
-      const tuotuoVal = document.getElementById('manualTuoTuoInput')?.value || '';
+    function updateManualVaultAssets(triggerCloud = true, currentInputEl = null) {
+      if (currentInputEl) {
+        formatAccountingInput(currentInputEl);
+      }
 
-      localStorage.setItem('admin_vault_cash', cashVal);
-      localStorage.setItem('admin_vault_bangbang', bangbangVal);
-      localStorage.setItem('admin_vault_paipai', paipaiVal);
-      localStorage.setItem('admin_vault_tuotuo', tuotuoVal);
+      const inCash = document.getElementById('manualCashInput');
+      const inBang = document.getElementById('manualBangBangInput');
+      const inPai = document.getElementById('manualPaiPaiInput');
+      const inTuo = document.getElementById('manualTuoTuoInput');
 
-      const cash = parseFloat(cashVal) || 0;
-      const bangbang = parseFloat(bangbangVal) || 0;
-      const paipai = parseFloat(paipaiVal) || 0;
-      const tuotuo = parseFloat(tuotuoVal) || 0;
+      const cash = parseInputValue(inCash);
+      const bangbang = parseInputValue(inBang);
+      const paipai = parseInputValue(inPai);
+      const tuotuo = parseInputValue(inTuo);
+
+      localStorage.setItem('admin_vault_cash', cash);
+      localStorage.setItem('admin_vault_bangbang', bangbang);
+      localStorage.setItem('admin_vault_paipai', paipai);
+      localStorage.setItem('admin_vault_tuotuo', tuotuo);
 
       const klineTotalEl = document.getElementById('adminTotalAssetDisplay');
       let klineTotal = 56900;
@@ -1905,10 +1932,10 @@
           const inPai = document.getElementById('manualPaiPaiInput');
           const inTuo = document.getElementById('manualTuoTuoInput');
 
-          if (inCash) inCash.value = data.cash || '';
-          if (inBang) inBang.value = data.bangbang || '';
-          if (inPai) inPai.value = data.paipai || '';
-          if (inTuo) inTuo.value = data.tuotuo || '';
+          if (inCash) inCash.value = data.cash ? data.cash.toLocaleString() : '';
+          if (inBang) inBang.value = data.bangbang ? data.bangbang.toLocaleString() : '';
+          if (inPai) inPai.value = data.paipai ? data.paipai.toLocaleString() : '';
+          if (inTuo) inTuo.value = data.tuotuo ? data.tuotuo.toLocaleString() : '';
 
           updateManualVaultAssets(false);
 
@@ -1952,6 +1979,11 @@
       const numBangBang = parseFloat(manualBangBang) || 0;
       const numPaiPai = parseFloat(manualPaiPai) || 0;
       const numTuoTuo = parseFloat(manualTuoTuo) || 0;
+
+      const formattedCash = numCash > 0 ? numCash.toLocaleString('en-US') : '';
+      const formattedBangBang = numBangBang > 0 ? numBangBang.toLocaleString('en-US') : '';
+      const formattedPaiPai = numPaiPai > 0 ? numPaiPai.toLocaleString('en-US') : '';
+      const formattedTuoTuo = numTuoTuo > 0 ? numTuoTuo.toLocaleString('en-US') : '';
 
       // 掃描動態與靜態班表資料
       const datasets = [EMBEDDED_SCHEDULE_DATA_8];
@@ -2311,10 +2343,11 @@
                   <span>💵 現金</span>
                 </div>
                 <input 
-                  type="number" 
+                  type="text" 
+                  inputmode="numeric"
                   id="manualCashInput" 
-                  value="${manualCash || ''}" 
-                  oninput="updateManualVaultAssets()"
+                  value="${formattedCash}" 
+                  oninput="updateManualVaultAssets(true, this)"
                   placeholder="0"
                   class="w-full h-8 bg-slate-950 border border-amber-600/70 rounded-lg px-2 text-center text-xs font-black font-mono text-amber-300 focus:outline-none focus:border-amber-400"
                 >
@@ -2326,10 +2359,11 @@
                   <span>🏦 邦邦</span>
                 </div>
                 <input 
-                  type="number" 
+                  type="text" 
+                  inputmode="numeric"
                   id="manualBangBangInput" 
-                  value="${manualBangBang || ''}" 
-                  oninput="updateManualVaultAssets()"
+                  value="${formattedBangBang}" 
+                  oninput="updateManualVaultAssets(true, this)"
                   placeholder="0"
                   class="w-full h-8 bg-slate-950 border border-sky-600/70 rounded-lg px-2 text-center text-xs font-black font-mono text-sky-300 focus:outline-none focus:border-sky-400"
                 >
@@ -2341,10 +2375,11 @@
                   <span>🪙 派派</span>
                 </div>
                 <input 
-                  type="number" 
+                  type="text" 
+                  inputmode="numeric"
                   id="manualPaiPaiInput" 
-                  value="${manualPaiPai || ''}" 
-                  oninput="updateManualVaultAssets()"
+                  value="${formattedPaiPai}" 
+                  oninput="updateManualVaultAssets(true, this)"
                   placeholder="0"
                   class="w-full h-8 bg-slate-950 border border-rose-600/70 rounded-lg px-2 text-center text-xs font-black font-mono text-rose-300 focus:outline-none focus:border-rose-400"
                 >
@@ -2356,10 +2391,11 @@
                   <span>💳 託託</span>
                 </div>
                 <input 
-                  type="number" 
+                  type="text" 
+                  inputmode="numeric"
                   id="manualTuoTuoInput" 
-                  value="${manualTuoTuo || ''}" 
-                  oninput="updateManualVaultAssets()"
+                  value="${formattedTuoTuo}" 
+                  oninput="updateManualVaultAssets(true, this)"
                   placeholder="0"
                   class="w-full h-8 bg-slate-950 border border-purple-600/70 rounded-lg px-2 text-center text-xs font-black font-mono text-purple-300 focus:outline-none focus:border-purple-400"
                 >
