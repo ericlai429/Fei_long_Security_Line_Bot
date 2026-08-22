@@ -270,6 +270,12 @@
     </div>
   </div>
 
+  <!-- 🪙 T_MUD 專案真實金幣音效播放器 -->
+  <audio id="coinAudioPlayer" preload="auto">
+    <source src="./assets/coin.m4a" type="audio/mp4">
+    <source src="./assets/coin.mp3" type="audio/mpeg">
+  </audio>
+
 
 
   <!-- Main Pure View (Ultra-Clean, Zero-Overflow Responsive Top Navbar) -->
@@ -828,54 +834,92 @@
       container.innerHTML = html;
     }
 
-    // 🪙 T_MUD 專案真實金幣音效 (coin.mp3 / coin.m4a) 播放器
-    let coinAudioInstance = null;
+    // 🪙 T_MUD 專案金幣敲擊玻璃 (glass coin) MP3/M4A 音效引擎 (Web Audio 解碼)
+    let coinAudioBuffer = null;
+    let coinAudioCtx = null;
 
-    function playCoinDropSound() {
+    async function loadCoinAudioBuffer() {
+      if (coinAudioBuffer) return;
       try {
-        if (!coinAudioInstance) {
-          coinAudioInstance = new Audio('./assets/coin.mp3');
-        }
-        coinAudioInstance.currentTime = 0;
-        const playPromise = coinAudioInstance.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(err => {
-            console.warn('Audio autoplay blocked, falling back to Web Audio Synth:', err);
-            synthCoinSound();
-          });
-        }
+        const res = await fetch('./assets/coin.m4a');
+        if (!res.ok) return;
+        const arrayBuffer = await res.arrayBuffer();
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!coinAudioCtx) coinAudioCtx = new AudioContext();
+        coinAudioCtx.decodeAudioData(arrayBuffer, (buffer) => {
+          coinAudioBuffer = buffer;
+        });
       } catch(e) {
-        synthCoinSound();
+        console.warn('Audio pre-load error:', e);
       }
     }
 
-    // 🪙 備用合成音效
-    function synthCoinSound() {
+    function playCoinDropSound() {
+      // 1. 優先播放預解碼之 T_MUD 真實金幣敲擊玻璃音效 Buffer (0 延遲，100% 精準)
+      if (coinAudioBuffer) {
+        try {
+          if (!coinAudioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            coinAudioCtx = new AudioContext();
+          }
+          if (coinAudioCtx.state === 'suspended') {
+            coinAudioCtx.resume();
+          }
+          const source = coinAudioCtx.createBufferSource();
+          source.buffer = coinAudioBuffer;
+          source.connect(coinAudioCtx.destination);
+          source.start(0);
+          return;
+        } catch(e) {}
+      }
+
+      // 2. DOM Audio 備用通道
+      try {
+        const player = document.getElementById('coinAudioPlayer');
+        if (player) {
+          player.currentTime = 0;
+          const p = player.play();
+          if (p !== undefined) {
+            p.catch(() => synthGlassCoinSound());
+          }
+        } else {
+          const fallbackAudio = new Audio('./assets/coin.m4a');
+          fallbackAudio.play().catch(() => synthGlassCoinSound());
+        }
+      } catch(e) {
+        synthGlassCoinSound();
+      }
+    }
+
+    // 🪙 備用高頻玻璃敲擊合成音效
+    function synthGlassCoinSound() {
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) return;
         const ctx = new AudioContext();
-        const coins = [
-          { delay: 0, freq: 1174.66, dur: 0.12 },
-          { delay: 0.07, freq: 1567.98, dur: 0.15 },
-          { delay: 0.15, freq: 2093.00, dur: 0.18 },
-          { delay: 0.24, freq: 2637.02, dur: 0.22 }
+        const pings = [
+          { delay: 0, freq: 2400, dur: 0.25 },
+          { delay: 0.05, freq: 3800, dur: 0.3 },
+          { delay: 0.12, freq: 4500, dur: 0.35 }
         ];
-        coins.forEach(c => {
+        pings.forEach(p => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(c.freq, ctx.currentTime + c.delay);
-          osc.frequency.exponentialRampToValueAtTime(c.freq * 1.5, ctx.currentTime + c.delay + c.dur);
-          gain.gain.setValueAtTime(0.45, ctx.currentTime + c.delay);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + c.delay + c.dur);
+          osc.frequency.setValueAtTime(p.freq, ctx.currentTime + p.delay);
+          osc.frequency.exponentialRampToValueAtTime(p.freq * 0.85, ctx.currentTime + p.delay + p.dur);
+          gain.gain.setValueAtTime(0.5, ctx.currentTime + p.delay);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + p.delay + p.dur);
           osc.connect(gain);
           gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + c.delay);
-          osc.stop(ctx.currentTime + c.delay + c.dur);
+          osc.start(ctx.currentTime + p.delay);
+          osc.stop(ctx.currentTime + p.delay + p.dur);
         });
       } catch(e) {}
     }
+
+    // 當開啟個人金庫彈窗時自動預載音效 Buffer
+    loadCoinAudioBuffer();
 
     // 🪙 金幣掉落視覺粒子動畫
     function triggerCoinRain() {
