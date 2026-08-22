@@ -1996,8 +1996,8 @@
               <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 21,240 分鐘 ｜ 總收入 $56,900 元</span>
             </div>
 
-            <!-- Canvas Container -->
-            <div class="w-full h-56 bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden cursor-crosshair">
+            <!-- Canvas Container (Y 軸高度拉高 50%) -->
+            <div class="w-full h-[336px] sm:h-[360px] bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden cursor-crosshair">
               <canvas id="redKLineCanvas" class="w-full h-full block"></canvas>
             </div>
 
@@ -2442,7 +2442,7 @@
       setTimeout(() => {
         try {
           const width = 560;
-          const height = 720;
+          const height = 840;
           const klines = globalDailyKLines && globalDailyKLines.length > 0 ? globalDailyKLines : [];
           const numFrames = 10;
 
@@ -2505,7 +2505,7 @@
           gifCanvas.height = height;
           const ctx = gifCanvas.getContext('2d');
 
-          // 3. 逐畫格繪製並壓入 GIF 編碼器
+          // 3. 逐畫格繪製並壓入 GIF 編碼器 (Y 軸拉高 50%)
           for (let f = 1; f <= numFrames; f++) {
             const progressRatio = f / numFrames;
             const visibleDayCount = Math.max(1, Math.ceil(klines.length * progressRatio));
@@ -2520,8 +2520,8 @@
             ctx.textAlign = 'center';
             ctx.fillText('👑 115年8月份 管理者資產收益 K線 ＋ 總合動態報表', 280, 32);
 
-            // 📈 K 線圖子區塊
-            const padding = { top: 60, right: 55, bottom: 340, left: 15 };
+            // 📈 K 線圖子區塊 (Y軸拉高50%)
+            const padding = { top: 60, right: 55, bottom: 330, left: 15 };
             const chartW = width - padding.left - padding.right;
             const chartH = height - padding.top - padding.bottom;
             const maxVal = 60000;
@@ -2581,7 +2581,7 @@
             ctx.stroke();
 
             // 💼 4大額外資產手動記帳欄位卡片 (現金, 邦邦, 派派, 託託)
-            const boxY = 410;
+            const boxY = 530;
             ctx.fillStyle = '#0f172a';
             ctx.strokeStyle = '#334155';
             ctx.lineWidth = 1;
@@ -2621,7 +2621,7 @@
             });
 
             // 🌈 👑 金庫總計資產總合卡片 (七色彩虹炫光外框)
-            const gY = 550;
+            const gY = 670;
             ctx.fillStyle = '#1e1b4b';
             ctx.strokeStyle = '#ff0055';
             ctx.lineWidth = 3;
