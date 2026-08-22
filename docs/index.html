@@ -1918,56 +1918,61 @@
       }
     }
 
-    let isFetchingCloudVault = false;
-    async function fetchCloudVaultAssets(showToastNotice = false) {
-      if (isFetchingCloudVault) return;
-      isFetchingCloudVault = true;
-
-      try {
-        let data = null;
-        for (const url of CLOUD_KV_SYNC_URLS) {
-          try {
-            const res = await fetch(url);
-            if (res.ok) {
-              const json = await res.json();
-              if (json && (json.cash > 0 || json.bangbang > 0 || json.paipai > 0 || json.tuotuo > 0)) {
-                data = json;
-                break;
-              }
-            }
-          } catch(e) {}
-        }
-
-        if (data) {
-          localStorage.setItem('admin_vault_cash', data.cash || 0);
-          localStorage.setItem('admin_vault_bangbang', data.bangbang || 0);
-          localStorage.setItem('admin_vault_paipai', data.paipai || 0);
-          localStorage.setItem('admin_vault_tuotuo', data.tuotuo || 0);
-
-          const inCash = document.getElementById('manualCashInput');
-          const inBang = document.getElementById('manualBangBangInput');
-          const inPai = document.getElementById('manualPaiPaiInput');
-          const inTuo = document.getElementById('manualTuoTuoInput');
-
-          if (inCash) inCash.value = data.cash ? data.cash.toLocaleString() : '';
-          if (inBang) inBang.value = data.bangbang ? data.bangbang.toLocaleString() : '';
-          if (inPai) inPai.value = data.paipai ? data.paipai.toLocaleString() : '';
-          if (inTuo) inTuo.value = data.tuotuo ? data.tuotuo.toLocaleString() : '';
-
-          updateManualVaultAssets(false);
-
-          if (showToastNotice) {
-            playCoinDropSound();
-            triggerCoinRain();
-            showToast(`☁️ 已成功從雲端讀取 NB 最新資料！(現金:$${(data.cash||0).toLocaleString()}, 邦邦:$${(data.bangbang||0).toLocaleString()})`, 'success');
-          }
-        } else if (showToastNotice) {
-          showToast('💡 提示：在 GitHub 靜態網頁上，請於 NB 點擊「🔗 複製 NB 同步網址」傳至手機點開，即可 100% 秒速帶入金額！', 'info');
-        }
-      } catch(e) {
-      } finally {
-        isFetchingCloudVault = false;
+    function fetchCloudVaultAssets(showToastNotice = false) {
+      // 由於 GitHub Pages 為靜態主機，無法使用傳統雲端 API
+      // 改以「URL Hash 帶入法」實現 100% NB → 手機 同步
+      // 此功能引導用戶在 NB 上點選 🔗 複製 NB 同步網址，然後傳給手機
+      if (showToastNotice) {
+        showVaultSyncGuideModal();
       }
+    }
+
+    function showVaultSyncGuideModal() {
+      const existingModal = document.getElementById('vaultSyncGuideModal');
+      if (existingModal) existingModal.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'vaultSyncGuideModal';
+      modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4';
+      modal.innerHTML = `
+        <div class="bg-slate-900 border border-amber-500/60 rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 animate-fade-in">
+          <div class="text-3xl">📲</div>
+          <h3 class="text-amber-300 font-black text-base">如何同步 NB 上的資產金額？</h3>
+          <div class="text-left space-y-3 text-sm text-slate-300">
+            <div class="flex items-start gap-3 bg-slate-800 rounded-2xl p-3">
+              <span class="text-xl">💻</span>
+              <div>
+                <div class="font-bold text-amber-200">Step 1：在 NB 上操作</div>
+                <div class="text-slate-400 text-xs mt-0.5">打開金庫 → 輸入 4 大資產金額 → 點擊「🔗 複製 NB 同步網址傳送至手機」</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 bg-slate-800 rounded-2xl p-3">
+              <span class="text-xl">📨</span>
+              <div>
+                <div class="font-bold text-amber-200">Step 2：傳送連結到手機</div>
+                <div class="text-slate-400 text-xs mt-0.5">透過 LINE Keep / 傳給自己，在手機上點開連結</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 bg-emerald-900/50 border border-emerald-700/50 rounded-2xl p-3">
+              <span class="text-xl">✅</span>
+              <div>
+                <div class="font-bold text-emerald-300">手機 0.001 秒自動帶入金額！</div>
+                <div class="text-slate-400 text-xs mt-0.5">iOS / Android 全平台支援，100% 成功率，不需要後端伺服器</div>
+              </div>
+            </div>
+          </div>
+          <button
+            onclick="document.getElementById('vaultSyncGuideModal').remove()"
+            class="w-full h-10 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-2xl text-sm transition cursor-pointer active:scale-95"
+          >
+            我知道了，去複製連結！
+          </button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
     }
 
     function copyVaultSyncUrl() {
