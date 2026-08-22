@@ -1234,9 +1234,9 @@
 
         if (heartbeatSeconds <= 0) {
           heartbeatSeconds = 60;
-          minuteAssetBonus += 1700 / (12 * 60); // +2.361111 元
+          minuteAssetBonus += 1800 / (12 * 60); // +2.50 元
           playCoinDropSound();
-          showToast(`💓 1分鐘心跳脈搏結算！動態算力收益 +$2.36 元 (累積脈搏加算: $${minuteAssetBonus.toFixed(2)})`, 'info');
+          showToast(`💓 1分鐘心跳脈搏結算！動態算力收益 +$2.50 元 (累積脈搏加算: $${minuteAssetBonus.toFixed(2)})`, 'info');
           generateAndDrawRedKLineChart();
         }
       }, 1000);
@@ -1946,7 +1946,7 @@
                   <span id="heartbeatCountdown" class="text-amber-300 font-black">60秒</span>
                 </span>
                 <span class="text-slate-500">|</span>
-                <span class="text-emerald-300 font-bold">+2.361元/分</span>
+                <span class="text-emerald-300 font-bold">+2.500元/分</span>
               </div>
             </div>
 
@@ -1956,7 +1956,7 @@
                 <i class="fa-solid fa-hand-pointer text-amber-400 text-[11px]"></i>
                 <span>懸停或滑動 K 線觀測每分鐘收入總合：</span>
               </span>
-              <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 21,240 分鐘 ｜ 總收入 $50,150 元</span>
+              <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 21,240 分鐘 ｜ 總收入 $56,900 元</span>
             </div>
 
             <!-- Canvas Container -->
@@ -1971,11 +1971,11 @@
               </div>
               <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
                 <div class="text-[9px] text-slate-400">標準班次日薪</div>
-                <div class="font-black text-emerald-400 text-xs">$1,700 元/12h</div>
+                <div class="font-black text-emerald-400 text-xs">$1,800 元/12h</div>
               </div>
               <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
                 <div class="text-[9px] text-slate-400">1分鐘心跳算力</div>
-                <div id="liveMinuteRateDisplay" class="font-black text-rose-400 text-xs">$2.361 元/分</div>
+                <div id="liveMinuteRateDisplay" class="font-black text-rose-400 text-xs">$2.500 元/分</div>
               </div>
               <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
                 <div class="text-[9px] text-slate-400">1日至今此刻累積資產</div>
@@ -1984,7 +1984,7 @@
             </div>
 
             <div class="text-[10px] text-slate-400 flex items-center justify-between">
-              <span>💓 1分鐘脈搏心跳時鐘每 60 秒自動結算 +$2.36 元即時收益</span>
+              <span>💓 1分鐘脈搏心跳時鐘每 60 秒自動結算 +$2.50 元即時收益</span>
               <span>💡 紅色 K 棒：每日資產開盤/最高/最低/收盤價 ｜ 金色線：動態累積走勢</span>
             </div>
           </div>
