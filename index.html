@@ -290,7 +290,7 @@
         </div>
       </div>
 
-      <!-- 右側按鈕群：金庫 ＋ 小鑰匙 ＋ 查詢 (緊湊置中，保證右緣絕對對齊邊界內) -->
+      <!-- 右側按鈕群：金庫 ＋ 登入 ＋ 查詢 (尺寸質感 100% 統一對齊) -->
       <div class="flex items-center gap-1.5 shrink-0 pl-1">
         <!-- 🏦 個人金庫按鈕 (切換至個人班表系統) -->
         <button 
@@ -298,27 +298,29 @@
           id="personalVaultBtn"
           onclick="openPersonalVaultModal()" 
           title="🏦 個人金庫 ｜ 切換至個人專屬班表系統"
-          class="w-8 h-8 rounded-xl bg-slate-950 border border-sky-500/80 hover:border-sky-400 text-sky-400 flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
+          class="h-8 px-2.5 sm:px-3 bg-slate-950 hover:bg-slate-900 border border-sky-500/80 hover:border-sky-400 text-sky-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
         >
-          <i class="fa-solid fa-vault text-xs"></i>
+          <i class="fa-solid fa-vault text-xs text-sky-400"></i>
+          <span>金庫</span>
         </button>
 
-        <!-- 🗝️ 黑色金鑰 -->
+        <!-- 🗝️ 登入 / Admin 金鑰按鈕 -->
         <button 
           type="button" 
           id="secretAdminKeyBtn"
           onclick="openAdminAuthModal()" 
-          title="Admin 管理員金鑰"
-          class="w-8 h-8 rounded-xl bg-slate-950 border border-amber-500/80 hover:border-amber-400 text-amber-400 flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
+          title="主管登入 / 管理員金鑰"
+          class="h-8 px-2.5 sm:px-3 bg-slate-950 hover:bg-slate-900 border border-amber-500/80 hover:border-amber-400 text-amber-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
         >
-          <i class="fa-solid fa-key text-xs"></i>
+          <i class="fa-solid fa-key text-xs text-amber-400"></i>
+          <span>登入</span>
         </button>
 
         <!-- 🔍 查詢按鈕 (緊湊高質感，保證絕不溢出) -->
         <button 
           onclick="fetchFullSchedule(true)" 
           id="queryScheduleBtn"
-          class="h-8 px-2.5 sm:px-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1 shrink-0 cursor-pointer"
+          class="h-8 px-2.5 sm:px-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
         >
           <i class="fa-solid fa-rotate text-[11px]"></i>
           <span>查詢</span>
@@ -796,11 +798,13 @@
       const keyBtn = document.getElementById('secretAdminKeyBtn');
       if (keyBtn) {
         if (unlocked) {
-          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-950 border border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center justify-center active:scale-90 shrink-0';
-          keyBtn.title = '👑 管理員已解鎖 (保持登入中，點擊可開啟管理選單)';
+          keyBtn.className = 'h-8 px-2.5 sm:px-3 bg-amber-950 border border-amber-500 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition flex items-center justify-center gap-1 active:scale-95 shrink-0 rounded-xl text-xs font-bold cursor-pointer';
+          keyBtn.title = '👑 主管已驗證 (點擊可開啟管理控制選單)';
+          keyBtn.innerHTML = '<i class="fa-solid fa-key text-xs text-amber-400"></i><span>控制台</span>';
         } else {
-          keyBtn.className = 'w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-400 hover:text-amber-400 hover:border-amber-500/60 transition flex items-center justify-center active:scale-90 shrink-0';
-          keyBtn.title = '管理員專屬通道';
+          keyBtn.className = 'h-8 px-2.5 sm:px-3 bg-slate-950 hover:bg-slate-900 border border-amber-500/80 hover:border-amber-400 text-amber-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer';
+          keyBtn.title = '主管登入 / 管理員金鑰';
+          keyBtn.innerHTML = '<i class="fa-solid fa-key text-xs text-amber-400"></i><span>登入</span>';
         }
       }
     }
