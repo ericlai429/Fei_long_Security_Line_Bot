@@ -109,7 +109,7 @@
           <div class="w-8 h-8 rounded-xl bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-400">
             <i class="fa-solid fa-user-shield text-xs"></i>
           </div>
-          <span id="adminModalTitle">主管登入</span>
+          <span id="adminModalTitle">後台登入</span>
         </div>
         <button type="button" onclick="closeAdminAuthModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark text-base"></i>
@@ -441,7 +441,7 @@
           type="button" 
           id="secretAdminKeyBtn"
           onclick="openAdminAuthModal()" 
-          title="主管登入 / 管理員金鑰"
+          title="後台登入 / 管理員金鑰"
           class="h-8 px-2.5 sm:px-3 bg-slate-950 hover:bg-slate-900 border border-amber-500/80 hover:border-amber-400 text-amber-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
         >
           <i class="fa-solid fa-key text-xs text-amber-400"></i>
@@ -2501,7 +2501,7 @@
           keyBtn.innerHTML = '<i class="fa-solid fa-key text-xs text-amber-400"></i><span>控制台</span>';
         } else {
           keyBtn.className = 'h-8 px-2.5 sm:px-3 bg-slate-950 hover:bg-slate-900 border border-amber-500/80 hover:border-amber-400 text-amber-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer';
-          keyBtn.title = '主管登入 / 管理員金鑰';
+          keyBtn.title = '後台登入 / 管理員金鑰';
           keyBtn.innerHTML = '<i class="fa-solid fa-key text-xs text-amber-400"></i><span>登入</span>';
         }
       }
@@ -2540,7 +2540,7 @@
       const changeForm = document.getElementById('adminChangePinForm');
       const errDiv = document.getElementById('adminLoginError');
       const succDiv = document.getElementById('adminLoginSuccess');
-      if (title) title.textContent = '主管登入';
+      if (title) title.textContent = '後台登入';
       if (unlockedPanel) unlockedPanel.style.display = 'none';
       if (loginForm) loginForm.style.display = 'block';
       if (changeForm) changeForm.style.display = 'none';
