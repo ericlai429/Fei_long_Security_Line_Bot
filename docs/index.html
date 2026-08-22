@@ -1741,12 +1741,10 @@
     }
 
     function recalculateDefaultAuditHours() {
-      const dayCount = parseInt(document.getElementById('tsghDayCountVal')?.dataset.count || '12', 10);
-      const nightCount = parseInt(document.getElementById('tsghNightCountVal')?.dataset.count || '10', 10);
       const greenCount = parseDatesCount(localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29');
-      
-      const totalShifts = dayCount + nightCount + greenCount;
-      const calcHours = totalShifts * 12;
+      const cloudRegularHours = 354; // 雲端試算表常規班表總時數
+      const t5Hours = greenCount * 12; // T5夜班執勤時數 (7天 * 12h = 84h)
+      const calcHours = cloudRegularHours + t5Hours; // 354 + 84 = 438 小時
 
       localStorage.setItem('admin_salary_audit_hours', calcHours);
       const inputEl = document.getElementById('auditTotalHoursInput');
@@ -1755,7 +1753,7 @@
       updateSalaryAuditHours(calcHours);
       playCoinDropSound();
       triggerCoinRain();
-      showToast(`📊 已連動計算: SUM(G12:AK12) = ${calcHours} 小時 (${(calcHours / 12).toFixed(1)} 天)`, 'success');
+      showToast(`📊 已連動計算: SUM(G12:AK12) = 354h + ${t5Hours}h = ${calcHours} 小時 (${(calcHours / 12).toFixed(1)} 天)`, 'success');
     }
 
     function updateManualVaultAssets() {
@@ -1873,8 +1871,8 @@
       let nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
       let greenT5Rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1700', 10);
 
-      const totalWorkedDays = tsghDayCount + tsghNightCount + greenT5NightCount;
-      const defaultCalculatedHours = totalWorkedDays * 12;
+      const cloudRegularHours = 354; // 雲端試算表常規班表總時數
+      const defaultCalculatedHours = cloudRegularHours + (greenT5NightCount * 12); // 354 + 84 = 438 小時
 
       let storedAuditHours = localStorage.getItem('admin_salary_audit_hours');
       let auditTotalHours = storedAuditHours !== null ? parseFloat(storedAuditHours) : defaultCalculatedHours;
@@ -2124,7 +2122,7 @@
             </div>
 
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1 pt-0.5 border-t border-slate-900/80">
-              <span>💡 公式說明: =SUM(G12:AK12) 累計總時數 ÷ 12 小時即為資水核算上班天數</span>
+              <span>💡 公式說明: =SUM(G12:AK12) 雲端試算表常規(354h) + T5夜班(84h) = 438 小時 (對應 36.5 天)</span>
               <button 
                 type="button" 
                 onclick="recalculateDefaultAuditHours()" 
