@@ -1962,7 +1962,7 @@
             showToast(`☁️ 已成功從雲端讀取 NB 最新資料！(現金:$${(data.cash||0).toLocaleString()}, 邦邦:$${(data.bangbang||0).toLocaleString()})`, 'success');
           }
         } else if (showToastNotice) {
-          showToast('☁️ 目前雲端無最新同步紀錄', 'info');
+          showToast('💡 提示：在 GitHub 靜態網頁上，請於 NB 點擊「🔗 複製 NB 同步網址」傳至手機點開，即可 100% 秒速帶入金額！', 'info');
         }
       } catch(e) {
       } finally {
@@ -1982,7 +1982,7 @@
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(syncUrl).then(() => {
-          showToast('🔗 已複製 NB 同步網址！傳送至手機開啟即可秒速帶入金額', 'success');
+          showToast('🔗 已複製 NB 同步網址！傳至手機開啟即可秒速帶入金額', 'success');
         }).catch(() => {
           prompt('請複製以下同步網址並傳至手機開啟：', syncUrl);
         });
@@ -2002,6 +2002,14 @@
             if (decoded.b !== undefined) localStorage.setItem('admin_vault_bangbang', decoded.b);
             if (decoded.p !== undefined) localStorage.setItem('admin_vault_paipai', decoded.p);
             if (decoded.t !== undefined) localStorage.setItem('admin_vault_tuotuo', decoded.t);
+
+            const modal = document.getElementById('adminAuthModal');
+            if (modal && !modal.classList.contains('hidden')) {
+              renderAdminVaultView();
+            }
+
+            playCoinDropSound();
+            triggerCoinRain();
             showToast('📱 已成功從 NB 專屬同步網址帶入 4 大資產金額！', 'success');
             history.replaceState(null, '', window.location.pathname);
           }
