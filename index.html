@@ -1867,17 +1867,36 @@
       await _ghWriteVaultAssets(pat, false);
     }
 
-    // 按鈕：☁️ 讀取雲端 — 從 GitHub raw 讀回數值
+    // 按鈕：☁️ 讀取雲端 — 先讀 GitHub API 0秒即時資料（繞過 CDN 快取），失敗則備用 raw
     async function fetchCloudVaultAssets(showToastNotice = false) {
       try {
-        const res = await fetch(GH_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) throw new Error(res.status);
-        const data = await res.json();
+        let data = null;
 
-        const c = parseFloat(data.cash)    || 0;
+        // Step 1: 優先向 GitHub Contents API 請求 0 秒即時資料
+        try {
+          const apiRes = await fetch(GH_API_URL + '?t=' + Date.now(), { cache: 'no-store' });
+          if (apiRes.ok) {
+            const apiJson = await apiRes.json();
+            if (apiJson && apiJson.content) {
+              const decodedStr = decodeURIComponent(escape(atob(apiJson.content.replace(/\n/g, ''))));
+              data = JSON.parse(decodedStr);
+            }
+          }
+        } catch(e) {}
+
+        // Step 2: 備用方案（若 API 頻率限制，則讀取 Raw）
+        if (!data) {
+          const res = await fetch(GH_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
+          if (!res.ok) throw new Error(res.status);
+          data = await res.json();
+        }
+
+        if (!data) throw new Error('雲端無有效數據');
+
+        const c = parseFloat(data.cash)     || 0;
         const b = parseFloat(data.bangbang) || 0;
-        const p = parseFloat(data.paipai)  || 0;
-        const t = parseFloat(data.tuotuo)  || 0;
+        const p = parseFloat(data.paipai)   || 0;
+        const t = parseFloat(data.tuotuo)   || 0;
 
         localStorage.setItem('admin_vault_cash',     c);
         localStorage.setItem('admin_vault_bangbang', b);
@@ -1888,10 +1907,10 @@
         const inBang = document.getElementById('manualBangBangInput');
         const inPai  = document.getElementById('manualPaiPaiInput');
         const inTuo  = document.getElementById('manualTuoTuoInput');
-        if (inCash) inCash.value = c ? c.toLocaleString('en-US') : '';
-        if (inBang) inBang.value = b ? b.toLocaleString('en-US') : '';
-        if (inPai)  inPai.value  = p ? p.toLocaleString('en-US') : '';
-        if (inTuo)  inTuo.value  = t ? t.toLocaleString('en-US') : '';
+        if (inCash) inCash.value = c !== 0 ? c.toLocaleString('en-US') : '0';
+        if (inBang) inBang.value = b !== 0 ? b.toLocaleString('en-US') : '0';
+        if (inPai)  inPai.value  = p !== 0 ? p.toLocaleString('en-US') : '0';
+        if (inTuo)  inTuo.value  = t !== 0 ? t.toLocaleString('en-US') : '0';
 
         updateManualVaultAssets(false);
 
@@ -1899,7 +1918,7 @@
           playCoinDropSound();
           triggerCoinRain();
           const ts = data.updated_at ? new Date(data.updated_at).toLocaleString('zh-TW') : '';
-          showToast(`☁️ 已從 GitHub 讀取最新資產！現金:$${c.toLocaleString()} 邦邦:$${b.toLocaleString()}${ts ? ' (' + ts + ')' : ''}`, 'success');
+          showToast(`☁️ 已成功從 GitHub 即時同步！現金:$${c.toLocaleString()} 邦邦:$${b.toLocaleString()}${ts ? ' (' + ts + ')' : ''}`, 'success');
         }
       } catch(e) {
         if (showToastNotice) showToast(`❌ 讀取失敗 (${e.message})，請確認網路`, 'error');
