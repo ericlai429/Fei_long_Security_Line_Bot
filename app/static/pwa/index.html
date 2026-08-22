@@ -1814,7 +1814,7 @@
       localStorage.setItem('admin_vault_tuotuo', tuotuo);
 
       const klineTotalEl = document.getElementById('adminTotalAssetDisplay');
-      let klineTotal = 56900;
+      let klineTotal = 64100;
       if (klineTotalEl) {
         const parsed = parseInt(klineTotalEl.textContent.replace(/,/g, ''), 10);
         if (!isNaN(parsed) && parsed > 0) klineTotal = parsed;
@@ -2329,7 +2329,7 @@
                 <i class="fa-solid fa-hand-pointer text-amber-400 text-[11px]"></i>
                 <span>懸停或滑動 K 線觀測每分鐘收入總合：</span>
               </span>
-              <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 21,240 分鐘 ｜ 總收入 $56,900 元</span>
+              <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 ${(tsghDayCount + tsghNightCount + greenT5NightCount + mobileSupportCount) * 720} 分鐘 ｜ 總收入 $${grandTotal.toLocaleString()} 元</span>
             </div>
 
             <!-- Canvas Container (Y 軸高度拉高 50%) -->
@@ -2340,7 +2340,7 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-slate-300 pt-1">
               <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
                 <div class="text-[9px] text-slate-400">當月應勤總分鐘</div>
-                <div class="font-black text-amber-300 text-xs">21,240 分鐘</div>
+                <div id="adminTotalDutyMinutesDisplay" class="font-black text-amber-300 text-xs">${((tsghDayCount + tsghNightCount + greenT5NightCount + mobileSupportCount) * 720).toLocaleString()} 分鐘</div>
               </div>
               <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
                 <div class="text-[9px] text-slate-400">標準班次日薪</div>
@@ -2352,7 +2352,7 @@
               </div>
               <div class="bg-rose-950/60 border border-rose-800/80 p-2 rounded-xl text-center">
                 <div class="text-[9px] text-rose-300 font-bold">全月金庫總目標</div>
-                <div class="font-black text-yellow-300 text-xs">$56,900 元</div>
+                <div id="adminTotalAssetTargetDisplay" class="font-black text-yellow-300 text-xs">$${grandTotal.toLocaleString()} 元</div>
               </div>
             </div>
 
