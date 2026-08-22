@@ -1241,14 +1241,75 @@
       }, 1000);
     }
 
-    function generateAndDrawRedKLineChart() {
-      // 8 月份每日應勤時數 (對照 115 年 8 月份機動人員執勤表 賴鯤仲: G12 到 AK12)
-      const dailyDutyMap = [
-        12, 12, 12, 12, 17.5, 12, 0, 24, 24, 12, 
-        0, 12, 0, 24, 24, 12, 0, 12, 12, 24, 
-        12, 0, 12, 24, 12, 12, 12, 0, 12, 0, 0
-      ];
+    function getManagerDailyHours(dayIndex) {
+      const dateNum = dayIndex + 1;
+      const dateStr = `2026/08/${String(dateNum).padStart(2, '0')}`;
+      
+      let hours = 0;
+      let managerName = localStorage.getItem('feilong_vault_my_name') || '賴鯤仲';
+      const cleanManager = cleanPersonName(managerName);
 
+      const datasets = [EMBEDDED_SCHEDULE_DATA_8];
+      if (rawScheduleData && rawScheduleData.rows) {
+        datasets.push({ [currentTabName || 'current']: rawScheduleData });
+      }
+
+      const shiftDedupe = new Set();
+      let hasDayShift = false;
+      let hasNightShift = false;
+
+      datasets.forEach(dataObj => {
+        if (!dataObj) return;
+        Object.keys(dataObj).forEach(tabKey => {
+          const tabData = dataObj[tabKey];
+          if (!tabData || !tabData.rows) return;
+          tabData.rows.forEach(r => {
+            const rDate = r['日期'] || '';
+            if (rDate.includes(dateStr) || rDate.endsWith(`/${String(dateNum).padStart(2,'0')}`)) {
+              const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
+              const dayVal = r['早班 (07-19)'] || '';
+              const nightVal = r['晚班 (19-07)'] || '';
+              const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
+
+              if (dayVal.trim() && (matchGuardInCell(cleanManager, dayVal) || matchGuardInCell('賴鯤仲', dayVal) || matchGuardInCell('周有輝', dayVal))) {
+                const key = `DAY_${dateNum}_${postName}`;
+                if (!shiftDedupe.has(key)) {
+                  shiftDedupe.add(key);
+                  hours += 12;
+                  hasDayShift = true;
+                }
+              }
+              if (nightVal.trim() && !isGreenT5 && !nightVal.includes('T5')) {
+                if (matchGuardInCell(cleanManager, nightVal) || matchGuardInCell('賴鯤仲', nightVal) || matchGuardInCell('周有輝', nightVal)) {
+                  const key = `NIGHT_${dateNum}_${postName}`;
+                  if (!shiftDedupe.has(key)) {
+                    shiftDedupe.add(key);
+                    hours += 12;
+                    hasNightShift = true;
+                  }
+                }
+              }
+            }
+          });
+        });
+      });
+
+      // T5 綠底夜班 (19:00 ~ 07:00)
+      let greenT5DatesStr = localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29';
+      const greenDatesList = greenT5DatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+      if (greenDatesList.includes(dateNum)) {
+        const key = `T5_GREEN_${dateNum}`;
+        if (!shiftDedupe.has(key)) {
+          shiftDedupe.add(key);
+          hours += 12;
+          hasNightShift = true;
+        }
+      }
+
+      return { hours, hasDayShift, hasNightShift };
+    }
+
+    function generateAndDrawRedKLineChart() {
       const ratePerMinute = 1700 / (12 * 60); // 2.361111 元/分鐘
       
       let currentAsset = minuteAssetBonus;
@@ -1257,7 +1318,8 @@
 
       for (let day = 0; day < 31; day++) {
         const open = currentAsset;
-        const hoursWorked = dailyDutyMap[day] || 0;
+        const shiftInfo = getManagerDailyHours(day);
+        const hoursWorked = shiftInfo.hours;
         const minutesWorked = hoursWorked * 60;
         totalAccumulatedMinutes += minutesWorked;
 
@@ -1277,7 +1339,9 @@
           earned: earned,
           hoursWorked: hoursWorked,
           minutesWorked: minutesWorked,
-          totalAccumulatedMinutes: totalAccumulatedMinutes
+          totalAccumulatedMinutes: totalAccumulatedMinutes,
+          hasDayShift: shiftInfo.hasDayShift,
+          hasNightShift: shiftInfo.hasNightShift
         });
       }
 
@@ -1421,22 +1485,49 @@
       });
       ctx.stroke();
 
-      // 🎯 讀取台北時間精度至 1 分鐘，動態錨定於 K 線收入曲線上
+      // 🎯 依據早班 (07:00~19:00) ＆ 晚班 (19:00~07:00) 時段邏輯，計算 1 分鐘精確算力
       const targetItem = dailyKLines[activeIdxToUse];
       if (targetItem) {
         let anchorX = padding.left + activeIdxToUse * slotWidth + slotWidth / 2;
         let displayAsset = targetItem.close;
 
-        // 若為預設當前台北時間（未懸停狀態），計算當天內每分鐘精度累積動態 Asset
+        // 若為預設當前台北時間（未懸停狀態），套用早班 07:00~19:00 與晚班 19:00~07:00 時間軸
         if (activeIndex === null && activeIdxToUse === defaultDayIdx) {
           const minuteInDay = tHour * 60 + tMinute;
-          const minuteFraction = Math.min(1.0, Math.max(0.0, minuteInDay / 1440)); // 24h 分鐘佔比
-          anchorX = padding.left + activeIdxToUse * slotWidth + (slotWidth * minuteFraction);
+          
+          let dutyMinutesPassed = 0;
 
-          // 當天每分鐘算力加算 ($1700 / 12 / 60 = $2.3611/分)
-          const todayDutyMinutes = targetItem.hoursWorked * 60;
-          const currentPassedDutyMinutes = Math.min(todayDutyMinutes, Math.floor((minuteInDay / 1440) * todayDutyMinutes));
-          displayAsset = targetItem.open + (currentPassedDutyMinutes * (1700 / 720));
+          // 早班邏輯: 07:00 (420分) ~ 19:00 (1140分)
+          if (targetItem.hasDayShift) {
+            if (minuteInDay >= 420 && minuteInDay <= 1140) {
+              dutyMinutesPassed += (minuteInDay - 420);
+            } else if (minuteInDay > 1140) {
+              dutyMinutesPassed += 720;
+            }
+          }
+
+          // 晚班邏輯: 19:00 (1140分) ~ 次日 07:00 (420分)
+          if (targetItem.hasNightShift) {
+            if (minuteInDay >= 1140) {
+              dutyMinutesPassed += (minuteInDay - 1140);
+            } else if (minuteInDay < 420) {
+              dutyMinutesPassed += (300 + minuteInDay); // 跨夜前半段 300分 (19:00~24:00) + 凌晨00:00至今
+            }
+          }
+
+          // 若本日沒有班次或已過執勤時間
+          if (!targetItem.hasDayShift && !targetItem.hasNightShift) {
+            dutyMinutesPassed = 0;
+          } else if (targetItem.hoursWorked > 0 && dutyMinutesPassed === 0 && minuteInDay > 1140 && targetItem.hasDayShift && !targetItem.hasNightShift) {
+            dutyMinutesPassed = 720;
+          }
+
+          const ratePerMin = 1700 / (12 * 60); // 2.361111 元/分
+          const capDutyMinutes = Math.min(targetItem.minutesWorked, dutyMinutesPassed);
+          displayAsset = targetItem.open + (capDutyMinutes * ratePerMin);
+
+          const minuteFraction = Math.min(1.0, Math.max(0.0, minuteInDay / 1440));
+          anchorX = padding.left + activeIdxToUse * slotWidth + (slotWidth * minuteFraction);
         }
 
         const anchorY = padding.top + chartHeight * (1 - (displayAsset - minVal) / (maxVal - minVal));
@@ -1485,11 +1576,15 @@
         ctx.textAlign = 'center';
         ctx.fillText(`$${Math.round(displayAsset).toLocaleString()}`, width - padding.right + 32, anchorY + 4);
 
-        // 5. 更新頂部提示欄，顯示台北時間精度至 1 分鐘之即時資訊
+        // 5. 更新頂部提示欄，顯示台北時間 (早/晚班時段對照 ｜ 精度至1分鐘)
         const detailEl = document.getElementById('klineTooltipDetail');
         if (detailEl && activeIndex === null) {
           const timeStr = `${String(tHour).padStart(2,'0')}:${String(tMinute).padStart(2,'0')}`;
-          detailEl.innerHTML = `🇹🇼 台北時間: <span class="text-white font-bold">8月${tDate}日 ${timeStr}</span> (精度1分) ｜ 當前累積動態資產: <span class="text-amber-300 font-black">$${Math.round(displayAsset).toLocaleString()} 元</span>`;
+          let shiftNameTag = '非執勤時段';
+          if (tHour >= 7 && tHour < 19) shiftNameTag = '☀️ 早班時段 (07:00-19:00)';
+          else shiftNameTag = '🌙 晚班時段 (19:00-07:00)';
+
+          detailEl.innerHTML = `🇹🇼 台北時間: <span class="text-white font-bold">8月${tDate}日 ${timeStr}</span> (${shiftNameTag}) ｜ 算力累積: <span class="text-amber-300 font-black">$${Math.round(displayAsset).toLocaleString()} 元</span>`;
         }
       }
     }
