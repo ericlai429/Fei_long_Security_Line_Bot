@@ -73,6 +73,12 @@
           <span class="hidden md:inline">班表</span>
         </a>
 
+        <!-- 登出按鈕 -->
+        <button onclick="adminLogout()" class="h-8 px-2 sm:px-2.5 bg-slate-800 hover:bg-rose-950/60 text-rose-400 rounded-xl border border-rose-900/60 text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="登出主管身分">
+          <i class="fa-solid fa-right-from-bracket text-xs"></i>
+          <span class="hidden md:inline">登出</span>
+        </button>
+
         <!-- 重整按鈕 -->
         <button onclick="loadGroupList()" class="h-8 px-2.5 sm:px-3 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 shadow-sm shrink-0 cursor-pointer" title="重新載入名冊與設定">
           <i class="fa-solid fa-rotate text-xs" id="reloadIcon"></i>
@@ -87,6 +93,62 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="hidden fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300"></div>
+
+    <!-- 🗝️ 主管登入驗證彈窗 (未登入時鎖定) -->
+    <div id="adminAuthModal" class="hidden fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-amber-500 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2 text-white font-bold text-base">
+            <div class="w-8 h-8 rounded-xl bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-400">
+              <i class="fa-solid fa-user-shield text-xs"></i>
+            </div>
+            <span>主管身分驗證</span>
+          </div>
+          <a href="./index.html" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center" title="回班表">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+          </a>
+        </div>
+
+        <form id="adminLoginForm" onsubmit="handleAdminLoginSubmit(event)" class="space-y-3.5">
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-lock text-xs"></i>
+              <span>請輸入主管密碼進入後台</span>
+            </label>
+            <input 
+              type="password" 
+              name="password"
+              id="adminLoginPinInput" 
+              autocomplete="current-password"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="請輸入密碼 (預設: 789)" 
+              class="w-full h-11 bg-slate-950 border border-amber-700/80 rounded-xl px-3 text-sm text-center text-amber-300 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
+            >
+          </div>
+
+          <div class="flex items-center justify-between px-1">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="adminRememberPinCheckbox" checked class="w-4 h-4 rounded bg-slate-950 border-amber-500 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 cursor-pointer">
+              <span class="text-xs font-bold text-slate-300">記住登入狀態 (7天免重複輸入)</span>
+            </label>
+          </div>
+
+          <div id="adminLoginError" style="display: none;" class="text-[11px] text-rose-400 bg-rose-950/60 p-2.5 rounded-xl border border-rose-800 font-bold"></div>
+          <div id="adminLoginSuccess" style="display: none;" class="text-[11px] text-emerald-300 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-700 font-bold"></div>
+
+          <button 
+            type="submit" 
+            id="adminLoginBtn"
+            class="w-full h-12 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-[0.98] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i class="fa-solid fa-lock-open text-xs"></i>
+            <span>驗證並進入後台</span>
+          </button>
+        </form>
+      </div>
+    </div>
 
         <!-- ✉️ 小隊長 Email 白名單專屬管理彈窗 (1~80分頁下拉填入) -->
     <div id="whitelistModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
@@ -3109,11 +3171,105 @@
       if (refreshInput && savedRefresh && !refreshInput.value) refreshInput.value = savedRefresh;
     }
 
+    function checkAdminAuth() {
+      const isUnlocked = localStorage.getItem('feilong_admin_unlocked') === 'true' || sessionStorage.getItem('feilong_admin_unlocked') === 'true';
+      const modal = document.getElementById('adminAuthModal');
+      if (!isUnlocked) {
+        if (modal) {
+          modal.classList.remove('hidden');
+          const pinInput = document.getElementById('adminLoginPinInput');
+          if (pinInput) setTimeout(() => pinInput.focus(), 100);
+        }
+      } else {
+        if (modal) modal.classList.add('hidden');
+      }
+    }
+
+    async function handleAdminLoginSubmit(e) {
+      e.preventDefault();
+      const pinInput = document.getElementById('adminLoginPinInput');
+      const pin = pinInput ? pinInput.value.trim() : '';
+      const rememberCheckbox = document.getElementById('adminRememberPinCheckbox');
+      const shouldRemember = rememberCheckbox ? rememberCheckbox.checked : true;
+      const errDiv = document.getElementById('adminLoginError');
+      const succDiv = document.getElementById('adminLoginSuccess');
+
+      if (errDiv) errDiv.style.display = 'none';
+      if (succDiv) succDiv.style.display = 'none';
+
+      if (!pin) {
+        if (errDiv) {
+          errDiv.textContent = '❌ 請輸入密碼';
+          errDiv.style.display = 'block';
+        }
+        return;
+      }
+
+      const savedCustomPin = localStorage.getItem('feilong_master_pin');
+      let isMatch = savedCustomPin ? (pin === savedCustomPin) : (pin === '789');
+
+      if (!isMatch) {
+        try {
+          const res = await fetch(API_BASE + '/api/admin/master-pin/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin: pin })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'success') isMatch = true;
+          }
+        } catch(e) {}
+      }
+
+      if (!isMatch) {
+        if (errDiv) {
+          errDiv.textContent = '❌ 密碼錯誤，請重新輸入';
+          errDiv.style.display = 'block';
+        }
+        if (pinInput) {
+          pinInput.focus();
+          pinInput.classList.add('ring-2', 'ring-rose-500');
+          setTimeout(() => pinInput.classList.remove('ring-2', 'ring-rose-500'), 1500);
+        }
+        return;
+      }
+
+      if (shouldRemember) {
+        localStorage.setItem('feilong_master_pin', pin);
+        localStorage.setItem('feilong_admin_unlocked', 'true');
+      } else {
+        sessionStorage.setItem('feilong_admin_unlocked', 'true');
+      }
+
+      if (succDiv) {
+        succDiv.textContent = '✅ 驗證成功，正在載入後台...';
+        succDiv.style.display = 'block';
+      }
+
+      setTimeout(() => {
+        const modal = document.getElementById('adminAuthModal');
+        if (modal) modal.classList.add('hidden');
+        loadGroupList();
+        fetchAvailableTabs();
+      }, 500);
+    }
+
+    function adminLogout() {
+      localStorage.removeItem('feilong_admin_unlocked');
+      sessionStorage.removeItem('feilong_admin_unlocked');
+      showToast('已安全登出', 'info');
+      setTimeout(() => {
+        checkAdminAuth();
+      }, 400);
+    }
+
     // Ping heartbeat every 30 seconds
     setInterval(sendAdminHeartbeat, 30000);
     sendAdminHeartbeat();
 
     initPersistedKeys();
+    checkAdminAuth();
     loadGroupList();
     fetchAvailableTabs();
   </script>

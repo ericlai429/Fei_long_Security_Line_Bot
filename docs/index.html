@@ -48,30 +48,30 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
 
-  <!-- 🗝️ iOS 完全相容：Admin Login / Master PIN Setup Modal -->
+  <!-- 🗝️ iOS 完全相容：主管登入 / 管理控制台選單 Modal -->
   <div id="adminAuthModal" style="display: none;" class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-amber-500 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center gap-2 text-white font-bold text-base">
           <div class="w-8 h-8 rounded-xl bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-400">
-            <i class="fa-solid fa-key text-xs"></i>
+            <i class="fa-solid fa-user-shield text-xs"></i>
           </div>
-          <span id="adminModalTitle">Admin 管理員驗證</span>
+          <span id="adminModalTitle">主管登入</span>
         </div>
         <button type="button" onclick="closeAdminAuthModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark text-base"></i>
         </button>
       </div>
 
-      <!-- 🌟 面板 1：已解鎖狀態面版 (已驗證通過者) -->
+      <!-- 🌟 面板 1：已登入主管控制選單 -->
       <div id="adminUnlockedPanel" style="display: none;" class="space-y-3.5">
         <div class="bg-gradient-to-r from-emerald-950/80 to-slate-950 border border-emerald-600/80 rounded-2xl p-3.5 space-y-1.5 shadow-md">
           <div class="flex items-center gap-2 text-emerald-300 font-extrabold text-xs">
             <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
-            <span>👑 最高主管已登入 (Check-in 簽到中)</span>
+            <span>👑 主管身分已驗證 (有效連線中)</span>
           </div>
           <p class="text-[11px] text-slate-400 leading-relaxed">
-            管理密碼由後台資料庫加密保護。登出將鎖定當前操作會話，密碼安全留存，下次操作請再次 Check-in 簽到。
+            您已取得管理權限，可直接進入管理後台或查看未遮蔽同仁聯絡資訊。
           </p>
         </div>
 
@@ -89,7 +89,7 @@
             class="w-full h-10 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition active:scale-98"
           >
             <i class="fa-solid fa-key text-xs"></i>
-            <span>修改 Master PIN 密碼</span>
+            <span>修改管理密碼</span>
           </button>
           <button 
             type="button" 
@@ -97,25 +97,17 @@
             class="w-full h-10 bg-slate-900 hover:bg-rose-950/60 text-rose-400 border border-rose-900/50 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition active:scale-98"
           >
             <i class="fa-solid fa-right-from-bracket text-xs"></i>
-            <span>安全登出 (鎖定操作會話)</span>
+            <span>登出主管身分</span>
           </button>
         </div>
       </div>
 
-      <!-- 🌟 面板 2：嚴格登入比對表單 (只比對密碼，絕不隨意覆寫) -->
+      <!-- 🌟 面板 2：主管密碼登入表單 -->
       <form id="adminLoginForm" onsubmit="handleAdminStrictLogin(event)" class="space-y-3.5">
-        <div class="flex items-center justify-between px-3 py-2 bg-slate-950/80 border border-slate-800 rounded-xl">
-          <span class="text-xs font-bold text-slate-400">管理員驗證層級</span>
-          <span class="text-xs font-bold text-amber-400 flex items-center gap-1">
-            <i class="fa-solid fa-user-shield"></i>
-            <span>👑 最高權限主管</span>
-          </span>
-        </div>
-
-        <div class="space-y-1">
-          <label class="text-xs font-bold text-amber-400 flex items-center gap-1">
-            <i class="fa-solid fa-lock"></i>
-            <span>請輸入管理員 Master PIN 密碼</span>
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-lock text-xs"></i>
+            <span>請輸入主管管理密碼</span>
           </label>
           <input 
             type="password" 
@@ -130,10 +122,10 @@
           >
         </div>
 
-        <div class="flex items-center justify-between px-1 py-1">
+        <div class="flex items-center justify-between px-1">
           <label class="flex items-center gap-2 cursor-pointer select-none">
             <input type="checkbox" id="adminRememberPinCheckbox" checked class="w-4 h-4 rounded bg-slate-950 border-amber-500 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 cursor-pointer">
-            <span class="text-xs font-bold text-amber-300/90">保持登入 ＆ 永久記住密碼</span>
+            <span class="text-xs font-bold text-slate-300">記住登入狀態 (7天免重複輸入)</span>
           </label>
         </div>
 
@@ -146,26 +138,26 @@
           class="w-full h-12 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-[0.98] text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2"
         >
           <i class="fa-solid fa-lock-open text-xs"></i>
-          <span>驗證登入 (解鎖管理控制台)</span>
+          <span>登入</span>
         </button>
 
         <div class="flex items-center justify-center text-[11px] text-slate-500 pt-1">
           <button type="button" onclick="showChangePinView()" class="text-slate-400 hover:text-amber-300 transition underline">
-            想要變更密碼？點此進入修改
+            修改密碼
           </button>
         </div>
       </form>
 
-      <!-- 🌟 面板 3：修改密碼表單 (必須先嚴格比對舊密碼，比對成功才准替換新密碼) -->
+      <!-- 🌟 面板 3：修改密碼表單 -->
       <form id="adminChangePinForm" style="display: none;" onsubmit="handleAdminChangePin(event)" class="space-y-3">
         <div class="bg-amber-950/40 border border-amber-800/80 p-2.5 rounded-xl text-[11px] text-amber-300">
-          🔒 <b>資安比對保護</b>：修改密碼前，必須先正確輸入「目前的舊密碼」以驗證身份。
+          🔒 <b>變更密碼</b>：請先輸入目前的舊密碼進行驗證。
         </div>
 
         <div class="space-y-1">
           <label class="text-xs font-bold text-rose-300 flex items-center gap-1">
             <i class="fa-solid fa-key"></i>
-            <span>1. 請輸入目前舊密碼 (進行比對)</span>
+            <span>目前舊密碼</span>
           </label>
           <input 
             type="password" 
@@ -179,24 +171,24 @@
         <div class="space-y-1">
           <label class="text-xs font-bold text-amber-300 flex items-center gap-1">
             <i class="fa-solid fa-shield-halved"></i>
-            <span>2. 請輸入新 Master PIN 密碼</span>
+            <span>欲設定之新密碼</span>
           </label>
           <input 
             type="password" 
             id="adminNewPinInput" 
             autocomplete="new-password"
-            placeholder="請輸入欲設定之新密碼 (3~8位)" 
+            placeholder="請輸入新密碼 (3~8位)" 
             class="w-full h-10 bg-slate-950 border border-amber-700/80 rounded-xl px-3 text-xs text-center text-amber-200 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
           >
         </div>
 
         <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-300">3. 再次確認新密碼</label>
+          <label class="text-xs font-bold text-slate-300">再次確認新密碼</label>
           <input 
             type="password" 
             id="adminConfirmNewPinInput" 
             autocomplete="new-password"
-            placeholder="請再次輸入相同的新密碼" 
+            placeholder="請再次輸入新密碼" 
             class="w-full h-10 bg-slate-950 border border-slate-700 rounded-xl px-3 text-xs text-center text-amber-200 tracking-widest font-mono focus:outline-none focus:border-amber-500 placeholder-slate-600"
           >
         </div>
@@ -210,12 +202,12 @@
           class="w-full h-11 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2"
         >
           <i class="fa-solid fa-check text-xs"></i>
-          <span>驗證舊密碼並替換為新密碼</span>
+          <span>確認變更密碼</span>
         </button>
 
         <div class="flex items-center justify-center text-[11px] text-slate-500 pt-1">
           <button type="button" onclick="showLoginView()" class="text-slate-400 hover:text-white transition underline">
-            ← 取消，返回登入畫面
+            ← 返回登入
           </button>
         </div>
       </form>
@@ -528,7 +520,7 @@
       const unlockedPanel = document.getElementById('adminUnlockedPanel');
       const loginForm = document.getElementById('adminLoginForm');
       const changeForm = document.getElementById('adminChangePinForm');
-      if (title) title.textContent = 'Admin 管理員控制中心';
+      if (title) title.textContent = '主管管理選單';
       if (unlockedPanel) unlockedPanel.style.display = 'block';
       if (loginForm) loginForm.style.display = 'none';
       if (changeForm) changeForm.style.display = 'none';
@@ -541,7 +533,7 @@
       const changeForm = document.getElementById('adminChangePinForm');
       const errDiv = document.getElementById('adminLoginError');
       const succDiv = document.getElementById('adminLoginSuccess');
-      if (title) title.textContent = 'Admin 管理員驗證';
+      if (title) title.textContent = '主管登入';
       if (unlockedPanel) unlockedPanel.style.display = 'none';
       if (loginForm) loginForm.style.display = 'block';
       if (changeForm) changeForm.style.display = 'none';
@@ -550,8 +542,8 @@
       
       const pinInput = document.getElementById('adminLoginPinInput');
       if (pinInput) {
-        const savedPin = localStorage.getItem('feilong_master_pin');
-        if (savedPin) pinInput.value = savedPin;
+        pinInput.value = '';
+        setTimeout(() => pinInput.focus(), 100);
       }
     }
 
@@ -562,7 +554,7 @@
       const changeForm = document.getElementById('adminChangePinForm');
       const errDiv = document.getElementById('adminChangeError');
       const succDiv = document.getElementById('adminChangeSuccess');
-      if (title) title.textContent = '修改 Master PIN 密碼';
+      if (title) title.textContent = '修改主管密碼';
       if (unlockedPanel) unlockedPanel.style.display = 'none';
       if (loginForm) loginForm.style.display = 'none';
       if (changeForm) changeForm.style.display = 'block';
@@ -584,7 +576,7 @@
       updateAdminKeyUi(false);
       closeAdminAuthModal();
       fetchFullSchedule(true);
-      showToast('🔒 已安全登出！管理會話已鎖定 (後台密碼安全受保護，下次請再次 Check-in 簽到)', 'info');
+      showToast('已安全登出', 'info');
     }
 
     // 🔒 嚴格登入資料比對 (打錯密碼 100% 阻擋，絕不替換密碼)
@@ -602,7 +594,7 @@
 
       if (!pin) {
         if (errDiv) {
-          errDiv.textContent = '❌ 請輸入管理員密碼！';
+          errDiv.textContent = '❌ 請輸入密碼';
           errDiv.style.display = 'block';
         }
         return;
@@ -639,7 +631,7 @@
       // ❌ 比對失敗：密碼打錯！嚴格拒絕登入，絕對不替換密碼！
       if (!isMatch) {
         if (errDiv) {
-          errDiv.textContent = '❌ 密碼比對錯誤！請確認並輸入正確的管理員 PIN 碼';
+          errDiv.textContent = '❌ 密碼錯誤，請重新輸入';
           errDiv.style.display = 'block';
         }
         if (pinInput) {
@@ -660,14 +652,14 @@
       updateAdminKeyUi(true);
 
       if (succDiv) {
-        succDiv.textContent = '✅ 密碼比對相符！驗證成功，管理員權限已解鎖。';
+        succDiv.textContent = '✅ 登入成功';
         succDiv.style.display = 'block';
       }
 
       setTimeout(() => {
         closeAdminAuthModal();
         fetchFullSchedule(true);
-      }, 1000);
+      }, 800);
     }
 
     // 🔒 嚴格修改密碼：必須先 100% 正確輸入目前舊密碼，才准替換為新密碼！
@@ -705,7 +697,7 @@
       // ❌ 舊密碼比對失敗：直接阻擋！
       if (!isOldPinValid) {
         if (errDiv) {
-          errDiv.textContent = '❌ 目前舊密碼輸入錯誤！資料比對失敗，拒絕修改密碼。';
+          errDiv.textContent = '❌ 目前舊密碼輸入錯誤，拒絕修改';
           errDiv.style.display = 'block';
         }
         if (oldPinInput) {
@@ -719,7 +711,7 @@
       // 🔍 關卡 2：新密碼格式與一致性檢查
       if (!newPin || newPin.length < 3) {
         if (errDiv) {
-          errDiv.textContent = '❌ 新密碼長度至少需 3 位數以上！';
+          errDiv.textContent = '❌ 新密碼長度至少需 3 位數以上';
           errDiv.style.display = 'block';
         }
         return;
@@ -727,7 +719,7 @@
 
       if (newPin !== confirmPin) {
         if (errDiv) {
-          errDiv.textContent = '❌ 兩次輸入的新密碼不一致，請重新確認！';
+          errDiv.textContent = '❌ 兩次輸入的新密碼不一致';
           errDiv.style.display = 'block';
         }
         return;
@@ -750,14 +742,14 @@
       } catch(e) {}
 
       if (succDiv) {
-        succDiv.textContent = '🎉 舊密碼核對成功！新 Master PIN 碼已正式更新儲存！';
+        succDiv.textContent = '🎉 密碼已成功更新！';
         succDiv.style.display = 'block';
       }
 
       setTimeout(() => {
         showUnlockedView();
         fetchFullSchedule(true);
-      }, 1500);
+      }, 1200);
     }
 
     // 🔤 人員名稱格式化：100% 水平垂直居中、固定寬高與均勻字距，徹底杜絕歪斜
