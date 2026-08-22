@@ -1231,7 +1231,214 @@
             }
           });
         });
-      });cked) {
+      });
+
+    // 📈 8月份資產收益紅色 K 線圖 繪製引擎 (x=30 收入曲線，自帶 1 分鐘心跳時鐘與動態觀測)
+    let heartbeatInterval = null;
+    let heartbeatSeconds = 60;
+    let minuteAssetBonus = 0;
+    let globalDailyKLines = [];
+
+    function startHeartbeatClock() {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      heartbeatSeconds = 60;
+
+      heartbeatInterval = setInterval(() => {
+        heartbeatSeconds--;
+        const el = document.getElementById('heartbeatCountdown');
+        if (el) el.textContent = `${heartbeatSeconds}秒`;
+
+        if (heartbeatSeconds <= 0) {
+          heartbeatSeconds = 60;
+          minuteAssetBonus += 1700 / (12 * 60); // +2.361111 元
+          playCoinDropSound();
+          showToast(`💓 1分鐘心跳脈搏結算！動態算力收益 +$2.36 元 (累積脈搏加算: $${minuteAssetBonus.toFixed(2)})`, 'info');
+          generateAndDrawRedKLineChart();
+        }
+      }, 1000);
+    }
+
+    function generateAndDrawRedKLineChart() {
+      // 8 月份每日應勤時數 (對照 115 年 8 月份機動人員執勤表 賴鯤仲: G12 到 AK12)
+      const dailyDutyMap = [
+        12, 12, 12, 12, 17.5, 12, 0, 24, 24, 12, 
+        0, 12, 0, 24, 24, 12, 0, 12, 12, 24, 
+        12, 0, 12, 24, 12, 12, 12, 0, 12, 0, 0
+      ];
+
+      const ratePerMinute = 1700 / (12 * 60); // 2.361111 元/分鐘
+      
+      let currentAsset = minuteAssetBonus;
+      let totalAccumulatedMinutes = 0;
+      globalDailyKLines = [];
+
+      for (let day = 0; day < 31; day++) {
+        const open = currentAsset;
+        const hoursWorked = dailyDutyMap[day] || 0;
+        const minutesWorked = hoursWorked * 60;
+        totalAccumulatedMinutes += minutesWorked;
+
+        const earned = minutesWorked * ratePerMinute;
+        const close = open + earned;
+        const high = close;
+        const low = open;
+
+        currentAsset = close;
+
+        globalDailyKLines.push({
+          day: day + 1,
+          open: open,
+          high: high,
+          low: low,
+          close: close,
+          earned: earned,
+          hoursWorked: hoursWorked,
+          minutesWorked: minutesWorked,
+          totalAccumulatedMinutes: totalAccumulatedMinutes
+        });
+      }
+
+      const liveAssetEl = document.getElementById('liveCumulativeAssetDisplay');
+      if (liveAssetEl) liveAssetEl.textContent = `$${Math.round(currentAsset).toLocaleString()} 元`;
+
+      drawRedKLineChart('redKLineCanvas', globalDailyKLines);
+      setupKLineHoverInspector('redKLineCanvas', globalDailyKLines);
+    }
+
+    function drawRedKLineChart(canvasId, dailyKLines) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // 暗色專業金融背景
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, width, height);
+
+      const padding = { top: 25, right: 55, bottom: 30, left: 15 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+
+      const maxVal = Math.max(...dailyKLines.map(k => k.high), 55000);
+      const minVal = 0;
+
+      // 網格線 (Horizontal Grid)
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+
+      const gridRows = 5;
+      ctx.font = '10px monospace';
+      ctx.fillStyle = '#64748b';
+      ctx.textAlign = 'left';
+
+      for (let i = 0; i <= gridRows; i++) {
+        const y = padding.top + (chartHeight / gridRows) * i;
+        const val = maxVal - (maxVal / gridRows) * i;
+
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+
+        ctx.fillText(`$${Math.round(val).toLocaleString()}`, width - padding.right + 6, y + 3);
+      }
+
+      // 繪製 31 根紅色 K 線棒 (Red Candlesticks)
+      const numDays = dailyKLines.length;
+      const candleWidth = Math.max(3, (chartWidth / numDays) * 0.6);
+      const slotWidth = chartWidth / numDays;
+
+      dailyKLines.forEach((k, i) => {
+        const x = padding.left + i * slotWidth + slotWidth / 2;
+
+        const yOpen = padding.top + chartHeight * (1 - (k.open - minVal) / (maxVal - minVal));
+        const yClose = padding.top + chartHeight * (1 - (k.close - minVal) / (maxVal - minVal));
+        const yHigh = padding.top + chartHeight * (1 - (k.high - minVal) / (maxVal - minVal));
+        const yLow = padding.top + chartHeight * (1 - (k.low - minVal) / (maxVal - minVal));
+
+        const color = '#ef4444'; // 鮮紅金融 K 線色
+
+        // K 棒影線 (Wick)
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, yHigh);
+        ctx.lineTo(x, yLow);
+        ctx.stroke();
+
+        // K 棒實體 (Body)
+        ctx.fillStyle = color;
+        const topY = Math.min(yOpen, yClose);
+        const bodyHeight = Math.max(2, Math.abs(yClose - yOpen));
+
+        ctx.fillRect(x - candleWidth / 2, topY, candleWidth, bodyHeight);
+
+        // 標記日期 (每 3 天標示一次)
+        if ((i + 1) % 3 === 1 || i === numDays - 1) {
+          ctx.fillStyle = '#94a3b8';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${i + 1}`, x, height - padding.bottom + 14);
+        }
+      });
+
+      // 疊加資產累積走勢金黃色折線 (Golden Asset Curve Overlay)
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      dailyKLines.forEach((k, i) => {
+        const x = padding.left + i * slotWidth + slotWidth / 2;
+        const y = padding.top + chartHeight * (1 - (k.close - minVal) / (maxVal - minVal));
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    function setupKLineHoverInspector(canvasId, klines) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || canvas.dataset.hoverBound) return;
+      canvas.dataset.hoverBound = "true";
+
+      const handleMove = (evt) => {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+        const xPos = clientX - rect.left;
+
+        const paddingLeft = 15;
+        const paddingRight = 55;
+        const chartWidth = rect.width - paddingLeft - paddingRight;
+        const slotWidth = chartWidth / klines.length;
+
+        let index = Math.floor((xPos - paddingLeft) / slotWidth);
+        if (index < 0) index = 0;
+        if (index >= klines.length) index = klines.length - 1;
+
+        const item = klines[index];
+        const detailEl = document.getElementById('klineTooltipDetail');
+        if (detailEl && item) {
+          detailEl.innerHTML = `📅 8月${item.day}日 ｜ 執勤 ${item.minutesWorked} 分 (${item.hoursWorked}h) ｜ 累積 ${item.totalAccumulatedMinutes.toLocaleString()} 分鐘 ｜ 收盤資產: <span class="text-amber-300">$${Math.round(item.close).toLocaleString()} 元</span>`;
+        }
+      };
+
+      canvas.addEventListener('mousemove', handleMove);
+      canvas.addEventListener('touchmove', handleMove);
+    }
+
+    // 👑 管理者專屬金庫 ｜ 個人當月獨立收入與排班資產統計 (需主管密碼驗證)
+    function openAdminVaultModal() {
+      if (!isUnlocked) {
         showToast('🔒「管理者金庫」包含敏感資產統計，請先輸入主管密碼驗證！', 'warning');
         openAdminAuthModal();
         return;
@@ -1241,9 +1448,15 @@
       const modal = document.getElementById('adminVaultModal');
       if (modal) modal.style.display = 'flex';
       renderAdminVaultView();
+      startHeartbeatClock();
+      setTimeout(() => generateAndDrawRedKLineChart(), 150);
     }
 
     function closeAdminVaultModal() {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+      }
       const modal = document.getElementById('adminVaultModal');
       if (modal) modal.style.display = 'none';
     }
@@ -1598,6 +1811,65 @@
                 <i class="fa-solid fa-rotate-left"></i>
                 <span>自動連動班表時數</span>
               </button>
+            </div>
+          </div>
+          <!-- 📈 115年8月份資產收益紅色 K 線圖 (自帶 1 分鐘心跳時鐘 ｜ x=30 收入曲線 ｜ 每分鐘收入總合) -->
+          <div class="bg-slate-950 border border-rose-600/60 rounded-2xl p-4 space-y-3 shadow-2xl relative overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="text-xs font-black text-rose-400 flex items-center gap-2">
+                <i class="fa-solid fa-chart-candlestick text-rose-500 text-sm animate-pulse"></i>
+                <span>📈 8月份資產收益紅色 K 線圖</span>
+                <span class="text-[10px] text-slate-400 font-mono font-normal">(x=30 收入曲線 ｜ 精度至分)</span>
+              </div>
+              
+              <!-- 💓 1 分鐘心跳脈搏時鐘 -->
+              <div class="flex items-center gap-2 bg-rose-950/80 border border-rose-600/80 px-3 py-1 rounded-full text-xs font-mono shadow-md">
+                <span class="flex items-center gap-1 text-rose-300 font-bold">
+                  <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                  <span>💓 1分心跳:</span>
+                  <span id="heartbeatCountdown" class="text-amber-300 font-black">60秒</span>
+                </span>
+                <span class="text-slate-500">|</span>
+                <span class="text-emerald-300 font-bold">+2.361元/分</span>
+              </div>
+            </div>
+
+            <!-- 動態懸停提示資訊欄 (Hover Tooltip Inspector) -->
+            <div id="klineHoverTooltip" class="bg-slate-900/90 border border-rose-500/50 rounded-xl p-2 text-xs font-mono flex items-center justify-between text-slate-200 shadow-inner">
+              <span class="text-slate-400 flex items-center gap-1">
+                <i class="fa-solid fa-hand-pointer text-amber-400 text-[11px]"></i>
+                <span>懸停或滑動 K 線觀測每分鐘收入總合：</span>
+              </span>
+              <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 21,240 分鐘 ｜ 總收入 $50,150 元</span>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="w-full h-56 bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden cursor-crosshair">
+              <canvas id="redKLineCanvas" class="w-full h-full block"></canvas>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-slate-300 pt-1">
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-slate-400">當月應勤總分鐘</div>
+                <div class="font-black text-amber-300 text-xs">21,240 分鐘</div>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-slate-400">標準班次日薪</div>
+                <div class="font-black text-emerald-400 text-xs">$1,700 元/12h</div>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-slate-400">1分鐘心跳算力</div>
+                <div id="liveMinuteRateDisplay" class="font-black text-rose-400 text-xs">$2.361 元/分</div>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-slate-400">當月每分鐘累積總合</div>
+                <div id="liveCumulativeAssetDisplay" class="font-black text-yellow-300 text-xs">$50,150 元</div>
+              </div>
+            </div>
+
+            <div class="text-[10px] text-slate-400 flex items-center justify-between">
+              <span>💓 1分鐘脈搏心跳時鐘每 60 秒自動結算 +$2.36 元即時收益</span>
+              <span>💡 紅色 K 棒：每日資產開盤/最高/最低/收盤價 ｜ 金色線：動態累積走勢</span>
             </div>
           </div>
 
