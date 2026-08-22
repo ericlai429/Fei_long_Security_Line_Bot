@@ -1193,45 +1193,28 @@
               class="h-9 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer"
             >
               <i class="fa-solid fa-print text-xs"></i>
-         let managerName = localStorage.getItem('feilong_vault_my_name') || '賴鯤仲';
-      const cleanManager = cleanPersonName(managerName);
+              <span>列印資產報表</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
 
-      const shiftDedupe = new Set();
+    function updateAssetRates(targetName, totalDay, totalNight) {
+      const dayInput = document.getElementById('vaultDayRateInput');
+      const nightInput = document.getElementById('vaultNightRateInput');
+      
+      const newDayRate = dayInput ? parseInt(dayInput.value, 10) || 1700 : 1700;
+      const newNightRate = nightInput ? parseInt(nightInput.value, 10) || 1700 : 1700;
 
-      datasets.forEach(dataObj => {
-        if (!dataObj) return;
-        Object.keys(dataObj).forEach(tabKey => {
-          const tabData = dataObj[tabKey];
-          if (!tabData || !tabData.rows || !Array.isArray(tabData.rows)) return;
+      localStorage.setItem('feilong_day_rate', newDayRate);
+      localStorage.setItem('feilong_night_rate', newNightRate);
 
-          tabData.rows.forEach(r => {
-            const dateStr = r['日期'] || '';
-            const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
-            const dayVal = r['早班 (07-19)'] || '';
-            const nightVal = r['晚班 (19-07)'] || '';
-
-            const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
-
-            if (dayVal.trim() && (matchGuardInCell(cleanManager, dayVal) || matchGuardInCell('賴鯤仲', dayVal) || matchGuardInCell('周有輝', dayVal))) {
-              const dKey = `${dateStr}_DAY_${postName}`;
-              if (!shiftDedupe.has(dKey)) {
-                shiftDedupe.add(dKey);
-                tsghDayCount++;
-              }
-            }
-
-            if (nightVal.trim() && !isGreenT5 && !nightVal.includes('T5')) {
-              if (matchGuardInCell(cleanManager, nightVal) || matchGuardInCell('賴鯤仲', nightVal) || matchGuardInCell('周有輝', nightVal)) {
-                const nKey = `${dateStr}_NIGHT_${postName}`;
-                if (!shiftDedupe.has(nKey)) {
-                  shiftDedupe.add(nKey);
-                  tsghNightCount++;
-                }
-              }
-            }
-          });
-        });
-      });
+      playCoinDropSound();
+      triggerCoinRain();
+      renderAssetAccumulationView(targetName, totalDay, totalNight);
+      showToast('💰 資產單價已更新試算！', 'success');
+    }
 
     // 📈 8月份資產收益紅色 K 線圖 繪製引擎 (x=30 收入曲線，自帶 1 分鐘心跳時鐘與動態觀測)
     let heartbeatInterval = null;
