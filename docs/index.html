@@ -1278,6 +1278,7 @@
       let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
       let nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
       let greenT5Rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1700', 10);
+      let mobileSupportRate = parseInt(localStorage.getItem('admin_mobile_support_rate') || '1800', 10);
 
       let hours = 0;
       let earned = 0;
@@ -1292,6 +1293,7 @@
       const shiftDedupe = new Set();
       let hasDayShift = false;
       let hasNightShift = false;
+      let isMobileSupport = false;
 
       datasets.forEach(dataObj => {
         if (!dataObj) return;
@@ -1304,6 +1306,7 @@
               const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
               const dayVal = r['早班 (07-19)'] || '';
               const nightVal = r['晚班 (19-07)'] || '';
+              const supportVal = r['機動支援'] || r['機動'] || r['支援'] || '';
               const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
 
               if (dayVal.trim() && (matchGuardInCell(cleanManager, dayVal) || matchGuardInCell('賴鯤仲', dayVal))) {
@@ -1326,6 +1329,15 @@
                   }
                 }
               }
+              if (supportVal.trim() && (matchGuardInCell(cleanManager, supportVal) || matchGuardInCell('賴鯤仲', supportVal))) {
+                const key = `SUPPORT_${dateNum}_${postName}`;
+                if (!shiftDedupe.has(key)) {
+                  shiftDedupe.add(key);
+                  hours += 12;
+                  earned += mobileSupportRate;
+                  isMobileSupport = true;
+                }
+              }
             }
           });
         });
@@ -1344,7 +1356,24 @@
         }
       }
 
-      return { hours, earned, hasDayShift, hasNightShift };
+      // 🛵 機動支援哨指定日期 ($1,800)
+      let mobileSupportDatesStr = localStorage.getItem('admin_mobile_support_dates');
+      if (mobileSupportDatesStr === null || mobileSupportDatesStr === '1,7,11,17,21' || mobileSupportDatesStr === '1,7,12,17,21') {
+        mobileSupportDatesStr = '1,7,12,19,21';
+        localStorage.setItem('admin_mobile_support_dates', mobileSupportDatesStr);
+      }
+      const mobileSupportDatesList = mobileSupportDatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+      if (mobileSupportDatesList.includes(dateNum)) {
+        const key = `MOBILE_SUPPORT_${dateNum}`;
+        if (!shiftDedupe.has(key)) {
+          shiftDedupe.add(key);
+          hours += 12;
+          earned += mobileSupportRate;
+          isMobileSupport = true;
+        }
+      }
+
+      return { hours, earned, hasDayShift, hasNightShift, isMobileSupport };
     }
 
     function generateAndDrawRedKLineChart() {
@@ -1377,7 +1406,8 @@
           minutesWorked: minutesWorked,
           totalAccumulatedMinutes: totalAccumulatedMinutes,
           hasDayShift: shiftInfo.hasDayShift,
-          hasNightShift: shiftInfo.hasNightShift
+          hasNightShift: shiftInfo.hasNightShift,
+          isMobileSupport: shiftInfo.isMobileSupport
         });
       }
 
@@ -1725,6 +1755,36 @@
       generateAndDrawRedKLineChart();
 
       const newInputEl = document.getElementById('t5GreenDatesInput');
+      if (newInputEl && cursorStart !== null) {
+        newInputEl.focus();
+        newInputEl.setSelectionRange(cursorStart, cursorEnd);
+      }
+    }
+
+    function resetDefaultMobileSupportDates() {
+      const defaultStr = '1,7,12,19,21';
+      localStorage.setItem('admin_mobile_support_dates', defaultStr);
+      localStorage.setItem('admin_mobile_support_count', 5);
+      playCoinDropSound();
+      triggerCoinRain();
+      renderAdminVaultView();
+      generateAndDrawRedKLineChart();
+      showToast('🛵 已還原 8 月機動支援預設日期 (1,7,12,19,21)', 'success');
+    }
+
+    function updateMobileSupportDatesRecord(datesStr) {
+      localStorage.setItem('admin_mobile_support_dates', datesStr);
+      const count = parseDatesCount(datesStr);
+      localStorage.setItem('admin_mobile_support_count', count);
+
+      const inputEl = document.getElementById('mobileSupportDatesInput');
+      const cursorStart = inputEl ? inputEl.selectionStart : null;
+      const cursorEnd = inputEl ? inputEl.selectionEnd : null;
+
+      renderAdminVaultView();
+      generateAndDrawRedKLineChart();
+
+      const newInputEl = document.getElementById('mobileSupportDatesInput');
       if (newInputEl && cursorStart !== null) {
         newInputEl.focus();
         newInputEl.setSelectionRange(cursorStart, cursorEnd);
@@ -2255,7 +2315,13 @@
       localStorage.setItem('admin_salary_audit_hours', auditTotalHours);
       let auditDaysResult = (auditTotalHours / 12).toFixed(1);
 
-      let mobileSupportCount = parseInt(localStorage.getItem('admin_mobile_support_count') || '5', 10);
+      let mobileSupportDatesStr = localStorage.getItem('admin_mobile_support_dates');
+      if (mobileSupportDatesStr === null || mobileSupportDatesStr === '1,7,11,17,21' || mobileSupportDatesStr === '1,7,12,17,21') {
+        mobileSupportDatesStr = '1,7,12,19,21';
+        localStorage.setItem('admin_mobile_support_dates', mobileSupportDatesStr);
+      }
+      let mobileSupportCount = parseDatesCount(mobileSupportDatesStr);
+      localStorage.setItem('admin_mobile_support_count', mobileSupportCount);
       let mobileSupportRate = parseInt(localStorage.getItem('admin_mobile_support_rate') || '1800', 10);
       const mobileSupportTotal = mobileSupportCount * mobileSupportRate;
 
@@ -2508,6 +2574,34 @@
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1">
               <span>💡 8月紀錄範例: 3,6,13,17,22,24,29 (以逗號區隔)</span>
               <span id="t5GreenHintTotalDisplay" class="font-mono text-emerald-300 font-bold">共 $${greenT5Total.toLocaleString()} 元</span>
+            </div>
+          </div>
+
+          <!-- 🛵 機動支援執勤日期紀錄 -->
+          <div class="bg-gradient-to-r from-amber-950/90 via-slate-950 to-amber-950/90 border border-amber-600/80 rounded-2xl p-3.5 space-y-2 shadow-lg">
+            <div class="flex items-center justify-between">
+              <div class="text-xs font-extrabold text-amber-300 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>🛵 機動支援執勤日期紀錄</span>
+              </div>
+              <div class="text-xs font-mono font-black text-amber-300 bg-amber-950 border border-amber-700 px-2.5 py-0.5 rounded-full shadow-inner">
+                小計 <span id="mobileSupportDaysSubtotal" class="text-amber-300 text-sm font-black">${mobileSupportCount}</span> 班
+              </div>
+            </div>
+
+            <div class="pt-0.5">
+              <input 
+                type="text" 
+                id="mobileSupportDatesInput" 
+                value="${mobileSupportDatesStr}" 
+                placeholder="請輸入日期，例如: 1,7,12,19,21" 
+                oninput="updateMobileSupportDatesRecord(this.value)"
+                class="w-full h-9 bg-slate-900 border border-amber-700/80 rounded-xl px-3 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400 placeholder-slate-600 shadow-inner"
+              >
+            </div>
+            <div class="text-[11px] text-slate-400 flex items-center justify-between px-1">
+              <span>💡 8月紀錄範例: 1,7,12,19,21 (以逗號區隔)</span>
+              <span id="mobileSupportHintTotalDisplay" class="font-mono text-amber-300 font-bold">共 $${mobileSupportTotal.toLocaleString()} 元</span>
             </div>
           </div>
 

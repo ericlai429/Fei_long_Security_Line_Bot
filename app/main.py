@@ -492,6 +492,7 @@ def get_live_schedule(
             detail="🔒 權限限制：下個月份 (115.09 預排) 僅限 Admin 管理員解鎖查看！"
         )
 
+    group = admin_service.get_group_by_id(group_id) or {}
     target_tab = tab or group.get("sheet_tab", "三總保全內部群")
     schedule = sheets_service.get_parsed_schedule(target_tab, year=req_year, month=req_month)
 
