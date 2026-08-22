@@ -86,6 +86,16 @@
       border: 2px solid #ff0055;
       animation: rainbowGlowLoop 3.2s linear infinite;
     }
+
+    /* 🪙 金幣 3D 原地旋轉動畫 */
+    @keyframes coinSpin3D {
+      0% { transform: rotateY(0deg); }
+      100% { transform: rotateY(360deg); }
+    }
+    .coin-spin-3d {
+      display: inline-block;
+      animation: coinSpin3D 2.5s linear infinite;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
@@ -437,16 +447,16 @@
           <span>登入</span>
         </button>
 
-        <!-- 🌈 管理者金庫按鈕 (主管登入右邊，七色彩虹炫光圈效果) -->
+        <!-- 🌈 管理者金庫按鈕 (皇冠呼吸燈 ＋ 原地 3D 旋轉金幣 ＋ 七色彩虹炫光圈) -->
         <button 
           type="button" 
           id="adminVaultBtn"
           onclick="openAdminVaultModal()" 
           title="👑 管理者金庫 ｜ 個人當月獨立收入與排班資產統計"
-          class="rainbow-glow-btn h-8 px-2.5 sm:px-3 text-white text-xs font-black rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-1 shrink-0 cursor-pointer relative overflow-hidden"
+          class="rainbow-glow-btn h-8 px-2 bg-slate-950 text-white text-xs font-black rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-1 shrink-0 cursor-pointer relative overflow-hidden"
         >
           <i class="fa-solid fa-crown text-xs text-yellow-300 animate-pulse"></i>
-          <span>管理者金庫</span>
+          <i class="fa-solid fa-coins text-xs text-amber-400 coin-spin-3d"></i>
         </button>
 
         <!-- 🔍 查詢按鈕 (緊湊高質感，保證絕不溢出) -->
