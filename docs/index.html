@@ -68,10 +68,10 @@
         <div class="bg-gradient-to-r from-emerald-950/80 to-slate-950 border border-emerald-600/80 rounded-2xl p-3.5 space-y-1.5 shadow-md">
           <div class="flex items-center gap-2 text-emerald-300 font-extrabold text-xs">
             <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
-            <span>👑 最高主管已登入 (保持登入中)</span>
+            <span>👑 最高主管已登入 (Check-in 簽到中)</span>
           </div>
           <p class="text-[11px] text-slate-400 leading-relaxed">
-            此裝置已通過密碼比對驗證，您可隨時直接進入管理後台或查看未遮蔽排班資訊。
+            管理密碼由後台資料庫加密保護。登出將鎖定當前操作會話，密碼安全留存，下次操作請再次 Check-in 簽到。
           </p>
         </div>
 
@@ -97,7 +97,7 @@
             class="w-full h-10 bg-slate-900 hover:bg-rose-950/60 text-rose-400 border border-rose-900/50 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition active:scale-98"
           >
             <i class="fa-solid fa-right-from-bracket text-xs"></i>
-            <span>安全登出 (清除本機密碼記憶)</span>
+            <span>安全登出 (鎖定操作會話)</span>
           </button>
         </div>
       </div>
@@ -579,13 +579,12 @@
 
     function adminLogout() {
       localStorage.removeItem('feilong_admin_unlocked');
-      localStorage.removeItem('feilong_master_pin');
       isUnlocked = false;
       sessionMasterPin = null;
       updateAdminKeyUi(false);
       closeAdminAuthModal();
       fetchFullSchedule(true);
-      showToast('🔒 已安全登出並清除本機密碼記憶', 'info');
+      showToast('🔒 已安全登出！管理會話已鎖定 (後台密碼安全受保護，下次請再次 Check-in 簽到)', 'info');
     }
 
     // 🔒 嚴格登入資料比對 (打錯密碼 100% 阻擋，絕不替換密碼)
