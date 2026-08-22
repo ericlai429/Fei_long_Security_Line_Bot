@@ -214,6 +214,62 @@
     </div>
   </div>
 
+  <!-- 🏦 個人班表金庫 Modal (Personal Schedule Vault) -->
+  <div id="personalVaultModal" style="display: none;" class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-sky-500/80 rounded-3xl max-w-xl w-full p-4 sm:p-6 space-y-4 shadow-2xl relative max-h-[90vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+        <div class="flex items-center gap-2.5 text-white font-bold text-base">
+          <div class="w-9 h-9 rounded-xl bg-sky-950 border border-sky-500 flex items-center justify-center text-sky-400 shadow-md">
+            <i class="fa-solid fa-vault text-sm"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-extrabold text-white leading-tight flex items-center gap-2">
+              <span>個人班表金庫</span>
+              <span class="text-[10px] bg-sky-950 text-sky-300 border border-sky-800 px-2 py-0.5 rounded-full font-bold">個人專屬系統</span>
+            </h2>
+            <p class="text-xs text-slate-400 font-medium">同仁班表快速查詢 ｜ 班次統計 ｜ 執勤對照</p>
+          </div>
+        </div>
+        <button type="button" onclick="closePersonalVaultModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <!-- Guard Selector Bar -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2 shrink-0">
+        <label class="text-xs font-bold text-sky-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-user-check"></i>
+          <span>選擇或切換同仁姓名：</span>
+        </label>
+        <div class="flex gap-2">
+          <select 
+            id="vaultGuardSelect" 
+            onchange="onVaultGuardSelected(this.value)"
+            class="flex-1 h-10 bg-slate-900 border border-sky-700/80 rounded-xl px-3 text-xs font-bold text-white focus:outline-none focus:border-sky-500 font-mono"
+          >
+            <option value="">載入同仁名單中...</option>
+          </select>
+          <button 
+            type="button" 
+            onclick="refreshVaultSchedule()" 
+            class="h-10 px-3.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl transition shadow flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <i class="fa-solid fa-rotate text-xs"></i>
+            <span>即時同步</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic Content Area -->
+      <div id="vaultContentArea" class="flex-1 overflow-y-auto space-y-3.5 pr-1">
+        <!-- Renders personal schedule info dynamically -->
+      </div>
+
+    </div>
+  </div>
+
 
 
   <!-- Main Pure View (Ultra-Clean, Zero-Overflow Responsive Top Navbar) -->
@@ -234,8 +290,19 @@
         </div>
       </div>
 
-      <!-- 右側按鈕群：小鑰匙 ＋ 查詢 (緊湊置中，保證右緣絕對對齊邊界內) -->
+      <!-- 右側按鈕群：金庫 ＋ 小鑰匙 ＋ 查詢 (緊湊置中，保證右緣絕對對齊邊界內) -->
       <div class="flex items-center gap-1.5 shrink-0 pl-1">
+        <!-- 🏦 個人金庫按鈕 (切換至個人班表系統) -->
+        <button 
+          type="button" 
+          id="personalVaultBtn"
+          onclick="openPersonalVaultModal()" 
+          title="🏦 個人金庫 ｜ 切換至個人專屬班表系統"
+          class="w-8 h-8 rounded-xl bg-slate-950 border border-sky-500/80 hover:border-sky-400 text-sky-400 flex items-center justify-center shadow-md active:scale-90 cursor-pointer shrink-0"
+        >
+          <i class="fa-solid fa-vault text-xs"></i>
+        </button>
+
         <!-- 🗝️ 黑色金鑰 -->
         <button 
           type="button" 
@@ -474,6 +541,244 @@
           tag.textContent = '下月預排';
         }
       }
+    }
+
+    // 🏦 個人金庫 (個人專屬班表查詢系統) 邏輯引擎
+    function extractGuardNames() {
+      const names = new Set();
+      const sources = [EMBEDDED_SCHEDULE_DATA_8];
+      if (rawScheduleData && rawScheduleData.rows) {
+        sources.push({ current: rawScheduleData });
+      }
+
+      sources.forEach(source => {
+        if (!source) return;
+        Object.values(source).forEach(tabObj => {
+          if (tabObj && tabObj.members) {
+            tabObj.members.forEach(m => {
+              if (m && m.trim()) names.add(m.trim());
+            });
+          }
+          if (tabObj && tabObj.rows) {
+            tabObj.rows.forEach(r => {
+              ['早班 (07-19)', '晚班 (19-07)'].forEach(col => {
+                const val = r[col];
+                if (val) {
+                  const clean = val.replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?[0-9]{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?/g, '').trim();
+                  if (clean && clean !== '-' && clean !== '—') {
+                    names.add(clean);
+                  }
+                }
+              });
+            });
+          }
+        });
+      });
+
+      return Array.from(names).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+    }
+
+    function openPersonalVaultModal() {
+      const modal = document.getElementById('personalVaultModal');
+      const select = document.getElementById('vaultGuardSelect');
+      
+      const allNames = extractGuardNames();
+      let savedName = localStorage.getItem('feilong_vault_my_name') || '';
+
+      if (select) {
+        select.innerHTML = '<option value="">-- 請選擇同仁姓名 --</option>' + 
+          allNames.map(n => `<option value="${n}" ${n === savedName ? 'selected' : ''}>${n}</option>`).join('');
+      }
+
+      if (!savedName && allNames.length > 0) {
+        savedName = allNames[0];
+        if (select) select.value = savedName;
+      }
+
+      if (modal) modal.style.display = 'flex';
+      renderPersonalVault(savedName);
+    }
+
+    function closePersonalVaultModal() {
+      const modal = document.getElementById('personalVaultModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function onVaultGuardSelected(name) {
+      if (name) {
+        localStorage.setItem('feilong_vault_my_name', name);
+      }
+      renderPersonalVault(name);
+    }
+
+    function refreshVaultSchedule() {
+      const select = document.getElementById('vaultGuardSelect');
+      const name = select ? select.value : '';
+      renderPersonalVault(name);
+      showToast('🎉 個人班表資料已最新同步！', 'success');
+    }
+
+    function renderPersonalVault(targetName) {
+      const container = document.getElementById('vaultContentArea');
+      if (!container) return;
+
+      if (!targetName) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-slate-400 space-y-2">
+            <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-500 flex items-center justify-center mx-auto text-xl">
+              <i class="fa-solid fa-user-gear"></i>
+            </div>
+            <p class="text-xs font-bold">請在上方下拉選單選擇同仁姓名，以載入專屬班表。</p>
+          </div>
+        `;
+        return;
+      }
+
+      let totalDayShifts = 0;
+      let totalNightShifts = 0;
+      const userShifts = [];
+
+      const datasets = [EMBEDDED_SCHEDULE_DATA_8];
+
+      datasets.forEach(dataObj => {
+        if (!dataObj) return;
+        Object.keys(dataObj).forEach(tabKey => {
+          const tabData = dataObj[tabKey];
+          if (!tabData || !tabData.rows) return;
+
+          tabData.rows.forEach(r => {
+            const dateStr = r['日期'] || '';
+            const dayOfWeek = r['星期'] || '';
+            const postName = r['哨點/崗位'] || tabKey;
+
+            const dayVal = r['早班 (07-19)'] || '';
+            const nightVal = r['晚班 (19-07)'] || '';
+
+            if (dayVal.includes(targetName)) {
+              totalDayShifts++;
+              userShifts.push({
+                date: dateStr,
+                weekday: dayOfWeek,
+                shiftType: '早班 (07:00-19:00)',
+                isDay: true,
+                post: postName,
+                raw: dayVal
+              });
+            }
+
+            if (nightVal.includes(targetName)) {
+              totalNightShifts++;
+              userShifts.push({
+                date: dateStr,
+                weekday: dayOfWeek,
+                shiftType: '晚班 (19:00-07:00)',
+                isDay: false,
+                post: postName,
+                raw: nightVal
+              });
+            }
+          });
+        });
+      });
+
+      userShifts.sort((a, b) => a.date.localeCompare(b.date));
+      const totalShifts = totalDayShifts + totalNightShifts;
+
+      let html = `
+        <!-- Stats Header Grid -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-gradient-to-br from-amber-950/60 to-slate-950 border border-amber-500/50 rounded-2xl p-3 text-center space-y-1 shadow-sm">
+            <div class="text-[11px] font-bold text-amber-300 flex items-center justify-center gap-1">
+              <i class="fa-solid fa-sun text-amber-400"></i>
+              <span>早班天數</span>
+            </div>
+            <div class="text-xl font-black text-amber-200 font-mono">${totalDayShifts} <span class="text-xs font-normal">天</span></div>
+          </div>
+          <div class="bg-gradient-to-br from-indigo-950/60 to-slate-950 border border-indigo-500/50 rounded-2xl p-3 text-center space-y-1 shadow-sm">
+            <div class="text-[11px] font-bold text-indigo-300 flex items-center justify-center gap-1">
+              <i class="fa-solid fa-moon text-indigo-400"></i>
+              <span>晚班天數</span>
+            </div>
+            <div class="text-xl font-black text-indigo-200 font-mono">${totalNightShifts} <span class="text-xs font-normal">天</span></div>
+          </div>
+          <div class="bg-gradient-to-br from-emerald-950/60 to-slate-950 border border-emerald-500/50 rounded-2xl p-3 text-center space-y-1 shadow-sm">
+            <div class="text-[11px] font-bold text-emerald-300 flex items-center justify-center gap-1">
+              <i class="fa-solid fa-calendar-check text-emerald-400"></i>
+              <span>當月執勤總數</span>
+            </div>
+            <div class="text-xl font-black text-emerald-200 font-mono">${totalShifts} <span class="text-xs font-normal">天</span></div>
+          </div>
+        </div>
+
+        <!-- Personal Info Banner -->
+        <div class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-2xl p-3 px-4">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-sky-400 animate-pulse"></span>
+            <span class="text-xs text-slate-400">同仁：</span>
+            <span class="text-sm font-black text-sky-300 font-mono">${targetName}</span>
+          </div>
+          <button type="button" onclick="window.print()" class="h-7 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold rounded-lg border border-slate-700 transition flex items-center gap-1 cursor-pointer">
+            <i class="fa-solid fa-print text-[10px]"></i>
+            <span>列印個人班表</span>
+          </button>
+        </div>
+      `;
+
+      if (userShifts.length === 0) {
+        html += `
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-8 text-center text-slate-400 space-y-2">
+            <i class="fa-solid fa-calendar-xmark text-2xl text-slate-600"></i>
+            <p class="text-xs font-bold">當月無「${targetName}」之執勤排班紀錄。</p>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="space-y-2">
+            <div class="text-xs font-bold text-slate-400 flex items-center justify-between px-1">
+              <span>📅 個人執勤排班明細列表 (${userShifts.length} 班次)</span>
+              <span class="text-[10px] text-sky-400 font-mono">115年8月份</span>
+            </div>
+            <div class="divide-y divide-slate-800 border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
+        `;
+
+        userShifts.forEach((s) => {
+          const isWeekend = (s.weekday === '六' || s.weekday === '日');
+          html += `
+            <div class="p-3 flex items-center justify-between hover:bg-slate-900/80 transition">
+              <div class="flex items-center gap-3">
+                <div class="text-center min-w-[50px]">
+                  <div class="text-xs font-mono font-black ${isWeekend ? 'text-rose-400' : 'text-slate-200'}">${s.date.split('/')[2] || s.date}日</div>
+                  <div class="text-[10px] ${isWeekend ? 'text-rose-400 font-bold' : 'text-slate-400'}">週${s.weekday}</div>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.isDay ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-indigo-950 text-indigo-300 border border-indigo-800'}">
+                      ${s.isDay ? '☀️ 早班' : '🌙 晚班'}
+                    </span>
+                    <span class="text-xs font-bold text-white">${s.shiftType}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-400 font-medium mt-0.5 flex items-center gap-1">
+                    <i class="fa-solid fa-location-dot text-[9px] text-sky-400"></i>
+                    <span>${s.post}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] font-mono text-emerald-400 font-bold bg-emerald-950/60 px-2 py-1 rounded-lg border border-emerald-800">
+                  已排定
+                </span>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
     }
 
     // 🗝️ iOS 友善 Admin 彈窗與持久登入保持 (嚴格資料比對保護)
