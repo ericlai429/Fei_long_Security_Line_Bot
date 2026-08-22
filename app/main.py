@@ -566,9 +566,15 @@ def get_master_pin_status():
 async def setup_master_pin(request: Request):
     body = await request.json()
     new_pin = str(body.get("new_pin", "")).strip()
+    old_pin = str(body.get("old_pin", "")).strip()
     admin_email = str(body.get("admin_email", "ericlai429@gmail.com")).strip()
     if not new_pin or len(new_pin) < 3:
-        raise HTTPException(status_code=400, detail="PIN 碼長度至少需 3 位數！")
+        raise HTTPException(status_code=400, detail="新 PIN 碼長度至少需 3 位數！")
+    
+    # 🔒 資安防護：若系統已初始化過 Master PIN，修改時必須嚴格驗證舊 PIN 碼！
+    if db.is_master_pin_initialized():
+        if not old_pin or not db.verify_master_pin_auth(old_pin):
+            raise HTTPException(status_code=403, detail="目前舊密碼驗證失敗！拒絕修改管理員密碼。")
     
     success = db.set_master_pin(new_pin, admin_email=admin_email)
     if not success:
@@ -592,7 +598,12 @@ async def verify_admin_master_pin(request: Request):
         raise HTTPException(status_code=401, detail="Master PIN 碼不正確！")
 
 @app.post("/api/admin/master-pin/reset")
-def reset_admin_master_pin():
+async def reset_admin_master_pin(request: Request):
+    body = await request.json()
+    current_pin = str(body.get("current_pin", "")).strip()
+    if db.is_master_pin_initialized():
+        if not current_pin or not db.verify_master_pin_auth(current_pin):
+            raise HTTPException(status_code=403, detail="目前 PIN 碼驗證失敗，無法重置！")
     db.reset_master_pin()
     return {"status": "success", "message": "Master PIN 碼已成功重置，等待前端首次登入設定！"}
 
