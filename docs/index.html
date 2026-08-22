@@ -828,41 +828,53 @@
       container.innerHTML = html;
     }
 
-    // 🪙 Web Audio API 金幣掉落音效生成器 (多音階金屬金幣撞擊)
+    // 🪙 T_MUD 專案真實金幣音效 (coin.mp3 / coin.m4a) 播放器
+    let coinAudioInstance = null;
+
     function playCoinDropSound() {
+      try {
+        if (!coinAudioInstance) {
+          coinAudioInstance = new Audio('./assets/coin.mp3');
+        }
+        coinAudioInstance.currentTime = 0;
+        const playPromise = coinAudioInstance.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.warn('Audio autoplay blocked, falling back to Web Audio Synth:', err);
+            synthCoinSound();
+          });
+        }
+      } catch(e) {
+        synthCoinSound();
+      }
+    }
+
+    // 🪙 備用合成音效
+    function synthCoinSound() {
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) return;
         const ctx = new AudioContext();
-        
         const coins = [
-          { delay: 0, freq: 1174.66, dur: 0.12 },    // D6
-          { delay: 0.07, freq: 1567.98, dur: 0.15 },  // G6
-          { delay: 0.15, freq: 2093.00, dur: 0.18 },  // C7
-          { delay: 0.24, freq: 2637.02, dur: 0.22 },  // E7
-          { delay: 0.35, freq: 3135.96, dur: 0.25 }   // G7
+          { delay: 0, freq: 1174.66, dur: 0.12 },
+          { delay: 0.07, freq: 1567.98, dur: 0.15 },
+          { delay: 0.15, freq: 2093.00, dur: 0.18 },
+          { delay: 0.24, freq: 2637.02, dur: 0.22 }
         ];
-
         coins.forEach(c => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          
           osc.type = 'sine';
           osc.frequency.setValueAtTime(c.freq, ctx.currentTime + c.delay);
           osc.frequency.exponentialRampToValueAtTime(c.freq * 1.5, ctx.currentTime + c.delay + c.dur);
-          
           gain.gain.setValueAtTime(0.45, ctx.currentTime + c.delay);
           gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + c.delay + c.dur);
-          
           osc.connect(gain);
           gain.connect(ctx.destination);
-          
           osc.start(ctx.currentTime + c.delay);
           osc.stop(ctx.currentTime + c.delay + c.dur);
         });
-      } catch(e) {
-        console.warn('Coin Audio Synth warning:', e);
-      }
+      } catch(e) {}
     }
 
     // 🪙 金幣掉落視覺粒子動畫
@@ -899,8 +911,8 @@
       const container = document.getElementById('vaultContentArea');
       if (!container) return;
 
-      let dayRate = parseInt(localStorage.getItem('feilong_day_rate') || '2100', 10);
-      let nightRate = parseInt(localStorage.getItem('feilong_night_rate') || '2300', 10);
+      let dayRate = parseInt(localStorage.getItem('feilong_day_rate') || '1700', 10);
+      let nightRate = parseInt(localStorage.getItem('feilong_night_rate') || '1700', 10);
 
       const dayAsset = totalDay * dayRate;
       const nightAsset = totalNight * nightRate;
@@ -908,20 +920,17 @@
 
       container.innerHTML = `
         <div class="space-y-4 animate-fade-in font-sans">
-          <!-- 🐷 小金豬資產主卡片 -->
+          <!-- 🐷 T_MUD 玻璃金豬資產主卡片 -->
           <div class="bg-gradient-to-br from-amber-950 via-slate-900 to-slate-950 border border-amber-500/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-center space-y-3">
-            <div class="absolute -right-6 -bottom-6 text-9xl opacity-10 pointer-events-none">🐷</div>
             
-            <div class="flex items-center justify-center gap-3">
-              <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 text-2xl shadow-inner animate-bounce">
-                🐷
-              </div>
-              <div class="text-left">
-                <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                  <span>小金豬資產金庫</span>
+            <div class="flex flex-col items-center justify-center space-y-2">
+              <img src="./assets/glass_piggy_bank.png" class="w-24 h-24 sm:w-28 sm:h-28 object-contain animate-bounce filter drop-shadow-[0_0_18px_rgba(245,158,11,0.5)]" alt="T_MUD 玻璃小金豬">
+              <div class="text-center">
+                <div class="text-xs font-bold text-amber-300 flex items-center justify-center gap-1.5">
+                  <span>T_MUD 玻璃金豬金庫</span>
                   <span class="text-[10px] bg-amber-950 text-amber-400 px-2 py-0.5 rounded-full border border-amber-800 font-mono">115年8月份</span>
                 </div>
-                <div class="text-base font-black text-white">${targetName} 當月累計資產</div>
+                <div class="text-base font-black text-white mt-0.5">${targetName} 當月累計資產</div>
               </div>
             </div>
 
@@ -938,10 +947,10 @@
             <div class="flex justify-center gap-2 pt-1">
               <button 
                 type="button" 
-                onclick="playCoinDropSound(); triggerCoinRain(); showToast('🪙 投幣成功！音效已播放', 'success');"
+                onclick="playCoinDropSound(); triggerCoinRain(); showToast('🪙 投幣成功！MP3 音效已播放', 'success');"
                 class="h-8 px-3.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-md transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
               >
-                <span>投幣試算 🪙</span>
+                <span>投幣試算 (播放 MP3 音效) 🪙</span>
               </button>
             </div>
           </div>
@@ -1014,8 +1023,8 @@
       const dayInput = document.getElementById('vaultDayRateInput');
       const nightInput = document.getElementById('vaultNightRateInput');
       
-      const newDayRate = dayInput ? parseInt(dayInput.value, 10) || 2100 : 2100;
-      const newNightRate = nightInput ? parseInt(nightInput.value, 10) || 2300 : 2300;
+      const newDayRate = dayInput ? parseInt(dayInput.value, 10) || 1700 : 1700;
+      const newNightRate = nightInput ? parseInt(nightInput.value, 10) || 1700 : 1700;
 
       localStorage.setItem('feilong_day_rate', newDayRate);
       localStorage.setItem('feilong_night_rate', newNightRate);
