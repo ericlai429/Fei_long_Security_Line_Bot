@@ -2620,8 +2620,19 @@
               </div>
             </div>
 
+            <!-- 🧩 零散班 5.5H 公司計薪進位 6H 提示卡片 -->
+            <div class="bg-amber-950/70 border border-amber-500/60 rounded-xl p-2 flex items-center justify-between text-[11px] text-amber-200 shadow-inner">
+              <div class="flex items-center gap-1.5 font-bold">
+                <i class="fa-solid fa-puzzle-piece text-amber-400"></i>
+                <span>零散班 5.5h 零星小時:</span>
+              </div>
+              <div class="text-[10px] font-mono text-amber-300">
+                不算A/B班 ➔ 實際 <span class="font-bold underline">5.5h</span>，公司計薪小計不注意進位算 <span class="font-black text-emerald-300 bg-amber-900 px-1.5 py-0.5 rounded border border-amber-600">6.0h</span> (+0.5h)
+              </div>
+            </div>
+
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1 pt-0.5 border-t border-slate-900/80">
-              <span>💡 精準公式: 雲端試算表 SUM(G12:AK12) 354h + 外加 T5綠底夜 84h = 438 小時 (對應 36.5 班)</span>
+              <span>💡 精準公式: SUM(G12:AK12) 354h + 外加 T5夜 84h = 438h (含零散班 5.5h 公司進位算 6h)</span>
               <button 
                 type="button" 
                 onclick="recalculateDefaultAuditHours()" 
