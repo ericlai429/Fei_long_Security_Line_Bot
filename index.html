@@ -2114,10 +2114,14 @@
       localStorage.setItem('admin_salary_audit_hours', auditTotalHours);
       let auditDaysResult = (auditTotalHours / 12).toFixed(1);
 
+      let mobileSupportCount = parseInt(localStorage.getItem('admin_mobile_support_count') || '5', 10);
+      let mobileSupportRate = parseInt(localStorage.getItem('admin_mobile_support_rate') || '1800', 10);
+      const mobileSupportTotal = mobileSupportCount * mobileSupportRate;
+
       const tsghDayTotal = tsghDayCount * dayRate;
       const tsghNightTotal = tsghNightCount * nightRate;
       const greenT5Total = greenT5NightCount * greenT5Rate;
-      const grandTotal = tsghDayTotal + tsghNightTotal + greenT5Total;
+      const grandTotal = tsghDayTotal + tsghNightTotal + greenT5Total + mobileSupportTotal;
       const finalCombinedGrandTotal = grandTotal + numCash + numBangBang + numPaiPai + numTuoTuo;
 
       container.innerHTML = `
@@ -2234,8 +2238,8 @@
             </div>
           </div>
 
-          <!-- 三大勤務類別資產明細 (包含 M6 綠色底色 T5 商業大樓) -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <!-- 四大勤務類別資產明細 (包含 M6 綠色底色 T5 商業大樓 ＆ 🛵 機動支援哨) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <!-- 常規早班 -->
             <div class="bg-slate-950 border border-amber-900/60 rounded-2xl p-3 space-y-1.5">
               <div class="flex items-center justify-between text-xs font-bold text-amber-300">
@@ -2248,7 +2252,7 @@
                 <input 
                   type="number" 
                   value="${dayRate}" 
-                  onchange="updateAdminVaultRates(this.value, null, null)"
+                  onchange="updateAdminVaultRates(this.value, null, null, null, null)"
                   class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-amber-300 text-[11px]"
                 >
               </div>
@@ -2266,7 +2270,7 @@
                 <input 
                   type="number" 
                   value="${nightRate}" 
-                  onchange="updateAdminVaultRates(null, this.value, null)"
+                  onchange="updateAdminVaultRates(null, this.value, null, null, null)"
                   class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-indigo-300 text-[11px]"
                 >
               </div>
@@ -2287,8 +2291,37 @@
                 <input 
                   type="number" 
                   value="${greenT5Rate}" 
-                  onchange="updateAdminVaultRates(null, null, this.value)"
+                  onchange="updateAdminVaultRates(null, null, this.value, null, null)"
                   class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-emerald-300 text-[11px]"
+                >
+              </div>
+            </div>
+
+            <!-- 🛵 機動支援哨 (聯合報/福清...) -->
+            <div class="bg-slate-950 border border-purple-800/80 rounded-2xl p-3 space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold text-purple-300">
+                <span class="flex items-center gap-1" title="機動支援據點：例如聯合報 2班 B班 + 福清 2班 夜班 + 東方 1班 夜班 = 5 班">
+                  <i class="fa-solid fa-motorcycle text-purple-400 text-xs"></i>
+                  <span>🛵 機動支援哨</span>
+                </span>
+                <div class="flex items-center gap-1">
+                  <input 
+                    type="number" 
+                    value="${mobileSupportCount}" 
+                    onchange="updateAdminVaultRates(null, null, null, null, this.value)"
+                    class="w-10 h-5 bg-slate-900 border border-purple-700 rounded text-center font-mono text-purple-300 text-[11px] font-bold"
+                  >
+                  <span class="font-mono text-purple-200">班</span>
+                </div>
+              </div>
+              <div class="text-base font-black text-purple-300 font-mono">$${mobileSupportTotal.toLocaleString()}</div>
+              <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
+                <span>單班:</span>
+                <input 
+                  type="number" 
+                  value="${mobileSupportRate}" 
+                  onchange="updateAdminVaultRates(null, null, null, this.value, null)"
+                  class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-purple-300 text-[11px]"
                 >
               </div>
             </div>
