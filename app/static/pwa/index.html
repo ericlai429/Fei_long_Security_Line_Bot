@@ -1855,113 +1855,168 @@
       }
     }
 
-    const CLOUD_SYNC_API_URL = 'https://api.restful-api.dev/objects/ff8081819ff5b11001a029e0aebb78fe';
+    const GH_RAW_URL  = 'https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/vault_assets.json';
+    const GH_API_URL  = 'https://api.github.com/repos/ericlai429/Fei_long_Security_Line_Bot/contents/docs/vault_assets.json';
 
+    function getGhPat() { return localStorage.getItem('admin_gh_pat') || ''; }
+
+    // 背景自動靜默同步（輸入時 debounce 觸發）
     async function syncManualVaultAssetsToCloud() {
-      const cashVal = parseFloat(localStorage.getItem('admin_vault_cash') || '0') || 0;
-      const bangbangVal = parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0;
-      const paipaiVal = parseFloat(localStorage.getItem('admin_vault_paipai') || '0') || 0;
-      const tuotuoVal = parseFloat(localStorage.getItem('admin_vault_tuotuo') || '0') || 0;
-
-      const payload = {
-        name: 'feilong_vault_assets',
-        data: {
-          cash: cashVal,
-          bangbang: bangbangVal,
-          paipai: paipaiVal,
-          tuotuo: tuotuoVal,
-          updated_at: new Date().toISOString()
-        }
-      };
-
-      try {
-        await fetch(CLOUD_SYNC_API_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } catch(e) {}
+      const pat = getGhPat();
+      if (!pat) return; // 沒有 token 就靜默跳過，不干擾輸入
+      await _ghWriteVaultAssets(pat, false);
     }
 
+    // 按鈕：☁️ 讀取雲端 — 從 GitHub raw 讀回數值
     async function fetchCloudVaultAssets(showToastNotice = false) {
       try {
-        const res = await fetch(CLOUD_SYNC_API_URL, { cache: 'no-store' });
-        if (!res.ok) throw new Error('cloud fetch failed');
-        const json = await res.json();
-        const data = json.data || json;
+        const res = await fetch(GH_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
 
-        if (data && (data.cash !== undefined || data.bangbang !== undefined)) {
-          const c = parseFloat(data.cash) || 0;
-          const b = parseFloat(data.bangbang) || 0;
-          const p = parseFloat(data.paipai) || 0;
-          const t = parseFloat(data.tuotuo) || 0;
+        const c = parseFloat(data.cash)    || 0;
+        const b = parseFloat(data.bangbang) || 0;
+        const p = parseFloat(data.paipai)  || 0;
+        const t = parseFloat(data.tuotuo)  || 0;
 
-          localStorage.setItem('admin_vault_cash', c);
-          localStorage.setItem('admin_vault_bangbang', b);
-          localStorage.setItem('admin_vault_paipai', p);
-          localStorage.setItem('admin_vault_tuotuo', t);
+        localStorage.setItem('admin_vault_cash',     c);
+        localStorage.setItem('admin_vault_bangbang', b);
+        localStorage.setItem('admin_vault_paipai',   p);
+        localStorage.setItem('admin_vault_tuotuo',   t);
 
-          const inCash = document.getElementById('manualCashInput');
-          const inBang = document.getElementById('manualBangBangInput');
-          const inPai = document.getElementById('manualPaiPaiInput');
-          const inTuo = document.getElementById('manualTuoTuoInput');
+        const inCash = document.getElementById('manualCashInput');
+        const inBang = document.getElementById('manualBangBangInput');
+        const inPai  = document.getElementById('manualPaiPaiInput');
+        const inTuo  = document.getElementById('manualTuoTuoInput');
+        if (inCash) inCash.value = c ? c.toLocaleString('en-US') : '';
+        if (inBang) inBang.value = b ? b.toLocaleString('en-US') : '';
+        if (inPai)  inPai.value  = p ? p.toLocaleString('en-US') : '';
+        if (inTuo)  inTuo.value  = t ? t.toLocaleString('en-US') : '';
 
-          if (inCash) inCash.value = c ? c.toLocaleString('en-US') : '';
-          if (inBang) inBang.value = b ? b.toLocaleString('en-US') : '';
-          if (inPai) inPai.value = p ? p.toLocaleString('en-US') : '';
-          if (inTuo) inTuo.value = t ? t.toLocaleString('en-US') : '';
+        updateManualVaultAssets(false);
 
-          updateManualVaultAssets(false);
-
-          if (showToastNotice) {
-            playCoinDropSound();
-            triggerCoinRain();
-            showToast(`☁️ 已成功從雲端同步最新資產！(現金:$${c.toLocaleString()}, 邦邦:$${b.toLocaleString()})`, 'success');
-          }
-        } else if (showToastNotice) {
-          showToast('☁️ 目前雲端無最新同步紀錄', 'info');
+        if (showToastNotice) {
+          playCoinDropSound();
+          triggerCoinRain();
+          const ts = data.updated_at ? new Date(data.updated_at).toLocaleString('zh-TW') : '';
+          showToast(`☁️ 已從 GitHub 讀取最新資產！現金:$${c.toLocaleString()} 邦邦:$${b.toLocaleString()}${ts ? ' (' + ts + ')' : ''}`, 'success');
         }
       } catch(e) {
-        if (showToastNotice) showToast('❌ 讀取雲端失敗，請確認網路連線', 'error');
+        if (showToastNotice) showToast(`❌ 讀取失敗 (${e.message})，請確認網路`, 'error');
       }
     }
 
+    // 按鈕：💾 儲存至 GitHub — 用 PAT 呼叫 GitHub Contents API
     async function saveAndSyncManualVaultAssets() {
       updateManualVaultAssets(false);
+      let pat = getGhPat();
+      if (!pat) {
+        openGhPatModal();
+        return;
+      }
+      await _ghWriteVaultAssets(pat, true);
+    }
 
-      const cashVal = parseFloat(localStorage.getItem('admin_vault_cash') || '0') || 0;
-      const bangbangVal = parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0;
-      const paipaiVal = parseFloat(localStorage.getItem('admin_vault_paipai') || '0') || 0;
-      const tuotuoVal = parseFloat(localStorage.getItem('admin_vault_tuotuo') || '0') || 0;
-
+    // 共用寫入邏輯
+    async function _ghWriteVaultAssets(pat, showResult) {
       const payload = {
-        name: 'feilong_vault_assets',
-        data: {
-          cash: cashVal,
-          bangbang: bangbangVal,
-          paipai: paipaiVal,
-          tuotuo: tuotuoVal,
-          updated_at: new Date().toISOString()
-        }
+        cash:       parseFloat(localStorage.getItem('admin_vault_cash')     || '0') || 0,
+        bangbang:   parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0,
+        paipai:     parseFloat(localStorage.getItem('admin_vault_paipai')   || '0') || 0,
+        tuotuo:     parseFloat(localStorage.getItem('admin_vault_tuotuo')   || '0') || 0,
+        updated_at: new Date().toISOString()
       };
 
       try {
-        const res = await fetch(CLOUD_SYNC_API_URL, {
+        // Step 1: 取得目前 SHA（GitHub API 更新必要）
+        const metaRes = await fetch(GH_API_URL, {
+          headers: { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (metaRes.status === 401) {
+          localStorage.removeItem('admin_gh_pat');
+          if (showResult) showToast('❌ Token 無效或過期，請重新設定', 'error');
+          return;
+        }
+        const meta = await metaRes.json();
+
+        // Step 2: PUT 更新檔案
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+        const putRes = await fetch(GH_API_URL, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          headers: {
+            'Authorization': `token ${pat}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `vault: ${new Date().toLocaleString('zh-TW')}`,
+            content,
+            sha: meta.sha
+          })
         });
 
-        if (res.ok) {
-          playCoinDropSound();
-          triggerCoinRain();
-          showToast('💾 已成功儲存 4 大資產，並同步推送到雲端！', 'success');
+        if (putRes.ok) {
+          if (showResult) {
+            playCoinDropSound();
+            triggerCoinRain();
+            showToast('💾 已寫入 GitHub！手機按「☁️ 讀取雲端」即可同步', 'success');
+          }
         } else {
-          showToast('⚠️ 已儲存至本地，雲端同步失敗', 'warning');
+          const err = await putRes.json();
+          if (showResult) showToast(`❌ 儲存失敗：${err.message || putRes.status}`, 'error');
         }
       } catch(e) {
-        showToast('⚠️ 已儲存至本地，雲端連線失敗', 'warning');
+        if (showResult) showToast('❌ 網路錯誤，無法連接 GitHub', 'error');
       }
+    }
+
+    // PAT 設定彈窗（取代 prompt() — 使用好看的 UI 輸入框）
+    function openGhPatModal() {
+      const ex = document.getElementById('ghPatModal');
+      if (ex) ex.remove();
+      const m = document.createElement('div');
+      m.id = 'ghPatModal';
+      m.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-sm px-4';
+      m.innerHTML = `
+        <div class="bg-slate-900 border border-amber-500/70 rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4">
+          <div class="text-center">
+            <div class="text-2xl mb-1">🔑</div>
+            <h3 class="text-amber-300 font-black text-sm">一次性設定 GitHub Token</h3>
+            <p class="text-slate-400 text-[11px] mt-1">只需輸入一次，瀏覽器自動記住，之後一鍵儲存</p>
+          </div>
+          <div class="bg-slate-800 rounded-2xl p-3 text-[11px] text-slate-300 space-y-1">
+            <p class="font-bold text-amber-200">📋 建立步驟（約 1 分鐘）：</p>
+            <p>1. 打開：<a href="https://github.com/settings/tokens" target="_blank" class="text-sky-400 underline">github.com/settings/tokens</a></p>
+            <p>2. 點 <span class="text-white font-bold">Generate new token (classic)</span></p>
+            <p>3. 勾選 <span class="text-emerald-300 font-bold">repo</span> 權限</p>
+            <p>4. 複製 token 貼到下方</p>
+          </div>
+          <input
+            id="ghPatInput"
+            type="password"
+            placeholder="ghp_xxxxxxxxxxxxxxxx"
+            class="w-full h-10 bg-slate-950 border border-amber-600/70 rounded-xl px-3 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-400 placeholder-slate-600"
+          >
+          <div class="flex gap-2">
+            <button onclick="document.getElementById('ghPatModal').remove()"
+              class="flex-1 h-10 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer transition">
+              取消
+            </button>
+            <button onclick="
+              const v = document.getElementById('ghPatInput').value.trim();
+              if (!v) return;
+              localStorage.setItem('admin_gh_pat', v);
+              document.getElementById('ghPatModal').remove();
+              saveAndSyncManualVaultAssets();
+            " class="flex-1 h-10 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs cursor-pointer transition active:scale-95">
+              確認並立即儲存
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(m);
+      m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+      setTimeout(() => document.getElementById('ghPatInput')?.focus(), 100);
     }
 
     function showVaultSyncGuideModal() {
@@ -2581,25 +2636,35 @@
                 <span class="text-[10px] text-amber-400/90 font-mono">(會計逗號格式)</span>
               </div>
               
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <button 
                   type="button" 
-                  onclick="showVaultQRCode()" 
-                  class="h-7 px-3 bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 text-white font-black text-[11px] rounded-lg shadow-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
-                  title="產生 QR Code，iPhone 相機一掃 0.001 秒直接帶入金額"
+                  onclick="fetchCloudVaultAssets(true)" 
+                  class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] rounded-lg border border-sky-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                  title="從 GitHub 讀取最新資產金額（NB 與手機共用同一份資料）"
                 >
-                  <i class="fa-solid fa-qrcode text-white"></i>
-                  <span>📱 iPhone 掃碼秒速同步</span>
+                  <i class="fa-solid fa-cloud-arrow-down text-sky-400"></i>
+                  <span>☁️ 讀取雲端</span>
                 </button>
 
                 <button 
                   type="button" 
-                  onclick="copyVaultSyncUrl()" 
-                  class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] rounded-lg border border-sky-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="複製同步網址，傳至 iPhone 點開即可秒速帶入"
+                  onclick="saveAndSyncManualVaultAssets()" 
+                  class="h-7 px-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                  title="點擊儲存 4 大欄位並同步寫入 GitHub"
                 >
-                  <i class="fa-solid fa-copy text-sky-400"></i>
-                  <span>複製網址</span>
+                  <i class="fa-solid fa-floppy-disk text-slate-950"></i>
+                  <span>💾 儲存至雲端</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  onclick="showVaultQRCode()" 
+                  class="h-7 px-2.5 bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 text-white font-black text-[11px] rounded-lg shadow-md flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                  title="產生 QR Code，iPhone 相機一掃 0.001 秒直接帶入金額"
+                >
+                  <i class="fa-solid fa-qrcode text-white"></i>
+                  <span>📱 掃碼</span>
                 </button>
               </div>
             </div>
