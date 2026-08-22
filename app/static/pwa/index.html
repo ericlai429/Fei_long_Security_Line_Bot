@@ -1961,10 +1961,13 @@
       }
     }
 
-    // PAT 設定彈窗（取代 prompt() — 使用好看的 UI 輸入框）
+    // PAT 設定彈窗（帶入已儲存憑證 value="${savedPat}" 以掩碼顯示）
     function openGhPatModal() {
       const ex = document.getElementById('ghPatModal');
       if (ex) ex.remove();
+
+      const savedPat = getGhPat();
+
       const m = document.createElement('div');
       m.id = 'ghPatModal';
       m.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-sm px-4';
@@ -1972,23 +1975,40 @@
         <div class="bg-slate-900 border border-amber-500/70 rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4">
           <div class="text-center">
             <div class="text-2xl mb-1">🔑</div>
-            <h3 class="text-amber-300 font-black text-sm">🔑 永久設定 GitHub Token (只需操作一次)</h3>
-            <p class="text-slate-400 text-[11px] mt-1">只要設定這一次，瀏覽器就會永久記住，以後隨時一鍵儲存！</p>
+            <h3 class="text-amber-300 font-black text-sm">🔑 永久設定 GitHub Token (金鑰設定)</h3>
+            <p class="text-slate-400 text-[11px] mt-1">只要設定這一次，瀏覽器即會永久保存，以後一鍵儲存！</p>
           </div>
-          <div class="bg-slate-800 rounded-2xl p-3 text-[11px] text-slate-300 space-y-1">
-            <p class="font-bold text-amber-200">📋 建立步驟（約 1 分鐘）：</p>
-            <p>1. 打開：<a href="https://github.com/settings/tokens" target="_blank" class="text-sky-400 underline">github.com/settings/tokens</a></p>
-            <p>2. 點 <span class="text-white font-bold">Generate new token (classic)</span></p>
-            <p>3. 勾選 <span class="text-emerald-300 font-bold">repo</span> 權限</p>
-            <p>4. 複製 token 貼到下方</p>
+
+          ${savedPat ? `
+            <div class="bg-emerald-950/80 border border-emerald-500/60 rounded-xl p-2.5 text-center text-xs font-bold text-emerald-300 shadow-inner">
+              <i class="fa-solid fa-circle-check text-emerald-400"></i>
+              <span>瀏覽器目前已永久保存 Token 憑證！</span>
+            </div>
+          ` : `
+            <div class="bg-slate-800 rounded-2xl p-3 text-[11px] text-slate-300 space-y-1">
+              <p class="font-bold text-amber-200">📋 建立步驟（約 1 分鐘）：</p>
+              <p>1. 打開：<a href="https://github.com/settings/tokens" target="_blank" class="text-sky-400 underline">github.com/settings/tokens</a></p>
+              <p>2. 點 <span class="text-white font-bold">Generate new token (classic)</span></p>
+              <p>3. 勾選 <span class="text-emerald-300 font-bold">repo</span> 權限</p>
+              <p>4. 複製 token 貼到下方</p>
+            </div>
+          `}
+
+          <div class="space-y-1">
+            <div class="text-[11px] text-slate-400 font-bold flex justify-between">
+              <span>Token 金鑰憑證:</span>
+              <span class="text-slate-500 font-mono text-[10px]">自動掩碼 (••••••••)</span>
+            </div>
+            <input
+              id="ghPatInput"
+              type="password"
+              value="${savedPat}"
+              placeholder="ghp_xxxxxxxxxxxxxxxx"
+              class="w-full h-10 bg-slate-950 border border-amber-600/70 rounded-xl px-3 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-400 placeholder-slate-600"
+            >
           </div>
-          <input
-            id="ghPatInput"
-            type="password"
-            placeholder="ghp_xxxxxxxxxxxxxxxx"
-            class="w-full h-10 bg-slate-950 border border-amber-600/70 rounded-xl px-3 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-400 placeholder-slate-600"
-          >
-          <div class="flex gap-2">
+
+          <div class="flex gap-2 pt-1">
             <button onclick="document.getElementById('ghPatModal').remove()"
               class="flex-1 h-10 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer transition">
               取消
@@ -2644,6 +2664,16 @@
                 >
                   <i class="fa-solid fa-floppy-disk text-slate-950"></i>
                   <span>💾 儲存至雲端</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  onclick="openGhPatModal()" 
+                  class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                  title="檢視或修改瀏覽器已保存的 GitHub Token 憑證"
+                >
+                  <i class="fa-solid fa-key text-amber-400"></i>
+                  <span>🔑 憑證</span>
                 </button>
               </div>
             </div>
