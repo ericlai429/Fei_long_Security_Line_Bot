@@ -1253,7 +1253,7 @@
     function updateT5GreenDatesRecord(datesStr) {
       localStorage.setItem('admin_t5_green_dates', datesStr);
       const count = parseDatesCount(datesStr);
-      const rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1500', 10);
+      const rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1700', 10);
       const dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
       const nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
 
@@ -1364,7 +1364,7 @@
 
       let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
       let nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
-      let greenT5Rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1500', 10);
+      let greenT5Rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1700', 10);
 
       const totalWorkedDays = tsghDayCount + tsghNightCount + greenT5NightCount;
       const defaultCalculatedHours = totalWorkedDays * 12;
@@ -1453,12 +1453,12 @@
               </div>
             </div>
 
-            <!-- 🟩 T5商業大樓夜班 (綠色底色) -->
+            <!-- 🟩 T5夜班 -->
             <div class="bg-slate-950 border border-emerald-800/80 rounded-2xl p-3 space-y-1.5">
               <div class="flex items-center justify-between text-xs font-bold text-emerald-300">
                 <span class="flex items-center gap-1">
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>🟩 T5夜班(綠底)</span>
+                  <span>🟩 T5夜班</span>
                 </span>
                 <span id="t5GreenCountDisplay" class="font-mono text-emerald-200">${greenT5NightCount} 天</span>
               </div>
@@ -1475,12 +1475,12 @@
             </div>
           </div>
 
-          <!-- 🟩 T5 綠底夜班日期紀錄與天數小計 (M6 欄位) -->
+          <!-- 🟩 T5夜班執勤日期紀錄 (M6 欄位) -->
           <div class="bg-gradient-to-r from-emerald-950/90 to-slate-950 border border-emerald-600/80 rounded-2xl p-3.5 space-y-2 shadow-lg">
             <div class="flex items-center justify-between">
               <div class="text-xs font-extrabold text-emerald-300 flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>🟩 T5 綠底夜班執勤日期紀錄 (M6 欄位)</span>
+                <span>🟩 T5夜班執勤日期紀錄</span>
               </div>
               <div class="text-xs font-mono font-black text-emerald-300 bg-emerald-950 border border-emerald-700 px-2.5 py-0.5 rounded-full shadow-inner">
                 小計 <span id="t5GreenDaysSubtotal" class="text-amber-300 text-sm font-black">${greenT5NightCount}</span> 日
