@@ -1857,6 +1857,32 @@
 
     const CLOUD_SYNC_API_URL = 'https://api.restful-api.dev/objects/ff8081819ff5b11001a029e0aebb78fe';
 
+    async function syncManualVaultAssetsToCloud() {
+      const cashVal = parseFloat(localStorage.getItem('admin_vault_cash') || '0') || 0;
+      const bangbangVal = parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0;
+      const paipaiVal = parseFloat(localStorage.getItem('admin_vault_paipai') || '0') || 0;
+      const tuotuoVal = parseFloat(localStorage.getItem('admin_vault_tuotuo') || '0') || 0;
+
+      const payload = {
+        name: 'feilong_vault_assets',
+        data: {
+          cash: cashVal,
+          bangbang: bangbangVal,
+          paipai: paipaiVal,
+          tuotuo: tuotuoVal,
+          updated_at: new Date().toISOString()
+        }
+      };
+
+      try {
+        await fetch(CLOUD_SYNC_API_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch(e) {}
+    }
+
     async function fetchCloudVaultAssets(showToastNotice = false) {
       try {
         const res = await fetch(CLOUD_SYNC_API_URL, { cache: 'no-store' });
@@ -1865,17 +1891,32 @@
         const data = json.data || json;
 
         if (data && (data.cash !== undefined || data.bangbang !== undefined)) {
-          localStorage.setItem('admin_vault_cash', data.cash || 0);
-          localStorage.setItem('admin_vault_bangbang', data.bangbang || 0);
-          localStorage.setItem('admin_vault_paipai', data.paipai || 0);
-          localStorage.setItem('admin_vault_tuotuo', data.tuotuo || 0);
+          const c = parseFloat(data.cash) || 0;
+          const b = parseFloat(data.bangbang) || 0;
+          const p = parseFloat(data.paipai) || 0;
+          const t = parseFloat(data.tuotuo) || 0;
 
-          renderAdminVaultView();
+          localStorage.setItem('admin_vault_cash', c);
+          localStorage.setItem('admin_vault_bangbang', b);
+          localStorage.setItem('admin_vault_paipai', p);
+          localStorage.setItem('admin_vault_tuotuo', t);
+
+          const inCash = document.getElementById('manualCashInput');
+          const inBang = document.getElementById('manualBangBangInput');
+          const inPai = document.getElementById('manualPaiPaiInput');
+          const inTuo = document.getElementById('manualTuoTuoInput');
+
+          if (inCash) inCash.value = c ? c.toLocaleString('en-US') : '';
+          if (inBang) inBang.value = b ? b.toLocaleString('en-US') : '';
+          if (inPai) inPai.value = p ? p.toLocaleString('en-US') : '';
+          if (inTuo) inTuo.value = t ? t.toLocaleString('en-US') : '';
+
+          updateManualVaultAssets(false);
 
           if (showToastNotice) {
             playCoinDropSound();
             triggerCoinRain();
-            showToast(`☁️ 已成功從雲端同步最新資產！(現金:$${(data.cash||0).toLocaleString()}, 邦邦:$${(data.bangbang||0).toLocaleString()})`, 'success');
+            showToast(`☁️ 已成功從雲端同步最新資產！(現金:$${c.toLocaleString()}, 邦邦:$${b.toLocaleString()})`, 'success');
           }
         } else if (showToastNotice) {
           showToast('☁️ 目前雲端無最新同步紀錄', 'info');
@@ -2612,10 +2653,6 @@
           </div>
         </div>
       `;
-
-      setTimeout(() => {
-        fetchCloudVaultAssets(false);
-      }, 100);
     }
 
     function updateAdminVaultRates(dRate, nRate, gRate, mRate, mCount) {
