@@ -2090,10 +2090,20 @@
         });
       });
 
-      // 預設統計天數
-      if (tsghDayCount === 0 && tsghNightCount === 0) {
+      // 讀取/設定常規夜(B)班數量 (預設 19 班 = 三總夜班 14 班 ＋ 機動支援夜/B班 5 班)
+      let customNightCount = localStorage.getItem('admin_custom_night_count');
+      if (customNightCount !== null) {
+        const parsed = parseInt(customNightCount, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          tsghNightCount = parsed;
+        }
+      } else {
+        tsghNightCount = 19;
+        localStorage.setItem('admin_custom_night_count', 19);
+      }
+
+      if (tsghDayCount === 0) {
         tsghDayCount = 12;
-        tsghNightCount = 10;
       }
 
       let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
@@ -2258,11 +2268,19 @@
               </div>
             </div>
 
-            <!-- 常規晚班 -->
+            <!-- 常規夜(B)班 -->
             <div class="bg-slate-950 border border-indigo-900/60 rounded-2xl p-3 space-y-1.5">
               <div class="flex items-center justify-between text-xs font-bold text-indigo-300">
-                <span>🌙 常規晚班</span>
-                <span id="tsghNightCountVal" data-count="${tsghNightCount}" class="font-mono text-indigo-200">${tsghNightCount} 班</span>
+                <span>🌙 常規夜(B)班</span>
+                <div class="flex items-center gap-1">
+                  <input 
+                    type="number" 
+                    value="${tsghNightCount}" 
+                    onchange="updateAdminVaultShiftCounts(null, this.value)"
+                    class="w-10 h-5 bg-slate-900 border border-indigo-700 rounded text-center font-mono text-indigo-200 text-[11px] font-bold"
+                  >
+                  <span class="font-mono text-indigo-200">班</span>
+                </div>
               </div>
               <div class="text-base font-black text-indigo-300 font-mono">$${tsghNightTotal.toLocaleString()}</div>
               <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
@@ -2575,15 +2593,27 @@
       }, 100);
     }
 
-    function updateAdminVaultRates(dRate, nRate, gRate) {
+    function updateAdminVaultRates(dRate, nRate, gRate, mRate, mCount) {
       if (dRate !== null) localStorage.setItem('admin_day_rate', dRate);
       if (nRate !== null) localStorage.setItem('admin_night_rate', nRate);
       if (gRate !== null) localStorage.setItem('admin_t5_green_rate', gRate);
+      if (mRate !== null) localStorage.setItem('admin_mobile_support_rate', mRate);
+      if (mCount !== null) localStorage.setItem('admin_mobile_support_count', mCount);
 
       playCoinDropSound();
       triggerCoinRain();
       renderAdminVaultView();
-      showToast('💰 管理者單價已更新！', 'success');
+      showToast('💰 單價與機動支援哨數值已即時更新！', 'success');
+    }
+
+    function updateAdminVaultShiftCounts(dayCount, nightCount) {
+      if (dayCount !== null) localStorage.setItem('admin_custom_day_count', dayCount);
+      if (nightCount !== null) localStorage.setItem('admin_custom_night_count', nightCount);
+
+      playCoinDropSound();
+      triggerCoinRain();
+      renderAdminVaultView();
+      showToast('💰 常規夜(B)班數量已更新！', 'success');
     }
 
     // 🎬 100% 純原生 JavaScript GIF 編碼引擎 (零外包依賴 ｜ 支援全平台與離線環境 ｜ 50ms 極速生成)
