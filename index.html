@@ -1678,7 +1678,13 @@
           <!-- 👑 管理者尊爵金庫卡片 -->
           <div class="bg-gradient-to-br from-amber-950 via-slate-900 to-indigo-950 border border-amber-500/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-center space-y-3">
             <div class="flex flex-col items-center justify-center space-y-2">
-              <img src="./assets/glass_piggy_bank.png" class="w-24 h-24 sm:w-28 sm:h-28 object-contain animate-bounce filter drop-shadow-[0_0_22px_rgba(245,158,11,0.7)]" alt="T_MUD 玻璃小金豬">
+              <img 
+                src="./assets/glass_piggy_bank.png" 
+                onclick="playCoinDropSound(); triggerCoinRain(); showToast('🪙 敲響小金豬！T_MUD 金幣滿堂！', 'success');"
+                class="w-24 h-24 sm:w-28 sm:h-28 object-contain animate-bounce cursor-pointer active:scale-90 hover:scale-110 transition-transform filter drop-shadow-[0_0_22px_rgba(245,158,11,0.7)]" 
+                alt="T_MUD 玻璃小金豬 (點擊收聽金幣音效)"
+                title="🪙 點擊敲響小金豬！收聽 T_MUD 金幣敲擊玻璃音效與金幣雨！"
+              >
               <div class="text-center">
                 <div class="text-xs font-bold text-amber-300 flex items-center justify-center gap-1.5">
                   <i class="fa-solid fa-crown text-amber-400"></i>
@@ -1707,6 +1713,66 @@
               >
                 <span>薪資試算 🪙</span>
               </button>
+            </div>
+          </div>
+
+          <!-- 📈 115年8月份資產收益紅色 K 線圖 (置於小金豬正下方 ｜ 自帶 1 分鐘心跳時鐘 ｜ 每分鐘收入總合) -->
+          <div class="bg-slate-950 border border-rose-600/60 rounded-2xl p-4 space-y-3 shadow-2xl relative overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="text-xs font-black text-rose-400 flex items-center gap-2">
+                <i class="fa-solid fa-chart-candlestick text-rose-500 text-sm animate-pulse"></i>
+                <span>📈 8月份資產收益紅色 K 線圖</span>
+                <span class="text-[10px] text-slate-400 font-mono font-normal">(x=30 收入曲線 ｜ 精度至分)</span>
+              </div>
+              
+              <!-- 💓 1 分鐘心跳脈搏時鐘 -->
+              <div class="flex items-center gap-2 bg-rose-950/80 border border-rose-600/80 px-3 py-1 rounded-full text-xs font-mono shadow-md">
+                <span class="flex items-center gap-1 text-rose-300 font-bold">
+                  <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                  <span>💓 1分心跳:</span>
+                  <span id="heartbeatCountdown" class="text-amber-300 font-black">60秒</span>
+                </span>
+                <span class="text-slate-500">|</span>
+                <span class="text-emerald-300 font-bold">+2.361元/分</span>
+              </div>
+            </div>
+
+            <!-- 動態懸停提示資訊欄 (Hover Tooltip Inspector) -->
+            <div id="klineHoverTooltip" class="bg-slate-900/90 border border-rose-500/50 rounded-xl p-2 text-xs font-mono flex items-center justify-between text-slate-200 shadow-inner">
+              <span class="text-slate-400 flex items-center gap-1">
+                <i class="fa-solid fa-hand-pointer text-amber-400 text-[11px]"></i>
+                <span>懸停或滑動 K 線觀測每分鐘收入總合：</span>
+              </span>
+              <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 21,240 分鐘 ｜ 總收入 $50,150 元</span>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="w-full h-56 bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden cursor-crosshair">
+              <canvas id="redKLineCanvas" class="w-full h-full block"></canvas>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-slate-300 pt-1">
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-slate-400">當月應勤總分鐘</div>
+                <div class="font-black text-amber-300 text-xs">21,240 分鐘</div>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-slate-400">標準班次日薪</div>
+                <div class="font-black text-emerald-400 text-xs">$1,700 元/12h</div>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-slate-400">1分鐘心跳算力</div>
+                <div id="liveMinuteRateDisplay" class="font-black text-rose-400 text-xs">$2.361 元/分</div>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div class="text-[9px] text-slate-400">當月每分鐘累積總合</div>
+                <div id="liveCumulativeAssetDisplay" class="font-black text-yellow-300 text-xs">$50,150 元</div>
+              </div>
+            </div>
+
+            <div class="text-[10px] text-slate-400 flex items-center justify-between">
+              <span>💓 1分鐘脈搏心跳時鐘每 60 秒自動結算 +$2.36 元即時收益</span>
+              <span>💡 紅色 K 棒：每日資產開盤/最高/最低/收盤價 ｜ 金色線：動態累積走勢</span>
             </div>
           </div>
 
@@ -1863,65 +1929,6 @@
                 <i class="fa-solid fa-rotate-left"></i>
                 <span>自動連動班表時數</span>
               </button>
-            </div>
-          </div>
-          <!-- 📈 115年8月份資產收益紅色 K 線圖 (自帶 1 分鐘心跳時鐘 ｜ x=30 收入曲線 ｜ 每分鐘收入總合) -->
-          <div class="bg-slate-950 border border-rose-600/60 rounded-2xl p-4 space-y-3 shadow-2xl relative overflow-hidden">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="text-xs font-black text-rose-400 flex items-center gap-2">
-                <i class="fa-solid fa-chart-candlestick text-rose-500 text-sm animate-pulse"></i>
-                <span>📈 8月份資產收益紅色 K 線圖</span>
-                <span class="text-[10px] text-slate-400 font-mono font-normal">(x=30 收入曲線 ｜ 精度至分)</span>
-              </div>
-              
-              <!-- 💓 1 分鐘心跳脈搏時鐘 -->
-              <div class="flex items-center gap-2 bg-rose-950/80 border border-rose-600/80 px-3 py-1 rounded-full text-xs font-mono shadow-md">
-                <span class="flex items-center gap-1 text-rose-300 font-bold">
-                  <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                  <span>💓 1分心跳:</span>
-                  <span id="heartbeatCountdown" class="text-amber-300 font-black">60秒</span>
-                </span>
-                <span class="text-slate-500">|</span>
-                <span class="text-emerald-300 font-bold">+2.361元/分</span>
-              </div>
-            </div>
-
-            <!-- 動態懸停提示資訊欄 (Hover Tooltip Inspector) -->
-            <div id="klineHoverTooltip" class="bg-slate-900/90 border border-rose-500/50 rounded-xl p-2 text-xs font-mono flex items-center justify-between text-slate-200 shadow-inner">
-              <span class="text-slate-400 flex items-center gap-1">
-                <i class="fa-solid fa-hand-pointer text-amber-400 text-[11px]"></i>
-                <span>懸停或滑動 K 線觀測每分鐘收入總合：</span>
-              </span>
-              <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 21,240 分鐘 ｜ 總收入 $50,150 元</span>
-            </div>
-
-            <!-- Canvas Container -->
-            <div class="w-full h-56 bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden cursor-crosshair">
-              <canvas id="redKLineCanvas" class="w-full h-full block"></canvas>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-slate-300 pt-1">
-              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
-                <div class="text-[9px] text-slate-400">當月應勤總分鐘</div>
-                <div class="font-black text-amber-300 text-xs">21,240 分鐘</div>
-              </div>
-              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
-                <div class="text-[9px] text-slate-400">標準班次日薪</div>
-                <div class="font-black text-emerald-400 text-xs">$1,700 元/12h</div>
-              </div>
-              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
-                <div class="text-[9px] text-slate-400">1分鐘心跳算力</div>
-                <div id="liveMinuteRateDisplay" class="font-black text-rose-400 text-xs">$2.361 元/分</div>
-              </div>
-              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
-                <div class="text-[9px] text-slate-400">當月每分鐘累積總合</div>
-                <div id="liveCumulativeAssetDisplay" class="font-black text-yellow-300 text-xs">$50,150 元</div>
-              </div>
-            </div>
-
-            <div class="text-[10px] text-slate-400 flex items-center justify-between">
-              <span>💓 1分鐘脈搏心跳時鐘每 60 秒自動結算 +$2.36 元即時收益</span>
-              <span>💡 紅色 K 棒：每日資產開盤/最高/最低/收盤價 ｜ 金色線：動態累積走勢</span>
             </div>
           </div>
 
