@@ -44,6 +44,48 @@
     .deep-pulse-dot {
       animation: deepBreathingGlow 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
+
+    /* 🌈 七色彩虹炫光圈外發光動畫 */
+    @keyframes rainbowGlowLoop {
+      0% {
+        border-color: #ff0055;
+        box-shadow: 0 0 10px #ff0055, 0 0 18px #ff0055, inset 0 0 5px #ff0055;
+      }
+      14% {
+        border-color: #ff5500;
+        box-shadow: 0 0 10px #ff5500, 0 0 18px #ff5500, inset 0 0 5px #ff5500;
+      }
+      28% {
+        border-color: #ffcc00;
+        box-shadow: 0 0 10px #ffcc00, 0 0 18px #ffcc00, inset 0 0 5px #ffcc00;
+      }
+      42% {
+        border-color: #00ff66;
+        box-shadow: 0 0 10px #00ff66, 0 0 18px #00ff66, inset 0 0 5px #00ff66;
+      }
+      57% {
+        border-color: #00ccff;
+        box-shadow: 0 0 10px #00ccff, 0 0 18px #00ccff, inset 0 0 5px #00ccff;
+      }
+      71% {
+        border-color: #0022ff;
+        box-shadow: 0 0 10px #0022ff, 0 0 18px #0022ff, inset 0 0 5px #0022ff;
+      }
+      85% {
+        border-color: #cc00ff;
+        box-shadow: 0 0 10px #cc00ff, 0 0 18px #cc00ff, inset 0 0 5px #cc00ff;
+      }
+      100% {
+        border-color: #ff0055;
+        box-shadow: 0 0 10px #ff0055, 0 0 18px #ff0055, inset 0 0 5px #ff0055;
+      }
+    }
+
+    .rainbow-glow-btn {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      border: 2px solid #ff0055;
+      animation: rainbowGlowLoop 3.2s linear infinite;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
@@ -270,6 +312,57 @@
     </div>
   </div>
 
+  <!-- 👑 管理者金庫 Modal (Admin/Manager Schedule & Asset Vault) -->
+  <div id="adminVaultModal" style="display: none;" class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-amber-500/80 rounded-3xl max-w-xl w-full p-4 sm:p-6 space-y-4 shadow-2xl relative max-h-[90vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+        <div class="flex items-center gap-2.5 text-white font-bold text-base">
+          <div class="w-9 h-9 rounded-xl bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-400 shadow-md">
+            <i class="fa-solid fa-crown text-sm"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-extrabold text-white leading-tight flex items-center gap-2">
+              <span>管理者專屬金庫</span>
+              <span class="text-[10px] bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded-full font-bold">最高權限獨立統計</span>
+            </h2>
+            <p class="text-xs text-slate-400 font-medium">個人當月班表收入 ｜ 綠色底色(T5商業大樓)加總試算</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAdminVaultModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <!-- Target Sheet Link Bar -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <i class="fa-solid fa-file-csv text-emerald-400 text-base shrink-0"></i>
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-slate-200 truncate">Google 專屬個人班表</div>
+            <div class="text-[10px] text-slate-400 font-mono truncate">GID: 2114846598</div>
+          </div>
+        </div>
+        <a 
+          href="https://docs.google.com/spreadsheets/d/18xBhJ27cfqEtOeIiVsMC50hW-8tthl3jRzB_wD-2PwI/edit?gid=2114846598#gid=2114846598" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="h-8 px-3 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shrink-0"
+        >
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+          <span>開啟原始班表</span>
+        </a>
+      </div>
+
+      <!-- Dynamic Content Area -->
+      <div id="adminVaultContentArea" class="flex-1 overflow-y-auto space-y-3.5 pr-1">
+        <!-- Renders manager asset info dynamically -->
+      </div>
+
+    </div>
+  </div>
+
   <!-- 🪙 T_MUD 專案真實金幣音效播放器 -->
   <audio id="coinAudioPlayer" preload="auto">
     <source src="./assets/coin.m4a" type="audio/mp4">
@@ -320,6 +413,18 @@
         >
           <i class="fa-solid fa-key text-xs text-amber-400"></i>
           <span>登入</span>
+        </button>
+
+        <!-- 🌈 管理者金庫按鈕 (主管登入右邊，七色彩虹炫光圈效果) -->
+        <button 
+          type="button" 
+          id="adminVaultBtn"
+          onclick="openAdminVaultModal()" 
+          title="👑 管理者金庫 ｜ 個人當月獨立收入與排班資產統計"
+          class="rainbow-glow-btn h-8 px-2.5 sm:px-3 text-white text-xs font-black rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-1 shrink-0 cursor-pointer relative overflow-hidden"
+        >
+          <i class="fa-solid fa-crown text-xs text-yellow-300 animate-pulse"></i>
+          <span>管理者金庫</span>
         </button>
 
         <!-- 🔍 查詢按鈕 (緊湊高質感，保證絕不溢出) -->
@@ -1077,6 +1182,209 @@
       triggerCoinRain();
       renderAssetAccumulationView(targetName, totalDay, totalNight);
       showToast('💰 資產單價已更新試算！', 'success');
+    }
+
+    // 👑 管理者專屬金庫 ｜ 個人當月獨立收入與排班資產統計
+    function openAdminVaultModal() {
+      playCoinDropSound();
+      triggerCoinRain();
+      const modal = document.getElementById('adminVaultModal');
+      if (modal) modal.style.display = 'flex';
+      renderAdminVaultView();
+    }
+
+    function closeAdminVaultModal() {
+      const modal = document.getElementById('adminVaultModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function renderAdminVaultView() {
+      const container = document.getElementById('adminVaultContentArea');
+      if (!container) return;
+
+      let tsghDayCount = 0;
+      let tsghNightCount = 0;
+      let greenT5NightCount = 0; // M6 綠色底色 (T5商業大樓夜班 $1500/Day)
+
+      // 掃描動態與靜態班表資料
+      const datasets = [EMBEDDED_SCHEDULE_DATA_8];
+      if (rawScheduleData && rawScheduleData.rows) {
+        datasets.push({ [currentTabName || 'current']: rawScheduleData });
+      }
+
+      datasets.forEach(dataObj => {
+        if (!dataObj) return;
+        Object.keys(dataObj).forEach(tabKey => {
+          const tabData = dataObj[tabKey];
+          if (!tabData || !tabData.rows || !Array.isArray(tabData.rows)) return;
+
+          tabData.rows.forEach(r => {
+            const dateStr = r['日期'] || '';
+            const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
+            const dayVal = r['早班 (07-19)'] || '';
+            const nightVal = r['晚班 (19-07)'] || '';
+
+            const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
+
+            if (dayVal.trim() && (dayVal.includes('管理') || dayVal.includes('張') || matchGuardInCell('周有輝', dayVal))) {
+              tsghDayCount++;
+            }
+
+            if (nightVal.trim()) {
+              if (isGreenT5 || nightVal.includes('T5') || nightVal.includes('綠色')) {
+                greenT5NightCount++;
+              } else if (nightVal.includes('管理') || matchGuardInCell('賴鯤仲', nightVal) || nightVal.includes('黃')) {
+                tsghNightCount++;
+              }
+            }
+          });
+        });
+      });
+
+      // 預設統計天數 (若資料庫尚未連線時)
+      if (tsghDayCount === 0 && tsghNightCount === 0 && greenT5NightCount === 0) {
+        tsghDayCount = 12;
+        tsghNightCount = 10;
+        greenT5NightCount = 8;
+      }
+
+      let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1700', 10);
+      let nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1700', 10);
+      let greenT5Rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1500', 10);
+
+      const tsghDayTotal = tsghDayCount * dayRate;
+      const tsghNightTotal = tsghNightCount * nightRate;
+      const greenT5Total = greenT5NightCount * greenT5Rate;
+      const grandTotal = tsghDayTotal + tsghNightTotal + greenT5Total;
+
+      container.innerHTML = `
+        <div class="space-y-4 animate-fade-in font-sans">
+          <!-- 👑 管理者尊爵金庫卡片 -->
+          <div class="bg-gradient-to-br from-amber-950 via-slate-900 to-indigo-950 border border-amber-500/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-center space-y-3">
+            <div class="flex flex-col items-center justify-center space-y-2">
+              <img src="./assets/glass_piggy_bank.png" class="w-24 h-24 sm:w-28 sm:h-28 object-contain animate-bounce filter drop-shadow-[0_0_22px_rgba(245,158,11,0.7)]" alt="T_MUD 玻璃小金豬">
+              <div class="text-center">
+                <div class="text-xs font-bold text-amber-300 flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-crown text-amber-400"></i>
+                  <span>管理者個人當月獨立班表金庫</span>
+                  <span class="text-[10px] bg-amber-950 text-amber-400 px-2 py-0.5 rounded-full border border-amber-800 font-mono">115年8月份</span>
+                </div>
+                <div class="text-base font-black text-white mt-0.5">個人當月班表總收入與資產統計</div>
+              </div>
+            </div>
+
+            <!-- 當月累積總收入巨型展示 -->
+            <div class="bg-slate-950/90 border border-amber-500/60 rounded-2xl p-4 shadow-inner">
+              <div class="text-xs text-amber-300/90 font-bold mb-1">💰 當月個人班表累積總收入</div>
+              <div class="text-3xl sm:text-4xl font-black text-amber-300 font-mono tracking-wider flex items-center justify-center gap-1">
+                <span class="text-amber-500 text-2xl">$</span>
+                <span id="adminTotalAssetDisplay">${grandTotal.toLocaleString()}</span>
+                <span class="text-xs text-slate-400 font-normal ml-1">元</span>
+              </div>
+            </div>
+
+            <div class="flex justify-center gap-2 pt-1">
+              <button 
+                type="button" 
+                onclick="playCoinDropSound(); triggerCoinRain(); showToast('🪙 管理者薪資試算成功！', 'success');"
+                class="h-8 px-3.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-md transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>薪資試算 🪙</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 三大勤務類別資產明細 (包含 M6 綠色底色 T5 商業大樓) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <!-- 常規早班 -->
+            <div class="bg-slate-950 border border-amber-900/60 rounded-2xl p-3 space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold text-amber-300">
+                <span>☀️ 常規早班</span>
+                <span class="font-mono text-amber-200">${tsghDayCount} 天</span>
+              </div>
+              <div class="text-base font-black text-amber-300 font-mono">$${tsghDayTotal.toLocaleString()}</div>
+              <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
+                <span>單日:</span>
+                <input 
+                  type="number" 
+                  value="${dayRate}" 
+                  onchange="updateAdminVaultRates(this.value, null, null)"
+                  class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-amber-300 text-[11px]"
+                >
+              </div>
+            </div>
+
+            <!-- 常規晚班 -->
+            <div class="bg-slate-950 border border-indigo-900/60 rounded-2xl p-3 space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold text-indigo-300">
+                <span>🌙 常規晚班</span>
+                <span class="font-mono text-indigo-200">${tsghNightCount} 天</span>
+              </div>
+              <div class="text-base font-black text-indigo-300 font-mono">$${tsghNightTotal.toLocaleString()}</div>
+              <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
+                <span>單日:</span>
+                <input 
+                  type="number" 
+                  value="${nightRate}" 
+                  onchange="updateAdminVaultRates(null, this.value, null)"
+                  class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-indigo-300 text-[11px]"
+                >
+              </div>
+            </div>
+
+            <!-- 🟩 T5商業大樓夜班 (綠色底色) -->
+            <div class="bg-slate-950 border border-emerald-800/80 rounded-2xl p-3 space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-bold text-emerald-300">
+                <span class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>🟩 T5夜班(綠色M6)</span>
+                </span>
+                <span class="font-mono text-emerald-200">${greenT5NightCount} 天</span>
+              </div>
+              <div class="text-base font-black text-emerald-300 font-mono">$${greenT5Total.toLocaleString()}</div>
+              <div class="flex items-center gap-1 text-[10px] text-slate-400 pt-1 border-t border-slate-900">
+                <span>單日:</span>
+                <input 
+                  type="number" 
+                  value="${greenT5Rate}" 
+                  onchange="updateAdminVaultRates(null, null, this.value)"
+                  class="w-14 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-emerald-300 text-[11px]"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部列印與關閉按鈕 -->
+          <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+            <button 
+              type="button" 
+              onclick="closeAdminVaultModal()" 
+              class="h-9 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
+            >
+              關閉金庫
+            </button>
+            <button 
+              type="button" 
+              onclick="window.print()" 
+              class="h-9 px-4 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black rounded-xl text-xs transition cursor-pointer shadow-md flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-print text-xs"></i>
+              <span>列印管理者資產報表</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateAdminVaultRates(dRate, nRate, gRate) {
+      if (dRate !== null) localStorage.setItem('admin_day_rate', dRate);
+      if (nRate !== null) localStorage.setItem('admin_night_rate', nRate);
+      if (gRate !== null) localStorage.setItem('admin_t5_green_rate', gRate);
+
+      playCoinDropSound();
+      triggerCoinRain();
+      renderAdminVaultView();
+      showToast('💰 管理者單價已更新！', 'success');
     }
 
     // 🗝️ iOS 友善 Admin 彈窗與持久登入保持 (嚴格資料比對保護)
