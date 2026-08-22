@@ -1206,8 +1206,13 @@
       showToast('💰 資產單價已更新試算！', 'success');
     }
 
-    // 👑 管理者專屬金庫 ｜ 個人當月獨立收入與排班資產統計
+    // 👑 管理者專屬金庫 ｜ 個人當月獨立收入與排班資產統計 (需主管密碼驗證)
     function openAdminVaultModal() {
+      if (!isUnlocked) {
+        showToast('🔒「管理者金庫」包含敏感資產統計，請先輸入主管密碼驗證！', 'warning');
+        openAdminAuthModal();
+        return;
+      }
       playCoinDropSound();
       triggerCoinRain();
       const modal = document.getElementById('adminVaultModal');
