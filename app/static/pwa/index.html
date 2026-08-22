@@ -1961,7 +1961,7 @@
       }
     }
 
-    // PAT 設定彈窗（帶入已儲存憑證 value="${savedPat}" 以掩碼顯示）
+    // PAT 設定彈窗（真實載入已保存憑證與字數驗證）
     function openGhPatModal() {
       const ex = document.getElementById('ghPatModal');
       if (ex) ex.remove();
@@ -1980,9 +1980,9 @@
           </div>
 
           ${savedPat ? `
-            <div class="bg-emerald-950/80 border border-emerald-500/60 rounded-xl p-2.5 text-center text-xs font-bold text-emerald-300 shadow-inner">
-              <i class="fa-solid fa-circle-check text-emerald-400"></i>
-              <span>瀏覽器目前已永久保存 Token 憑證！</span>
+            <div class="bg-emerald-950/80 border border-emerald-500/60 rounded-xl p-2.5 text-center text-xs font-bold text-emerald-300 shadow-inner flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+              <span>已保存憑證 (${savedPat.length} 字元金鑰)</span>
             </div>
           ` : `
             <div class="bg-slate-800 rounded-2xl p-3 text-[11px] text-slate-300 space-y-1">
@@ -1996,13 +1996,12 @@
 
           <div class="space-y-1">
             <div class="text-[11px] text-slate-400 font-bold flex justify-between">
-              <span>Token 金鑰憑證:</span>
-              <span class="text-slate-500 font-mono text-[10px]">自動掩碼 (••••••••)</span>
+              <span>GitHub Token 憑證:</span>
+              ${savedPat ? `<span class="text-emerald-400 font-mono text-[10px] font-bold">已實體載入 ${savedPat.length} 字元</span>` : `<span class="text-amber-400 font-mono text-[10px]">尚未設定</span>`}
             </div>
             <input
               id="ghPatInput"
               type="password"
-              value="${savedPat}"
               placeholder="ghp_xxxxxxxxxxxxxxxx"
               class="w-full h-10 bg-slate-950 border border-amber-600/70 rounded-xl px-3 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-400 placeholder-slate-600"
             >
@@ -2027,7 +2026,13 @@
       `;
       document.body.appendChild(m);
       m.addEventListener('click', e => { if (e.target === m) m.remove(); });
-      setTimeout(() => document.getElementById('ghPatInput')?.focus(), 100);
+      setTimeout(() => {
+        const inp = document.getElementById('ghPatInput');
+        if (inp) {
+          if (savedPat) inp.value = savedPat;
+          inp.focus();
+        }
+      }, 50);
     }
 
     function showVaultSyncGuideModal() {
