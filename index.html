@@ -1278,6 +1278,38 @@
       if (grandEl) grandEl.textContent = grandTotal.toLocaleString();
     }
 
+    function updateSalaryAuditHours(hoursVal) {
+      const hours = parseFloat(hoursVal) || 0;
+      localStorage.setItem('admin_salary_audit_hours', hours);
+      const days = (hours / 12).toFixed(1);
+      
+      const resDisplay = document.getElementById('auditDaysResultDisplay');
+      const formHours = document.getElementById('auditFormulaHours');
+      const formDays = document.getElementById('auditFormulaDays');
+
+      if (resDisplay) resDisplay.textContent = days;
+      if (formHours) formHours.textContent = hours;
+      if (formDays) formDays.textContent = days;
+    }
+
+    function recalculateDefaultAuditHours() {
+      const dayCount = parseInt(document.getElementById('tsghDayCountVal')?.dataset.count || '12', 10);
+      const nightCount = parseInt(document.getElementById('tsghNightCountVal')?.dataset.count || '10', 10);
+      const greenCount = parseDatesCount(localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29');
+      
+      const totalShifts = dayCount + nightCount + greenCount;
+      const calcHours = totalShifts * 12;
+
+      localStorage.setItem('admin_salary_audit_hours', calcHours);
+      const inputEl = document.getElementById('auditTotalHoursInput');
+      if (inputEl) inputEl.value = calcHours;
+
+      updateSalaryAuditHours(calcHours);
+      playCoinDropSound();
+      triggerCoinRain();
+      showToast(`📊 已連動計算: SUM(G12:AK12) = ${calcHours} 小時 (${(calcHours / 12).toFixed(1)} 天)`, 'success');
+    }
+
     function renderAdminVaultView() {
       const container = document.getElementById('adminVaultContentArea');
       if (!container) return;
@@ -1333,6 +1365,13 @@
       let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
       let nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
       let greenT5Rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1500', 10);
+
+      const totalWorkedDays = tsghDayCount + tsghNightCount + greenT5NightCount;
+      const defaultCalculatedHours = totalWorkedDays * 12;
+
+      let storedAuditHours = localStorage.getItem('admin_salary_audit_hours');
+      let auditTotalHours = storedAuditHours !== null ? parseFloat(storedAuditHours) : defaultCalculatedHours;
+      let auditDaysResult = (auditTotalHours / 12).toFixed(1);
 
       const tsghDayTotal = tsghDayCount * dayRate;
       const tsghNightTotal = tsghNightCount * nightRate;
@@ -1470,6 +1509,65 @@
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1">
               <span>💡 8月紀錄範例: 3,6,13,17,22,24,29 (以逗號區隔)</span>
               <span id="t5GreenHintTotalDisplay" class="font-mono text-emerald-300 font-bold">共 $${greenT5Total.toLocaleString()} 元</span>
+            </div>
+          </div>
+
+          <!-- 📊 當月資水檢查欄位 (總小時數 SUM(G12:AK12) / 12 = 上班天數) -->
+          <div class="bg-gradient-to-r from-indigo-950/90 via-slate-950 to-purple-950/90 border border-indigo-500/80 rounded-2xl p-3.5 space-y-2.5 shadow-xl">
+            <div class="flex items-center justify-between">
+              <div class="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-calculator text-amber-400 text-sm"></i>
+                <span>📊 當月資水檢查欄位 <span class="text-[10px] text-slate-400 font-mono font-normal">=SUM(G12:AK12)</span></span>
+              </div>
+              <div class="text-xs font-mono font-black text-amber-300 bg-indigo-950 border border-indigo-700 px-2.5 py-0.5 rounded-full shadow-inner">
+                檢查結果: <span id="auditDaysResultDisplay" class="text-emerald-300 text-sm font-black">${auditDaysResult}</span> 天
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+              <!-- 總計小時數輸入/顯示欄 -->
+              <div class="bg-slate-900/90 border border-indigo-700/60 rounded-xl p-2.5 space-y-1">
+                <div class="text-[11px] font-bold text-indigo-300 flex items-center justify-between">
+                  <span>⏱️ 總計小時數 SUM(G12:AK12)</span>
+                  <span class="text-[9px] text-slate-400">可手動微調</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <input 
+                    type="number" 
+                    id="auditTotalHoursInput" 
+                    value="${auditTotalHours}" 
+                    oninput="updateSalaryAuditHours(this.value)"
+                    class="w-full h-8 bg-slate-950 border border-indigo-600 rounded-lg px-2 text-center text-sm font-black font-mono text-amber-300 focus:outline-none focus:border-amber-400"
+                  >
+                  <span class="text-xs text-slate-300 font-bold shrink-0">小時</span>
+                </div>
+              </div>
+
+              <!-- 資水轉換試算公式欄 -->
+              <div class="bg-slate-900/90 border border-indigo-700/60 rounded-xl p-2.5 space-y-1">
+                <div class="text-[11px] font-bold text-purple-300 flex items-center justify-between">
+                  <span>🧮 資水對照 (總小時 ÷ 12)</span>
+                  <span class="text-[9px] text-emerald-400 font-bold">12小時/班</span>
+                </div>
+                <div class="h-8 flex items-center justify-center gap-1 text-xs font-mono font-black text-slate-200 bg-slate-950 border border-slate-800 rounded-lg">
+                  <span id="auditFormulaHours" class="text-amber-300">${auditTotalHours}</span>
+                  <span class="text-slate-400">÷ 12 =</span>
+                  <span id="auditFormulaDays" class="text-emerald-300 text-sm">${auditDaysResult}</span>
+                  <span class="text-slate-300">天</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-slate-400 flex items-center justify-between px-1 pt-0.5 border-t border-slate-900/80">
+              <span>💡 公式說明: =SUM(G12:AK12) 累計總時數 ÷ 12 小時即為資水核算上班天數</span>
+              <button 
+                type="button" 
+                onclick="recalculateDefaultAuditHours()" 
+                class="text-indigo-400 hover:text-indigo-300 text-[10px] font-bold underline flex items-center gap-1 cursor-pointer"
+              >
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>自動連動班表時數</span>
+              </button>
             </div>
           </div>
 
