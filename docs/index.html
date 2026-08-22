@@ -1553,7 +1553,7 @@
             dutyMinutesPassed = 720;
           }
 
-          const ratePerMin = 1700 / (12 * 60); // 2.361111 元/分
+          const ratePerMin = 1800 / (12 * 60); // 2.5 元/分
           const capDutyMinutes = Math.min(targetItem.minutesWorked, dutyMinutesPassed);
           displayAsset = targetItem.open + (capDutyMinutes * ratePerMin);
 
@@ -1563,7 +1563,7 @@
 
         const anchorY = padding.top + chartHeight * (1 - (displayAsset - minVal) / (maxVal - minVal));
 
-        // 1. 垂直橫移虛線 (Vertical Dotted Cursor Line)
+        // 1. 垂直橫移虛線 (Vertical Dotted Cursor Line 預設錨定當天日期與分鐘)
         ctx.save();
         ctx.setLineDash([4, 3]);
         ctx.strokeStyle = '#f43f5e';
@@ -1599,13 +1599,17 @@
         ctx.fill();
         ctx.stroke();
 
-        // 4. 右側 Y 軸錨定金額浮動標籤 (Floating Y-Axis Price Pill)
+        // 4. 右側 Y 軸錨定金額浮動標籤 (Floating Y-Axis Price Pill 顯影 1 日至今此刻累積資產)
         ctx.fillStyle = '#f59e0b';
-        ctx.fillRect(width - padding.right + 2, anchorY - 9, 60, 18);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(width - padding.right + 2, anchorY - 10, 62, 20, 4);
+        else ctx.fillRect(width - padding.right + 2, anchorY - 10, 62, 20);
+        ctx.fill();
+
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'black 10px monospace';
+        ctx.font = 'bold 10px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(`$${Math.round(displayAsset).toLocaleString()}`, width - padding.right + 32, anchorY + 4);
+        ctx.fillText(`$${Math.round(displayAsset).toLocaleString()}`, width - padding.right + 33, anchorY + 4);
 
         // 5. 更新頂部與右下角提示欄，精準加總 1 日至今日此刻 (對齊至目前時間/分鐘)
         const liveAssetEl = document.getElementById('liveCumulativeAssetDisplay');
