@@ -442,18 +442,11 @@
   <!-- Main Pure View (Ultra-Clean, Zero-Overflow Responsive Top Navbar) -->
   <header class="no-print w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 sm:px-4 sticky top-0 z-20 backdrop-blur-md box-border overflow-hidden">
     <div class="max-w-4xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
-      <!-- 🛡️ 左側：盾牌 ＋ 標題 ＋ 動態深邃呼吸燈號 -->
-      <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-white font-bold shadow-md shrink-0">
-          <i class="fa-solid fa-shield-halved text-xs"></i>
-        </div>
-        <div class="flex items-center gap-1.5 min-w-0">
-          <h1 class="text-sm sm:text-base font-black text-white leading-none whitespace-nowrap">飛龍三總班表</h1>
-          <!-- 🟢 整合式緊湊呼吸燈 -->
-          <div id="connectionStatusBadge" title="連線偵測正常" class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-950 border border-emerald-500/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)] shrink-0">
-            <span class="deep-pulse-dot w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-            <span id="connectionStatusText" class="hidden sm:inline tracking-tight">連線偵測</span>
-          </div>
+      <!-- 🟢 左側：連線偵測燈 (取代盾牌與標題，文字簡化為"連線") -->
+      <div class="flex items-center shrink-0">
+        <div id="connectionStatusBadge" title="連線狀態正常" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-slate-950 border border-emerald-500/80 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.4)] shrink-0">
+          <span class="deep-pulse-dot w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+          <span id="connectionStatusText" class="font-mono font-bold tracking-tight">連線</span>
         </div>
       </div>
 
@@ -3335,7 +3328,7 @@
       if (selectedYear === REAL_CURRENT_YEAR && selectedMonth === 8) {
         if (EMBEDDED_SCHEDULE_DATA_8[currentTabKey]) {
           rawScheduleData = EMBEDDED_SCHEDULE_DATA_8[currentTabKey];
-          setConnectionStatus('connected', '連線偵測');
+          setConnectionStatus('connected', '連線');
           renderFullScheduleTable(rawScheduleData);
           if (qBtn) {
             qBtn.innerHTML = '<i class="fa-solid fa-rotate text-xs"></i><span>查詢</span>';
@@ -3386,7 +3379,7 @@
             const apiData = await apiRes.json();
             if (apiData.rows && apiData.rows.length > 0) {
               rawScheduleData = apiData;
-              setConnectionStatus('connected', '連線偵測');
+              setConnectionStatus('connected', '連線');
               renderFullScheduleTable(rawScheduleData);
               if (qBtn) {
                 qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
@@ -3414,7 +3407,7 @@
             const snapData = await snapRes.json();
             if (snapData.rows && snapData.rows.length > 0) {
               rawScheduleData = snapData;
-              setConnectionStatus('connected', '連線偵測');
+              setConnectionStatus('connected', '連線');
               renderFullScheduleTable(rawScheduleData);
               if (qBtn) {
                 qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
