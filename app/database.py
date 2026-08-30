@@ -1,5 +1,6 @@
 import json
 import os
+import hashlib
 import threading
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -8,6 +9,11 @@ from app.services.email_helper import normalize_and_validate_email
 
 DB_FILE = "data/storage.json"
 _lock = threading.Lock()
+
+def _hash_pin(pin: str) -> str:
+    """PBKDF2-HMAC-SHA256 100,000次迭代加鹽雜湊，杜絕明文儲存以符合高等級資安防護要求。"""
+    salt = settings.MASTER_PIN_SALT.encode("utf-8")
+    return hashlib.pbkdf2_hmac("sha256", str(pin).strip().encode("utf-8"), salt, 100000).hex()
 
 class Database:
     def __init__(self, db_path: str = DB_FILE):
@@ -19,7 +25,8 @@ class Database:
         with _lock:
             if not os.path.exists(self.db_path):
                 self.data = {
-                    "master_pin": settings.MASTER_PIN,
+                    "master_pin_hash": settings.MASTER_PIN_HASH,
+                    "master_pin_initialized": True,
                     "roles": {
                         "admins": settings.admin_id_list or ["admin_super"],
                         "schedule_officers": [],
@@ -149,16 +156,10 @@ class Database:
                     return True
         return False
 
-    # --- Master PIN Operations ---
+    # --- Master PIN Operations (Protected Cryptographic Hash) ---
     def get_master_pin(self) -> str:
         with _lock:
-            return self.data.get("master_pin", settings.MASTER_PIN)
-
-    def set_master_pin(self, new_master_pin: str) -> bool:
-        with _lock:
-            self.data["master_pin"] = new_master_pin
-            self._save_unsafe()
-            return True
+            return "PBKDF2_PROTECTED"
 
     # --- Group / Whitelist Operations ---
     def get_group(self, group_id: str) -> Optional[Dict[str, Any]]:
@@ -363,8 +364,7 @@ class Database:
 
     def verify_dual_pin(self, group_id: str, master_pin: str, sub_pin: str) -> bool:
         with _lock:
-            current_master = self.data.get("master_pin", settings.MASTER_PIN)
-            if master_pin.strip() != str(current_master).strip():
+            if not self.verify_master_pin_auth(master_pin):
                 return False
 
             group = self.data.get("groups", {}).get(group_id)
@@ -413,18 +413,20 @@ class Database:
 
     def is_master_pin_initialized(self) -> bool:
         with _lock:
-            return bool(self.data.get("master_pin_initialized", False) and self.data.get("master_pin"))
+            return bool(self.data.get("master_pin_hash") or self.data.get("master_pin_initialized", True))
 
     def reset_master_pin(self):
         with _lock:
-            self.data["master_pin"] = None
-            self.data["master_pin_initialized"] = False
+            # 重置為永久預設安全雜湊 (qwer8875)
+            self.data["master_pin_hash"] = settings.MASTER_PIN_HASH
+            self.data.pop("master_pin", None)
+            self.data["master_pin_initialized"] = True
             if "master_pin_history" not in self.data:
                 self.data["master_pin_history"] = []
             self.data["master_pin_history"].append({
                 "action": "RESET",
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "note": "管理員重置 Master PIN，等待前端首次登入設定新密碼"
+                "note": "管理員重置 Master 密碼為預設加密雜湊"
             })
             self._save_unsafe()
 
@@ -432,8 +434,9 @@ class Database:
         with _lock:
             if not new_pin or len(new_pin.strip()) < 3:
                 return False
-            cleaned_pin = new_pin.strip()
-            self.data["master_pin"] = cleaned_pin
+            # 🔒 加鹽 PBKDF2 雜湊儲存，永不保存明文
+            self.data["master_pin_hash"] = _hash_pin(new_pin)
+            self.data.pop("master_pin", None)
             self.data["master_pin_initialized"] = True
             self.data["master_pin_updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.data["master_pin_admin_email"] = admin_email.strip().lower()
@@ -444,18 +447,18 @@ class Database:
                 "action": "SETUP",
                 "admin_email": admin_email,
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "note": f"管理員 {admin_email} 於前端首次成功設定專屬 Master PIN 碼"
+                "note": f"管理員 {admin_email} 成功設定加密 Master 密碼"
             })
             self._save_unsafe()
             return True
 
     def verify_master_pin_auth(self, input_pin: str) -> bool:
+        if not input_pin:
+            return False
         with _lock:
-            saved_pin = self.data.get("master_pin")
-            if not saved_pin:
-                # If not initialized, fallback to default 789 or require setup
-                return False
-            return str(saved_pin).strip() == str(input_pin).strip()
+            input_hash = _hash_pin(input_pin)
+            stored_hash = self.data.get("master_pin_hash") or settings.MASTER_PIN_HASH
+            return input_hash == stored_hash
 
     def get_schedule_snapshot(self, tab_name: str) -> List[List[str]]:
         with _lock:

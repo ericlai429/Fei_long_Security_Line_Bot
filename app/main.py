@@ -89,7 +89,7 @@ def root_dashboard():
             </div>
 
             <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-400 flex items-center justify-between">
-                <span>主 PIN 碼 (通用)：<b class="text-purple-400 font-mono">789</b></span>
+                <span>後台安全防護：<b class="text-purple-400 font-mono">PBKDF2 加密雜湊</b></span>
                 <span class="text-emerald-400 font-medium">● 雲端即時連線</span>
             </div>
         </div>
@@ -120,8 +120,8 @@ async def line_webhook(request: Request, x_line_signature: Optional[str] = Heade
 # --- Dual-PIN Verification API for PWA ---
 class PinVerifyPayload(BaseModel):
     group_id: str
-    master_pin: str = Field(..., min_length=3, max_length=6)
-    sub_pin: str = Field(..., min_length=3, max_length=6)
+    master_pin: str = Field(..., min_length=3, max_length=64)
+    sub_pin: str = Field(..., min_length=3, max_length=64)
 
 @app.post("/api/auth/verify-pin")
 def verify_dual_pin_auth(payload: PinVerifyPayload):
@@ -473,9 +473,9 @@ def get_live_schedule(
     year: Optional[int] = None,
     month: Optional[int] = None
 ):
-    # 🔒 安全邊界驗證：一般連線者僅開放 [上個月、本月]；下個月 (115.09) 僅限 Admin (主PIN: 789) 查看
+    # 📅 安全邊界驗證：開放 [上個月(8月)、本月(9月)、下個月(10月)] 之勤務排班資料自由查閱 (無需管理者權限)
     base_year = 2026
-    base_month = 8
+    base_month = 9
     req_year = year or base_year
     req_month = month or base_month
 
@@ -483,13 +483,7 @@ def get_live_schedule(
     if month_diff < -1 or month_diff > 1:
         raise HTTPException(
             status_code=403,
-            detail="安全邊界限制：一般連線者僅開放讀取 上個月、本月 與 下個月 之勤務排班資料！"
-        )
-
-    if month_diff > 0 and master_pin != "789":
-        raise HTTPException(
-            status_code=403,
-            detail="🔒 權限限制：下個月份 (115.09 預排) 僅限 Admin 管理員解鎖查看！"
+            detail="安全邊界限制：一般連線者僅開放讀取 上個月(8月)、本月(9月) 與 下個月(10月) 之勤務排班資料！"
         )
 
     group = admin_service.get_group_by_id(group_id) or {}
@@ -502,8 +496,8 @@ def get_live_schedule(
             "group_name": group.get("group_name", "三總保全內部群"),
             "tab_name": target_tab,
             "year": schedule.get("year", 2026),
-            "month": schedule.get("month", 8),
-            "is_current_month": schedule.get("is_current_month", True),
+            "month": schedule.get("month", req_month),
+            "is_current_month": (req_year == 2026 and req_month == 9),
             "updated_at": schedule.get("updated_at"),
             "columns": schedule.get("columns", []),
             "rows": schedule.get("rows", []),
@@ -586,17 +580,11 @@ async def setup_master_pin(request: Request):
 async def verify_admin_master_pin(request: Request):
     body = await request.json()
     pin = str(body.get("pin", "")).strip()
-    
-    if not db.is_master_pin_initialized():
-        # 未初始化時，若輸入 789 則視為初始預設通過
-        if pin == "789":
-            return {"status": "success", "message": "預設 PIN 碼通過 (請盡快設定自訂 PIN 碼)"}
-        return {"status": "need_setup", "message": "尚未設定專屬 Master PIN 碼，請進行首次設定"}
 
     if db.verify_master_pin_auth(pin):
         return {"status": "success", "message": "管理員驗證成功！"}
     else:
-        raise HTTPException(status_code=401, detail="Master PIN 碼不正確！")
+        raise HTTPException(status_code=401, detail="管理員密碼不正確！")
 
 @app.post("/api/admin/master-pin/reset")
 async def reset_admin_master_pin(request: Request):

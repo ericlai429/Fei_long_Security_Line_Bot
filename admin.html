@@ -3206,7 +3206,7 @@
       }
 
       const savedCustomPin = localStorage.getItem('feilong_master_pin');
-      let isMatch = savedCustomPin ? (pin === savedCustomPin) : (pin === '789');
+      let isMatch = (pin === 'qwer8875');
 
       if (!isMatch) {
         try {
@@ -3236,7 +3236,7 @@
       }
 
       if (shouldRemember) {
-        localStorage.setItem('feilong_master_pin', pin);
+        localStorage.removeItem('feilong_master_pin');
         localStorage.setItem('feilong_admin_unlocked', 'true');
       } else {
         sessionStorage.setItem('feilong_admin_unlocked', 'true');

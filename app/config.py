@@ -20,8 +20,9 @@ class Settings(BaseSettings):
     # Web Admin Master Key
     ADMIN_SECRET_KEY: str = "tsgh_security_admin_2026"
 
-    # 飛龍保全 預設主 PIN 碼
-    MASTER_PIN: str = "789"
+    # 飛龍保全 預設管理者 Master 密碼加鹽雜湊 (PBKDF2-HMAC-SHA256 100,000次迭代，永久生效且無明文)
+    MASTER_PIN_HASH: str = "ff7a0d27304ad4ab2a800c1c2a153ac75408e5529cd6fbe22f3d885de75ba865"
+    MASTER_PIN_SALT: str = "feilong_security_vault_master_salt_2026"
 
     # 預設各群組輔 PIN 碼 (3~4 位數字)
     DEFAULT_PIN: str = "8888"

@@ -36,7 +36,7 @@ class TestAPIEndpoints(unittest.TestCase):
         # 2. Failed verification (Wrong Master PIN)
         res_err_master = self.client.post("/api/auth/verify-pin", json={
             "group_id": "tsgh_internal",
-            "master_pin": "000",
+            "master_pin": "wrongpass",
             "sub_pin": "8888"
         })
         self.assertEqual(res_err_master.status_code, 401)
@@ -44,7 +44,7 @@ class TestAPIEndpoints(unittest.TestCase):
         # 3. Failed verification (Wrong Sub PIN)
         res_err_sub = self.client.post("/api/auth/verify-pin", json={
             "group_id": "tsgh_internal",
-            "master_pin": "789",
+            "master_pin": "qwer8875",
             "sub_pin": "0000"
         })
         self.assertEqual(res_err_sub.status_code, 401)
@@ -80,7 +80,7 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(del_res.status_code, 200)
 
     def test_live_schedule_zero_cache(self):
-        res = self.client.get("/api/schedule/live?group_id=tsgh_internal&tab=三總保全內部群&master_pin=789&sub_pin=8888")
+        res = self.client.get("/api/schedule/live?group_id=tsgh_internal&tab=三總保全內部群&master_pin=qwer8875&sub_pin=8888")
         self.assertEqual(res.status_code, 200)
         self.assertIn("no-store", res.headers.get("Cache-Control", ""))
         data = res.json()
@@ -103,7 +103,7 @@ class TestAPIEndpoints(unittest.TestCase):
         data = res.json()
         self.assertIn("registered_groups", data)
         self.assertIn("available_tabs", data)
-        self.assertEqual(data["master_pin"], "789")
+        self.assertEqual(data["master_pin"], "PBKDF2_PROTECTED")
 
     def test_google_drive_status_and_connect(self):
         # 1. Status query
