@@ -807,9 +807,6 @@
     }
 
     function onVaultGuardSelected(name) {
-      if (name) {
-        localStorage.setItem('feilong_vault_my_name', name);
-      }
       renderPersonalVault(name);
     }
 
@@ -1309,7 +1306,7 @@
               const supportVal = r['機動支援'] || r['機動'] || r['支援'] || '';
               const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
 
-              if (dayVal.trim() && (matchGuardInCell(cleanManager, dayVal) || matchGuardInCell('賴鯤仲', dayVal))) {
+              if (dayVal.trim() && matchGuardInCell(cleanManager, dayVal)) {
                 const key = `DAY_${dateNum}_${postName}`;
                 if (!shiftDedupe.has(key)) {
                   shiftDedupe.add(key);
@@ -1319,7 +1316,7 @@
                 }
               }
               if (nightVal.trim() && !isGreenT5 && !nightVal.includes('T5')) {
-                if (matchGuardInCell(cleanManager, nightVal) || matchGuardInCell('賴鯤仲', nightVal)) {
+                if (matchGuardInCell(cleanManager, nightVal)) {
                   const key = `NIGHT_${dateNum}_${postName}`;
                   if (!shiftDedupe.has(key)) {
                     shiftDedupe.add(key);
@@ -1329,7 +1326,7 @@
                   }
                 }
               }
-              if (supportVal.trim() && (matchGuardInCell(cleanManager, supportVal) || matchGuardInCell('賴鯤仲', supportVal))) {
+              if (supportVal.trim() && matchGuardInCell(cleanManager, supportVal)) {
                 const key = `SUPPORT_${dateNum}_${postName}`;
                 if (!shiftDedupe.has(key)) {
                   shiftDedupe.add(key);
@@ -2251,7 +2248,7 @@
             const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
 
             if (dayVal.trim()) {
-              if (matchGuardInCell(cleanManager, dayVal) || matchGuardInCell('賴鯤仲', dayVal)) {
+              if (matchGuardInCell(cleanManager, dayVal)) {
                 const dKey = `${dateStr}_DAY_${postName}`;
                 if (!shiftDedupe.has(dKey)) {
                   shiftDedupe.add(dKey);
@@ -2261,7 +2258,7 @@
             }
 
             if (nightVal.trim() && !isGreenT5 && !nightVal.includes('T5')) {
-              if (matchGuardInCell(cleanManager, nightVal) || matchGuardInCell('賴鯤仲', nightVal)) {
+              if (matchGuardInCell(cleanManager, nightVal)) {
                 const nKey = `${dateStr}_NIGHT_${postName}`;
                 if (!shiftDedupe.has(nKey)) {
                   shiftDedupe.add(nKey);

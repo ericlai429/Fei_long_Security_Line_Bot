@@ -304,8 +304,7 @@ class SheetsService:
     def get_parsed_schedule(self, tab_name: str, year: int = None, month: int = None) -> Dict[str, Any]:
         today = date.today()
         target_year = year or today.year
-        target_month = month or 8 # 預設當前排班月份為 8月
-        is_current = (target_year == today.year and target_month == 8)
+        target_month = month or 9  # 預設排班月份為 9月 (115年9月份)
 
         raw_data = self.get_raw_sheet_data(tab_name, year=target_year, month=target_month)
         if not raw_data:
@@ -313,13 +312,26 @@ class SheetsService:
                 "tab_name": tab_name,
                 "year": target_year,
                 "month": target_month,
-                "is_current_month": is_current,
+                "is_current_month": (target_year == today.year and target_month == 9),
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "columns": [],
                 "rows": [],
                 "members": [],
                 "posts": []
             }
+
+        # 智能從試算表頂部 Header 偵測實際民國/西元年份與月份 (如 115年9月份)
+        for h_row in raw_data[:5]:
+            h_text = "".join(str(c) for c in h_row)
+            m_match = re.search(r'(\d{2,3})年(\d{1,2})月', h_text)
+            if m_match and not month:
+                roc_y = int(m_match.group(1))
+                detected_m = int(m_match.group(2))
+                target_month = detected_m
+                target_year = (roc_y + 1911) if roc_y < 1900 else roc_y
+                break
+
+        is_current = (target_year == today.year and target_month == 9)
 
         # 🌟 1. 檢查是否為「矩陣式月曆排班表」(人員在 Y 軸，日期 1~31 在 X 軸)
         date_row_idx = None

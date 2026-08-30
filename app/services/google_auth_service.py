@@ -22,7 +22,7 @@ def get_or_refresh_google_user_credentials():
             logger.warning(f"Failed to load token file: {e}")
             creds = None
 
-    if creds and creds.expired and creds.refresh_token:
+    if creds and creds.expired and creds.refresh_token and creds.client_id:
         try:
             creds.refresh(Request())
             with open(TOKEN_PATH, "w", encoding="utf-8") as token_file:
@@ -30,7 +30,7 @@ def get_or_refresh_google_user_credentials():
             logger.info("Successfully refreshed Google user OAuth token!")
             return creds
         except Exception as e:
-            logger.error(f"Failed to refresh token: {e}")
+            logger.debug(f"Could not refresh token: {e}")
             return None
 
     if creds and creds.valid:

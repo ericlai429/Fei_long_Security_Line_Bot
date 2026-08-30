@@ -94,3 +94,19 @@
   1. 正式開闢「🛵 機動支援執勤日期紀錄」輸入卡片（預設為 `1, 7, 12, 19, 21`）。
   2. 升級 K 線圖資料構建邏輯，將機動支援班次精準掛載至 8/12、8/19、8/21 等特定指定日期。
   3. 加入自動舊資料相容遷移 (Auto Migration)，確保 K 線終點收盤價與 $65,800 元 100% 精準對齊。
+
+---
+
+## 👻 鬼故事 8：點選其他同仁班表時，他人上班時數累加至本人 K 線導致收入暴增事件
+
+- **👻 鬼故事現象**：
+  使用者在點選其他同仁的班表進行查看時，其他同仁的執勤時數與班次竟然全部加總到自己的 K 線資料中，造成本人的資產與收入不明原因突然暴增。
+
+- **🕵️‍♂️ 作祟原委 (Root Cause)**：
+  1. **全域身份覆寫**：在個人班表查詢彈窗 `onVaultGuardSelected(name)` 下拉選單中，點選其他同仁時直接執行了 `localStorage.setItem('feilong_vault_my_name', name)`，將本人的全域身份誤覆寫為被查看者的姓名。
+  2. **Logical OR 雙重累加漏洞**：在 K 線計算與金庫收益統計函數 `getManagerDailyShiftDetails()` 及 `calculateAssetOverview()` 中，班別比對邏輯誤寫為 `matchGuardInCell(cleanManager, cellVal) || matchGuardInCell('賴鯤仲', cellVal)`。當 `cleanManager` 被切換為其他同仁（如黃證書、黃仁忠）時，邏輯變為「比對黃證書 OR 賴鯤仲」，導致兩位同仁的執勤時數全部被重疊加總計算！
+
+- **⚔️ 降妖除魔 (Solution)**：
+  1. 解除 `onVaultGuardSelected()` 中的全域身份覆寫，僅在彈窗內臨時顯影該同仁班表，保護使用者本人的儲存身份不被竄改。
+  2. 全面拔除多餘的 `|| matchGuardInCell('賴鯤仲', ...)` 雙重條件，嚴格僅比對單一管理者本人姓名 `matchGuardInCell(cleanManager, cellVal)`，徹底杜絕他人班表時數外溢累加的問題。
+
