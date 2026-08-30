@@ -7,9 +7,14 @@ class Settings(BaseSettings):
     LINE_CHANNEL_SECRET: str = "mock_secret"
     LINE_CHANNEL_ACCESS_TOKEN: str = "mock_token"
 
-    # Google Sheets Settings
+    # Google Sheets & Drive Credentials
     GOOGLE_SERVICE_ACCOUNT_FILE: str = "credentials/service_account.json"
+    GOOGLE_SERVICE_ACCOUNT_JSON: str = "" # 支援直接於 .env 填入 Service Account JSON 字串
     GOOGLE_SPREADSHEET_ID: str = "1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s"
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REFRESH_TOKEN: str = ""
+    GOOGLE_ACCESS_TOKEN: str = ""
 
     # Base Public URL (e.g., https://xxxx.ngrok-free.app)
     BASE_URL: str = "http://localhost:8088"

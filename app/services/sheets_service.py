@@ -356,41 +356,77 @@ class SheetsService:
             daily_schedule = {day_num: {'day': [], 'night': [], 'support': [], 'weekday': w_val} for day_num, w_val in day_cols.values()}
             members_set = set()
             posts_set = {tab_name.strip()}
+            current_shift_type = "日班"
 
             for r_idx in range(date_row_idx + 2, len(raw_data)):
                 row = raw_data[r_idx]
-                if not row or len(row) < 2:
+                if not row or not any(str(c).strip() for c in row):
                     continue
 
-                shift_col = str(row[0]).strip()
-                person_col = str(row[1]).strip() if len(row) > 1 else ''
-
-                if any(k in shift_col for k in ['總工時', '注意', '備註', '每日', '合計']):
+                row_str = " ".join(str(c).strip() for c in row)
+                if any(k in str(row[0]).strip() for k in ['總工時', '注意事項', '備註說明', '每日合計', '合計天數', '休假天數']):
                     break
-                if not person_col or any(k in person_col for k in ['值勤人員', '電話', '姓名']):
+
+                # 智慧動態搜尋姓名欄位 (前 5 欄內任意包含姓名或電話者，自動支援新增多列人員)
+                person_col = ""
+                shift_type_hint = ""
+                site_hint = ""
+
+                for c_idx in range(min(5, len(row))):
+                    c_text = str(row[c_idx]).strip()
+                    if not c_text:
+                        continue
+                    if any(s in c_text for s in ['工務所', '重症大樓', '急診', '門診', '三總']):
+                        site_hint = c_text
+                    if any(s in c_text for s in ['日班', '日機', '早班', '早機', 'A班']):
+                        shift_type_hint = "日班"
+                    elif any(s in c_text for s in ['夜班', '夜機', '晚班', '晚機', 'B班']):
+                        shift_type_hint = "夜班"
+
+                    # 檢查是否為人員姓名 (包含中文 2~4 字 或 09 開頭電話)
+                    cleaned = re.sub(r'[\(（]?09\d{2}[-\s]?\d{3}[-\s]?\d{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?', '', c_text).strip()
+                    if cleaned and 2 <= len(cleaned) <= 4 and not any(k in cleaned for k in ['案場', '哨點', '班別', '姓名', '電話', '職稱', '日班', '夜班', '日機', '夜機', '早班', '晚班', '工務所', '重症大樓']):
+                        person_col = c_text
+
+                if site_hint:
+                    posts_set.add(site_hint)
+                if shift_type_hint:
+                    current_shift_type = shift_type_hint
+
+                # 若該列不是人員資料列，跳過
+                if not person_col:
                     continue
 
-                # 智能姓名與電話萃取清洗 (根除 "張惠珍0912471123" 等電話混入姓名的狀況)
+                # 智能姓名與電話萃取清洗 (修正常見 OCR 誤字)
                 phone_match = re.search(r'09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{9,10}', person_col)
                 phone = phone_match.group(0) if phone_match else ''
 
                 name_pure = re.sub(r'[\(（]?09\d{2}[-\s]?\d{3}[-\s]?\d{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?', '', person_col.split('\n')[0]).strip()
-
-                if not name_pure:
+                if not name_pure or len(name_pure) < 2:
                     continue
+
+                if name_pure in ['林又妗', '林郁妗', '林又欽']:
+                    name_pure = '林郁欽'
+                    if not phone:
+                        phone = '0909-079-073'
 
                 display_name = f"{name_pure} ({phone})" if phone else name_pure
                 members_set.add(name_pure)
 
+                # 智慧掃描當月所有天數出勤代碼 (A, B, 機, 支, 代, 1, 2)
                 for col_idx, (day_num, _) in day_cols.items():
                     if col_idx < len(row):
                         shift_val = str(row[col_idx]).strip().upper()
-                        if shift_val == 'A' or '日' in shift_val or '早' in shift_val:
-                            daily_schedule[day_num]['day'].append(display_name)
-                        elif shift_val == 'B' or '夜' in shift_val or '晚' in shift_val:
-                            daily_schedule[day_num]['night'].append(display_name)
-                        elif shift_val in ['機', '支', 'C']:
-                            daily_schedule[day_num]['support'].append(display_name)
+                        if not shift_val or shift_val in ['休', 'OFF', '-', '—', 'X', '0']:
+                            continue
+
+                        # 判斷早班 (A) 或 晚班 (B)
+                        if shift_val in ['A', '早', '日'] or (current_shift_type == '日班' and shift_val in ['機', '支', '代', 'V', '1']):
+                            if display_name not in daily_schedule[day_num]['day']:
+                                daily_schedule[day_num]['day'].append(display_name)
+                        elif shift_val in ['B', '晚', '夜'] or (current_shift_type == '夜班' and shift_val in ['機', '支', '代', 'V', '1']):
+                            if display_name not in daily_schedule[day_num]['night']:
+                                daily_schedule[day_num]['night'].append(display_name)
 
             standard_columns = ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"]
             standard_rows = []

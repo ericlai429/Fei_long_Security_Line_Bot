@@ -14,7 +14,23 @@ SCOPES = [
 TOKEN_PATH = os.path.join("data", "google_user_token.json")
 
 def get_or_refresh_google_user_credentials():
+    from app.config import settings
     creds = None
+
+    # 1. 優先從 .env 環境變數讀取 Access Token / Refresh Token
+    if settings.GOOGLE_ACCESS_TOKEN:
+        creds = Credentials(
+            token=settings.GOOGLE_ACCESS_TOKEN.strip(),
+            refresh_token=settings.GOOGLE_REFRESH_TOKEN.strip() if settings.GOOGLE_REFRESH_TOKEN else None,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=settings.GOOGLE_CLIENT_ID.strip() if settings.GOOGLE_CLIENT_ID else None,
+            client_secret=settings.GOOGLE_CLIENT_SECRET.strip() if settings.GOOGLE_CLIENT_SECRET else None,
+            scopes=SCOPES
+        )
+        if creds and creds.valid:
+            return creds
+
+    # 2. 從本機 data/google_user_token.json 載入
     if os.path.exists(TOKEN_PATH):
         try:
             creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
@@ -35,6 +51,15 @@ def get_or_refresh_google_user_credentials():
 
     if creds and creds.valid:
         return creds
+
+    # 3. 支援直接使用 .env 的 Service Account JSON 字串
+    if settings.GOOGLE_SERVICE_ACCOUNT_JSON:
+        try:
+            from google.oauth2 import service_account
+            sa_info = json.loads(settings.GOOGLE_SERVICE_ACCOUNT_JSON)
+            return service_account.Credentials.from_service_account_info(sa_info, scopes=SCOPES)
+        except Exception as e:
+            logger.warning(f"Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON from env: {e}")
 
     return None
 
