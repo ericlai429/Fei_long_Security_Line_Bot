@@ -2296,29 +2296,9 @@
         });
       });
 
-      // 常規早班預設為三總實際排班 10 班 (5 班工務所 ＋ 5 班重症大樓)
-      let customDayCount = localStorage.getItem('admin_custom_day_count');
-      if (customDayCount !== null && customDayCount !== '12') {
-        const parsed = parseInt(customDayCount, 10);
-        if (!isNaN(parsed) && parsed > 0) {
-          tsghDayCount = parsed;
-        }
-      } else {
-        localStorage.removeItem('admin_custom_day_count');
-        if (tsghDayCount === 0) tsghDayCount = 10;
-      }
-
-      // 常規夜班預設為三總實際排班 14 班 (4 班工務所 ＋ 10 班重症大樓)
-      let customNightCount = localStorage.getItem('admin_custom_night_count');
-      if (customNightCount !== null && customNightCount !== '19') {
-        const parsed = parseInt(customNightCount, 10);
-        if (!isNaN(parsed) && parsed > 0) {
-          tsghNightCount = parsed;
-        }
-      } else {
-        localStorage.removeItem('admin_custom_night_count');
-        if (tsghNightCount === 0) tsghNightCount = 14;
-      }
+      // 🌟 純動態精準計算：直接讀取三總實際排班早班與晚班班次
+      localStorage.removeItem('admin_custom_day_count');
+      localStorage.removeItem('admin_custom_night_count');
 
       let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
       let nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
