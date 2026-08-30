@@ -838,11 +838,14 @@
       let totalNightShifts = 0;
       const userShifts = [];
       const shiftKeys = new Set();
-
-      const datasets = [EMBEDDED_SCHEDULE_DATA_8];
-      if (rawScheduleData && rawScheduleData.rows) {
-        datasets.push({ [currentTabName || 'current']: rawScheduleData });
+      const currentMonthNum = (typeof selectedMonth !== 'undefined') ? selectedMonth : 8;
+      let monthDataset = EMBEDDED_SCHEDULE_DATA_8;
+      if (currentMonthNum === 9 && typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined') {
+        monthDataset = EMBEDDED_SCHEDULE_DATA_9;
+      } else if (currentMonthNum === 10 && typeof EMBEDDED_SCHEDULE_DATA_10 !== 'undefined') {
+        monthDataset = EMBEDDED_SCHEDULE_DATA_10;
       }
+      const datasets = [monthDataset];
 
       datasets.forEach(dataObj => {
         if (!dataObj) return;
@@ -1281,10 +1284,8 @@
       let managerName = localStorage.getItem('feilong_vault_my_name') || '賴鯤仲';
       const cleanManager = cleanPersonName(managerName);
 
+      // 🌟 嚴格純淨 8 月份資料庫，絕不混入其他月份，日期精確全字串比對 2026/08/XX
       const datasets = [EMBEDDED_SCHEDULE_DATA_8];
-      if (rawScheduleData && rawScheduleData.rows) {
-        datasets.push({ [currentTabName || 'current']: rawScheduleData });
-      }
 
       const shiftDedupe = new Set();
       let hasDayShift = false;
@@ -1298,7 +1299,7 @@
           if (!tabData || !tabData.rows) return;
           tabData.rows.forEach(r => {
             const rDate = r['日期'] || '';
-            if (rDate.includes(dateStr) || rDate.endsWith(`/${String(dateNum).padStart(2,'0')}`)) {
+            if (rDate === dateStr || rDate.includes(dateStr)) {
               const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
               const dayVal = r['早班 (07-19)'] || '';
               const nightVal = r['晚班 (19-07)'] || '';
