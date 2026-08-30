@@ -1341,7 +1341,7 @@
       });
 
       // T5 綠底夜班 ($1,700)
-      let greenT5DatesStr = localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29';
+      let greenT5DatesStr = localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29,31';
       const greenDatesList = greenT5DatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
       if (greenDatesList.includes(dateNum)) {
         const key = `T5_GREEN_${dateNum}`;
@@ -1730,7 +1730,7 @@
     }
 
     function resetDefaultT5GreenDates() {
-      const defaultStr = '3,6,13,17,22,24,29';
+      const defaultStr = '3,6,13,17,22,24,29,31';
       localStorage.setItem('admin_t5_green_dates', defaultStr);
       playCoinDropSound();
       triggerCoinRain();
@@ -1756,6 +1756,12 @@
         newInputEl.focus();
         newInputEl.setSelectionRange(cursorStart, cursorEnd);
       }
+
+      // ☁️ 即時自動同步 T5 天數至雲端
+      if (syncCloudDebounceTimer) clearTimeout(syncCloudDebounceTimer);
+      syncCloudDebounceTimer = setTimeout(() => {
+        syncManualVaultAssetsToCloud();
+      }, 600);
     }
 
     function resetDefaultMobileSupportDates() {
@@ -1786,6 +1792,12 @@
         newInputEl.focus();
         newInputEl.setSelectionRange(cursorStart, cursorEnd);
       }
+
+      // ☁️ 即時自動同步機動支援天數至雲端
+      if (syncCloudDebounceTimer) clearTimeout(syncCloudDebounceTimer);
+      syncCloudDebounceTimer = setTimeout(() => {
+        syncManualVaultAssetsToCloud();
+      }, 600);
     }
 
     function updateSalaryAuditHours(hoursVal) {
@@ -1803,7 +1815,7 @@
     }
 
     function recalculateDefaultAuditHours() {
-      const greenCount = parseDatesCount(localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29');
+      const greenCount = parseDatesCount(localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29,31');
       const cloudRegularHours = 354; // 雲端試算表常規班表總時數
       const t5Hours = greenCount * 12; // T5夜班執勤時數 (7天 * 12h = 84h)
       const calcHours = cloudRegularHours + t5Hours; // 354 + 84 = 438 小時
@@ -1932,6 +1944,17 @@
         localStorage.setItem('admin_vault_paipai',   p);
         localStorage.setItem('admin_vault_tuotuo',   t);
 
+        if (data.t5_green_dates) {
+          localStorage.setItem('admin_t5_green_dates', data.t5_green_dates);
+        }
+        if (data.mobile_support_dates) {
+          localStorage.setItem('admin_mobile_support_dates', data.mobile_support_dates);
+          localStorage.setItem('admin_mobile_support_count', parseDatesCount(data.mobile_support_dates));
+        }
+        if (data.salary_audit_hours) {
+          localStorage.setItem('admin_salary_audit_hours', data.salary_audit_hours);
+        }
+
         const inCash = document.getElementById('manualCashInput');
         const inBang = document.getElementById('manualBangBangInput');
         const inPai  = document.getElementById('manualPaiPaiInput');
@@ -1968,11 +1991,14 @@
     // 共用寫入邏輯
     async function _ghWriteVaultAssets(pat, showResult) {
       const payload = {
-        cash:       parseFloat(localStorage.getItem('admin_vault_cash')     || '0') || 0,
-        bangbang:   parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0,
-        paipai:     parseFloat(localStorage.getItem('admin_vault_paipai')   || '0') || 0,
-        tuotuo:     parseFloat(localStorage.getItem('admin_vault_tuotuo')   || '0') || 0,
-        updated_at: new Date().toISOString()
+        cash:                 parseFloat(localStorage.getItem('admin_vault_cash')     || '0') || 0,
+        bangbang:             parseFloat(localStorage.getItem('admin_vault_bangbang') || '0') || 0,
+        paipai:               parseFloat(localStorage.getItem('admin_vault_paipai')   || '0') || 0,
+        tuotuo:               parseFloat(localStorage.getItem('admin_vault_tuotuo')   || '0') || 0,
+        t5_green_dates:       localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29,31',
+        mobile_support_dates: localStorage.getItem('admin_mobile_support_dates') || '1,7,12,19,21',
+        salary_audit_hours:   parseFloat(localStorage.getItem('admin_salary_audit_hours') || '450') || 450,
+        updated_at:           new Date().toISOString()
       };
 
       try {
@@ -2201,7 +2227,7 @@
       // 載入綠底夜班日期紀錄 (預設 8 月份: 3,6,13,17,22,24,29)
       let greenT5DatesStr = localStorage.getItem('admin_t5_green_dates');
       if (greenT5DatesStr === null) {
-        greenT5DatesStr = '3,6,13,17,22,24,29';
+        greenT5DatesStr = '3,6,13,17,22,24,29,31';
         localStorage.setItem('admin_t5_green_dates', greenT5DatesStr);
       }
 
