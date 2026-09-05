@@ -39,6 +39,10 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+if os.path.exists("assets"):
+    app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+elif os.path.exists("app/static/pwa/assets"):
+    app.mount("/assets", StaticFiles(directory="app/static/pwa/assets"), name="assets")
 if os.path.exists("docs/data"):
     app.mount("/data", StaticFiles(directory="docs/data"), name="data")
 

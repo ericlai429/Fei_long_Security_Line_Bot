@@ -1480,7 +1480,7 @@
       const select = document.getElementById('vaultGuardSelect');
       
       const allNames = extractGuardNames();
-      let savedName = localStorage.getItem('feilong_vault_my_name') || '';
+      let savedName = localStorage.getItem('feilong_vault_my_name') || '賴鯤仲';
 
       if (select) {
         select.innerHTML = '<option value="">-- 請選擇同仁姓名 --</option>' + 
@@ -1543,6 +1543,7 @@
         monthDataset = EMBEDDED_SCHEDULE_DATA_10;
       }
       const datasets = [monthDataset];
+      const manualOverrides = (currentMonthNum === 9) ? getManualShiftOverrides() : {};
 
       datasets.forEach(dataObj => {
         if (!dataObj) return;
@@ -1555,8 +1556,19 @@
             const dayOfWeek = r['星期'] || '';
             const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
 
-            const dayVal = r['早班 (07-19)'] || '';
-            const nightVal = r['晚班 (19-07)'] || '';
+            let dayVal = r['早班 (07-19)'] || '';
+            let nightVal = r['晚班 (19-07)'] || '';
+
+            if (currentMonthNum === 9) {
+              const keyDay = `${tabKey}_${dateStr}_早班`;
+              const keyNight = `${tabKey}_${dateStr}_晚班`;
+              if (manualOverrides[keyDay] && manualOverrides[keyDay].person) {
+                dayVal = manualOverrides[keyDay].person;
+              }
+              if (manualOverrides[keyNight] && manualOverrides[keyNight].person) {
+                nightVal = manualOverrides[keyNight].person;
+              }
+            }
 
             const isDayG = dayVal && (dayVal.includes('G班') || dayVal.includes('G 6h') || dayVal.includes('6h') || dayVal.includes('6小時'));
             const isNightG = nightVal && (nightVal.includes('G班') || nightVal.includes('G 6h') || nightVal.includes('6h') || nightVal.includes('6小時'));
@@ -1691,7 +1703,7 @@
           <div class="space-y-2">
             <div class="text-xs font-bold text-slate-400 flex items-center justify-between px-1">
               <span>📅 個人執勤排班明細列表 (${userShifts.length} 班次)</span>
-              <span class="text-[10px] text-sky-400 font-mono">115年8月份</span>
+              <span class="text-[10px] text-sky-400 font-mono">115年${currentMonthNum}月份</span>
             </div>
             <div class="divide-y divide-slate-800 border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
         `;
@@ -1876,7 +1888,7 @@
               <div class="text-center">
                 <div class="text-xs font-bold text-amber-300 flex items-center justify-center gap-1.5">
                   <span>小金豬存錢桶</span>
-                  <span class="text-[10px] bg-amber-950 text-amber-400 px-2 py-0.5 rounded-full border border-amber-800 font-mono">115年8月份</span>
+                  <span class="text-[10px] bg-amber-950 text-amber-400 px-2 py-0.5 rounded-full border border-amber-800 font-mono">115年${(typeof selectedMonth !== 'undefined' ? selectedMonth : 9)}月份</span>
                 </div>
                 <div class="text-base font-black text-white mt-0.5">${targetName} 當月累計資產</div>
               </div>
@@ -5329,6 +5341,7 @@
             <tbody class="divide-y divide-slate-800/90">
       `;
 
+      const now = new Date();
       const todayShort = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
       const todayFull = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
 
