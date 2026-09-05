@@ -835,6 +835,11 @@
     let selectedMonth = 9;
     const REAL_CURRENT_YEAR = 2026;
     const REAL_CURRENT_MONTH = 9;
+
+    // 🏷️ 系統軟體版本與 GitHub 該次版本 push 日期 (固定對齊發布版本，不隨查詢歷史月份漂移)
+    const APP_SYSTEM_VERSION = '1.095';
+    const APP_SYSTEM_RELEASE_DATE = '9/5日';
+
     let rawScheduleData = null;
     let isUnlocked = false;
     let isSetupMode = true;
@@ -5340,14 +5345,9 @@
         if (k.startsWith(currentTabKey)) activeOverrideCount++;
       });
 
-      const now = new Date();
-      let updateDayStr = `${now.getMonth() + 1}/${now.getDate()}日`;
-      if (data && data.updated_at) {
-        const mMatch = data.updated_at.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-        if (mMatch) {
-          updateDayStr = `${parseInt(mMatch[2], 10)}/${parseInt(mMatch[3], 10)}日`;
-        }
-      }
+      // 🌟 系統資訊版本與最後更新日：永遠對齊 GitHub 該次版本 push 發布日期 (不受切換月份歷史資料影響)
+      const systemVersionStr = APP_SYSTEM_VERSION;
+      const systemReleaseDateStr = APP_SYSTEM_RELEASE_DATE;
 
       let overrideBannerHtml = '';
       if (activeOverrideCount > 0 && isUnlocked) {
@@ -5384,7 +5384,7 @@
           <div id="scheduleVersionBadgeContainer" class="flex items-center gap-2 text-xs font-mono transition-[margin] duration-150">
             <span id="scheduleVersionBadge" class="px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-700 text-amber-300 font-bold shadow-sm flex items-center gap-1.5 whitespace-nowrap">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block animate-pulse"></span>
-              <span>目前版本1.095,最後更新${updateDayStr}</span>
+              <span>目前版本${systemVersionStr},最後更新${systemReleaseDateStr}</span>
             </span>
           </div>
         </div>
