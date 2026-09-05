@@ -670,20 +670,15 @@
   <!-- Main Pure View (Ultra-Clean, Zero-Overflow Responsive Top Navbar) -->
   <header class="no-print w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 sm:px-4 sticky top-0 z-20 backdrop-blur-md box-border overflow-hidden">
     <div class="max-w-4xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
-      <!-- 🟢 左側：連線偵測狀態標籤 ＋ 雲端試算表對齊按鈕 (統一 h-8 高度，取消呼吸燈) -->
-      <div class="flex items-center shrink-0 gap-1.5 sm:gap-2">
-        <div id="connectionStatusBadge" title="連線狀態正常" class="h-8 flex items-center gap-1.5 px-2 sm:px-2.5 rounded-xl text-xs font-bold bg-slate-950 border border-emerald-500/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.25)] shrink-0">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0"></span>
-          <span id="connectionStatusText" class="font-mono font-bold tracking-tight">連線</span>
-        </div>
-
+      <!-- 🟢 左側：雲端試算表對齊按鈕 ＆ 版本核對燈號 (取代舊連線網格，統一 h-8 高度) -->
+      <div class="flex items-center shrink-0">
         <!-- 🔄 雲端試算表 9月對齊按鈕 ＆ 版本核對燈號 -->
         <button 
           type="button" 
           id="cloudSyncAlignBtn" 
           onclick="triggerCloudDataAlign(true)"
           title="每分鐘握手核對雲端試算表版本 ｜ 點擊檢查並強制對齊最新版"
-          class="h-8 flex items-center gap-1.5 px-2 sm:px-2.5 rounded-xl text-xs font-bold bg-slate-950/90 border border-emerald-500/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.25)] shrink-0 transition active:scale-95 cursor-pointer"
+          class="h-8 flex items-center gap-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold bg-slate-950/90 border border-emerald-500/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.25)] shrink-0 transition active:scale-95 cursor-pointer"
         >
           <span id="cloudSyncStatusDot" class="relative flex h-2 w-2 items-center justify-center shrink-0">
             <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0"></span>
@@ -845,31 +840,9 @@
     let isSetupMode = true;
     let sessionMasterPin = '';
 
-    // 💡 連線狀態管理 (統一 h-8 高度，取消呼吸燈)
+    // 💡 連線狀態功能已完全由「對齊」燈號按鈕 (#cloudSyncAlignBtn) 取代
     function setConnectionStatus(status, text) {
-      const badge = document.getElementById('connectionStatusBadge');
-      const textElem = document.getElementById('connectionStatusText');
-      if (!badge) return;
-
-      if (status === 'connected') {
-        badge.className = 'h-8 inline-flex items-center gap-1.5 px-2 sm:px-2.5 rounded-xl text-xs font-bold bg-slate-950 text-emerald-300 border border-emerald-500/80 shadow-[0_0_10px_rgba(16,185,129,0.25)] shrink-0 transition';
-        badge.innerHTML = `
-          <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0"></span>
-          <span id="connectionStatusText" class="font-mono font-bold tracking-tight">${text}</span>
-        `;
-      } else if (status === 'connecting') {
-        badge.className = 'h-8 inline-flex items-center gap-1.5 px-2 sm:px-2.5 rounded-xl text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-700/80 shrink-0 transition';
-        badge.innerHTML = `
-          <span class="w-2 h-2 rounded-full bg-amber-400 inline-block shrink-0"></span>
-          <span id="connectionStatusText" class="font-mono font-bold tracking-tight">${text}</span>
-        `;
-      } else {
-        badge.className = 'h-8 inline-flex items-center gap-1.5 px-2 sm:px-2.5 rounded-xl text-xs font-bold bg-rose-950/90 text-rose-300 border border-rose-700 shrink-0 transition';
-        badge.innerHTML = `
-          <span class="w-2 h-2 rounded-full bg-rose-500 inline-block shrink-0"></span>
-          <span id="connectionStatusText" class="font-mono font-bold tracking-tight">${text}</span>
-        `;
-      }
+      // 保留空函數維護相容性，全部由 setCloudSyncStatus 統一呈現
     }
 
     // 🍞 現代化高質感 Toast 浮窗提示系統 (支援全域呼叫)
