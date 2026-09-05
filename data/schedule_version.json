@@ -8,13 +8,13 @@
       "file": "schedule_4_tsgh_eng.json",
       "version_hash": "97f09d6b7dfeae4065710f1528e53097",
       "row_count": 30,
-      "updated_at": "2026-08-31 06:00"
+      "updated_at": "2026-09-05 10:15"
     },
     "5.三總重症大樓": {
       "file": "schedule_5_tsgh_icu.json",
       "version_hash": "53737215dfe3a5a2ef0454a36ccc112c",
       "row_count": 30,
-      "updated_at": "2026-08-31 06:00"
+      "updated_at": "2026-09-05 10:15"
     }
   }
 }

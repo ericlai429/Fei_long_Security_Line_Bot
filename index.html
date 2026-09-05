@@ -451,6 +451,208 @@
     </div>
   </div>
 
+  <!-- ✏️ 前端手動改班 / 暫代班登記 Modal (次優先權) -->
+  <div id="shiftOverrideModal" style="display: none;" class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-amber-500/80 rounded-3xl max-w-lg w-full p-4 sm:p-6 space-y-4 shadow-2xl relative max-h-[92vh] flex flex-col">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+        <div class="flex items-center gap-2.5 text-white font-bold text-base">
+          <div class="w-9 h-9 rounded-xl bg-amber-950/80 border border-amber-500 flex items-center justify-center text-amber-400 shadow-md">
+            <i class="fa-solid fa-user-pen text-sm"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-extrabold text-white leading-tight flex items-center gap-2">
+              <span>前端手動改班 / 暫代班</span>
+              <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold">次優先權</span>
+            </h2>
+            <p class="text-xs text-slate-400 font-medium">公司共享試算表為最高正本 ｜ 前端手動覆蓋隨時可還原</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeShiftOverrideModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <!-- Priority Hierarchy Indicator -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-2.5 text-[11px] text-slate-300 space-y-1 shrink-0">
+        <div class="flex items-center justify-between">
+          <span class="font-bold flex items-center gap-1.5 text-emerald-400">
+            <i class="fa-solid fa-cloud"></i> 🥇 最高優先權：公司共享試算表 (官方雲端正本)
+          </span>
+          <span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.2 rounded font-mono">TOP</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="font-bold flex items-center gap-1.5 text-amber-300">
+            <i class="fa-solid fa-pen-to-square"></i> 🥈 次優先權：前端手動暫代班 (即時覆蓋、本機快取)
+          </span>
+          <span class="text-[10px] bg-amber-950 text-amber-300 border border-amber-800 px-1.5 py-0.2 rounded font-mono">OVERRIDE</span>
+        </div>
+      </div>
+
+      <!-- Form Content Area -->
+      <div class="flex-1 overflow-y-auto space-y-3.5 pr-1 text-xs">
+        
+        <!-- 1. 案場選擇 (工務所 / 重症) -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-hospital text-indigo-400"></i>
+            <span>選擇哨點 / 崗位：</span>
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <button 
+              type="button" 
+              id="overridePostEngBtn" 
+              onclick="setOverridePost('4.三總工務所')" 
+              class="h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-slate-800 border-slate-700 text-slate-300"
+            >
+              <i class="fa-solid fa-building-shield text-xs"></i>
+              <span>4. 三總工務所</span>
+            </button>
+            <button 
+              type="button" 
+              id="overridePostIcuBtn" 
+              onclick="setOverridePost('5.三總重症大樓')" 
+              class="h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-purple-600/30 border-purple-500 text-purple-200"
+            >
+              <i class="fa-solid fa-hospital text-xs"></i>
+              <span>5. 三總重症大樓</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. 班別選擇 (A 班 / B 班) -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-clock text-amber-400"></i>
+            <span>選擇班別 (A or B 班)：</span>
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <button 
+              type="button" 
+              id="overrideShiftABtn" 
+              onclick="setOverrideShift('早班', 'A')" 
+              class="h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-amber-500/25 border-amber-500 text-amber-200"
+            >
+              <span>☀️ 早班 (A 班 07-19)</span>
+            </button>
+            <button 
+              type="button" 
+              id="overrideShiftBBtn" 
+              onclick="setOverrideShift('晚班', 'B')" 
+              class="h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-slate-800 border-slate-700 text-slate-300"
+            >
+              <span>🌆 晚班 (B 班 19-07)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. 日期選擇 -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-calendar-day text-sky-400"></i> 選擇日期：</span>
+            <div class="flex items-center gap-1">
+              <button type="button" onclick="setOverrideDateQuick('today')" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]">今天</button>
+              <button type="button" onclick="setOverrideDateQuick('tomorrow')" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]">明天</button>
+              <button type="button" onclick="setOverrideDateSpecific('2026/09/04')" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 text-[10px]">9/4</button>
+              <button type="button" onclick="setOverrideDateSpecific('2026/09/05')" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 text-[10px]">9/5</button>
+            </div>
+          </label>
+          <input 
+            type="date" 
+            id="overrideDateInput" 
+            onchange="onOverrideParamsChange()" 
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-sm focus:border-amber-400 outline-none"
+          />
+        </div>
+
+        <!-- 4. 強制填入的人名 (姓名與電話) -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-tag text-emerald-400"></i> 強制填入的人名 (含電話)：</span>
+            <span class="text-[10px] text-amber-400/80">可點選下方快捷或直接輸入</span>
+          </label>
+          <input 
+            type="text" 
+            id="overridePersonInput" 
+            placeholder="請輸入姓名 (如: 賴鯤仲 0965-591-375)"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-sm focus:border-amber-400 outline-none placeholder:text-slate-600"
+          />
+          
+          <!-- 快捷同仁選單 -->
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <button type="button" onclick="setOverridePersonChip('賴鯤仲 (0965-591-375)')" class="px-2 py-1 bg-slate-800 hover:bg-amber-600/30 hover:border-amber-500 border border-slate-700 rounded-lg text-slate-200 text-[11px] font-bold transition">賴鯤仲</button>
+            <button type="button" onclick="setOverridePersonChip('林又妗 (0908-010-300)')" class="px-2 py-1 bg-slate-800 hover:bg-amber-600/30 hover:border-amber-500 border border-slate-700 rounded-lg text-slate-200 text-[11px] font-bold transition">林又妗</button>
+            <button type="button" onclick="setOverridePersonChip('施俊宏 (0955-371-298)')" class="px-2 py-1 bg-slate-800 hover:bg-amber-600/30 hover:border-amber-500 border border-slate-700 rounded-lg text-slate-200 text-[11px] font-bold transition">施俊宏</button>
+            <button type="button" onclick="setOverridePersonChip('黃證書 (0985-108-809)')" class="px-2 py-1 bg-slate-800 hover:bg-amber-600/30 hover:border-amber-500 border border-slate-700 rounded-lg text-slate-200 text-[11px] font-bold transition">黃證書</button>
+            <button type="button" onclick="setOverridePersonChip('黃仁忠 (0975-009-622)')" class="px-2 py-1 bg-slate-800 hover:bg-amber-600/30 hover:border-amber-500 border border-slate-700 rounded-lg text-slate-200 text-[11px] font-bold transition">黃仁忠</button>
+            <button type="button" onclick="setOverridePersonChip('盧建村 (0955-521-871)')" class="px-2 py-1 bg-slate-800 hover:bg-amber-600/30 hover:border-amber-500 border border-slate-700 rounded-lg text-slate-200 text-[11px] font-bold transition">盧建村</button>
+            <button type="button" onclick="setOverridePersonChip('邱顯升 (0928-882-119)')" class="px-2 py-1 bg-slate-800 hover:bg-amber-600/30 hover:border-amber-500 border border-slate-700 rounded-lg text-slate-200 text-[11px] font-bold transition">邱顯升</button>
+            <button type="button" onclick="setOverridePersonChip('林郁欽 (0909-079-073)')" class="px-2 py-1 bg-slate-800 hover:bg-amber-600/30 hover:border-amber-500 border border-slate-700 rounded-lg text-slate-200 text-[11px] font-bold transition">林郁欽</button>
+          </div>
+        </div>
+
+        <!-- 5. 當前雲端正本 vs 前端手動暫代 對照框 -->
+        <div id="overrideComparisonBox" class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
+          <div class="text-[11px] font-bold text-slate-400">目前該班次排班狀態：</div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">🥇 雲端正本：</span>
+            <span id="cmpCloudOriginalText" class="font-bold text-slate-200">-</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-amber-400">🥈 前端暫代：</span>
+            <span id="cmpFrontendOverrideText" class="font-bold text-amber-300">(尚無手動覆蓋，以雲端為準)</span>
+          </div>
+        </div>
+
+        <!-- 6. 作用中的手動暫代清單 (可快速單筆刪除) -->
+        <div id="activeOverridesListSection" class="space-y-1">
+          <div class="text-[11px] font-bold text-slate-400 flex items-center justify-between">
+            <span>目前所有手動暫代清單：</span>
+            <button type="button" onclick="clearAllShiftOverrides()" class="text-rose-400 hover:text-rose-300 text-[10px] underline">全部清空</button>
+          </div>
+          <div id="activeOverridesListContainer" class="max-h-32 overflow-y-auto space-y-1">
+            <!-- 渲染中 -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons Footer -->
+      <div class="border-t border-slate-800 pt-3 flex items-center justify-between gap-2 shrink-0">
+        <button 
+          type="button" 
+          onclick="removeCurrentShiftOverride()" 
+          id="removeCurrentOverrideBtn"
+          title="清除此班次的手動暫代，恢復雲端試算表正本"
+          class="h-9 px-3 bg-slate-800 hover:bg-slate-700 text-rose-300 text-xs font-bold rounded-xl transition border border-rose-500/30 flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-rotate-left text-xs"></i>
+          <span>恢復雲端</span>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            onclick="closeShiftOverrideModal()" 
+            class="h-9 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition"
+          >
+            關閉
+          </button>
+          <button 
+            type="button" 
+            onclick="saveShiftOverride()" 
+            class="h-9 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black rounded-xl transition shadow-lg flex items-center gap-1.5 active:scale-95 cursor-pointer"
+          >
+            <i class="fa-solid fa-check"></i>
+            <span>確認改班 (即刻生效)</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- 🪙 T_MUD 專案真實金幣音效播放器 -->
   <audio id="coinAudioPlayer" preload="auto">
     <source src="./assets/coin.m4a" type="audio/mp4">
@@ -484,15 +686,28 @@
         </button>
       </div>
 
-      <!-- 右側按鈕群：金庫 ＋ 登入 ＋ 查詢 (尺寸質感 100% 統一對齊) -->
-      <div class="flex items-center gap-1.5 shrink-0 pl-1">
+      <!-- 右側按鈕群：改班 ＋ 金庫 ＋ 登入 ＋ 查詢 (尺寸質感 100% 統一對齊) -->
+      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0 pl-1">
+        <!-- ✏️ 前端改班按鈕 (手動暫代班登記，次優先) -->
+        <button 
+          type="button" 
+          id="shiftOverrideBtn"
+          onclick="openShiftOverrideModal()" 
+          title="✏️ 前端改班 ｜ 手動輸入暫代班 (次優先，共享試算表為最高正本)"
+          class="h-8 px-2 sm:px-2.5 bg-slate-950 hover:bg-slate-900 border border-amber-500/80 hover:border-amber-400 text-amber-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
+        >
+          <i class="fa-solid fa-user-pen text-xs text-amber-400"></i>
+          <span>改班</span>
+          <span id="activeOverrideCountBadge" style="display: none;" class="px-1.5 py-0.2 bg-amber-500 text-slate-950 text-[9px] font-black rounded-full leading-none ml-0.5">0</span>
+        </button>
+
         <!-- 🏦 個人金庫按鈕 (切換至個人班表系統) -->
         <button 
           type="button" 
           id="personalVaultBtn"
           onclick="openPersonalVaultModal()" 
           title="🏦 個人金庫 ｜ 切換至個人專屬班表系統"
-          class="h-8 px-2.5 sm:px-3 bg-slate-950 hover:bg-slate-900 border border-sky-500/80 hover:border-sky-400 text-sky-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
+          class="h-8 px-2 sm:px-2.5 bg-slate-950 hover:bg-slate-900 border border-sky-500/80 hover:border-sky-400 text-sky-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
         >
           <i class="fa-solid fa-vault text-xs text-sky-400"></i>
           <span>金庫</span>
@@ -604,7 +819,7 @@
 
   <script>
         // 📦 即時排班預先載入快照 (9月當月本月 ＆ 8月上月歷史)
-    const EMBEDDED_SCHEDULE_DATA_9 = {"4.三總工務所": {"tab_name": "4.三總工務所", "year": 2026, "month": 9, "is_current_month": true, "updated_at": "2026-08-31 06:00", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/09/01", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/02", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/03", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/04", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/05", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/06", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/07", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/08", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/09", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/10", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/11", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/12", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/13", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/14", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/15", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/16", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/17", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/18", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/19", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/20", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/21", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/22", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/23", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/24", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/25", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/26", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/27", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/28", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/29", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/30", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}], "members": ["賴鯤仲", "黃仁忠", "黃證書"], "posts": ["4.三總工務所"], "version_hash": "97f09d6b7dfeae4065710f1528e53097"}, "5.三總重症大樓": {"tab_name": "5.三總重症大樓", "year": 2026, "month": 9, "is_current_month": true, "updated_at": "2026-08-31 06:00", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/09/01", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "盧建村 (0955-521-871)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/02", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/03", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/04", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "施俊宏 (0955-371-298)", "substitutes": ["day_賴鯤仲"]}, {"日期": "2026/09/05", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/06", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/07", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/08", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/09", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/10", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/11", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/12", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/13", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "邱顯升 (0928-882-119)"}, {"日期": "2026/09/14", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/15", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/16", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/17", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/18", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/19", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/20", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/21", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/22", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/23", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/24", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/25", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/26", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/27", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/28", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/29", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/30", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}], "members": ["施俊宏", "林又妗", "盧建村", "賴鯤仲", "邱顯升"], "posts": ["5.三總重症大樓"], "version_hash": "53737215dfe3a5a2ef0454a36ccc112c"}};
+    const EMBEDDED_SCHEDULE_DATA_9 = {"4.三總工務所": {"tab_name": "4.三總工務所", "year": 2026, "month": 9, "is_current_month": true, "updated_at": "2026-09-05 10:15", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/09/01", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/02", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/03", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/04", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/05", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/06", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/07", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/08", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/09", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/10", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/11", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/12", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/13", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/14", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/15", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/16", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/17", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/18", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/19", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/20", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/21", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/22", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/23", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/24", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/25", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/26", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/27", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/28", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/29", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/30", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}], "members": ["賴鯤仲", "黃仁忠", "黃證書"], "posts": ["4.三總工務所"], "version_hash": "97f09d6b7dfeae4065710f1528e53097"}, "5.三總重症大樓": {"tab_name": "5.三總重症大樓", "year": 2026, "month": 9, "is_current_month": true, "updated_at": "2026-09-05 10:15", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/09/01", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "盧建村 (0955-521-871)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/02", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/03", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/04", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "施俊宏 (0955-371-298)", "substitutes": ["day_賴鯤仲"]}, {"日期": "2026/09/05", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/06", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/07", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/08", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/09", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/10", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/11", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/12", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/13", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "邱顯升 (0928-882-119)"}, {"日期": "2026/09/14", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/15", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/16", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/17", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/18", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/19", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/20", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/21", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/22", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/23", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/24", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/25", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/26", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/27", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/28", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/29", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/30", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}], "members": ["施俊宏", "林又妗", "盧建村", "賴鯤仲", "邱顯升"], "posts": ["5.三總重症大樓"], "version_hash": "53737215dfe3a5a2ef0454a36ccc112c"}};
     // 8月上月
     const EMBEDDED_SCHEDULE_DATA_8 = {
       "4.三總工務所": {"tab_name": "4.三總工務所", "year": 2026, "month": 8, "is_current_month": true, "updated_at": "2026-08-20 00:43", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/08/01", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "盧建村 (0955-521-871)", "晚班 (19-07)": "周有輝"}, {"日期": "2026/08/02", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/03", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "蘇秦漢 (0971-212-165)"}, {"日期": "2026/08/04", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/05", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/06", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/07", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/08", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/09", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/10", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/11", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/12", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/13", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/14", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/15", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/16", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "李宏熙 (0965-373-331)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/17", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/18", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/19", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/20", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "葉榮東 (0926-348-665)"}, {"日期": "2026/08/21", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/22", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/23", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/24", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/25", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/26", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/27", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/28", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/29", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/30", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/31", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}], "members": ["周有輝", "李宏熙", "盧建村", "葉榮東", "蘇秦漢", "賴鯤仲", "黃仁忠", "黃證書"], "posts": ["4.三總工務所"]},
@@ -4366,10 +4581,348 @@
       return now < shiftStartTime;
     }
 
+    // =========================================================================
+    // ✏️ 前端手動改班 / 暫代班模組 (次優先權，共享試算表為最高正本權)
+    // =========================================================================
+    const SHIFT_OVERRIDES_STORAGE_KEY = 'tsgh_manual_shift_overrides';
+
+    let currentOverridePost = '4.三總工務所';
+    let currentOverrideShift = '早班';
+    let currentOverrideShiftCode = 'A';
+    let currentOverrideDate = '';
+
+    function getManualShiftOverrides() {
+      try {
+        const raw = localStorage.getItem(SHIFT_OVERRIDES_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveManualShiftOverridesToStorage(overrides) {
+      try {
+        localStorage.setItem(SHIFT_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides));
+        updateOverrideNavbarBadge();
+      } catch (e) {}
+    }
+
+    function updateOverrideNavbarBadge() {
+      const overrides = getManualShiftOverrides();
+      const count = Object.keys(overrides).length;
+      const badge = document.getElementById('activeOverrideCountBadge');
+      if (badge) {
+        if (count > 0) {
+          badge.textContent = count;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    }
+
+    function openShiftOverrideModal(targetDate = null, targetShift = null, targetTab = null) {
+      const now = new Date();
+      if (targetTab) {
+        currentOverridePost = targetTab.includes('工務所') ? '4.三總工務所' : '5.三總重症大樓';
+      } else {
+        const isEng = (currentTabName.includes('4.') || currentTabName.includes('工務所'));
+        currentOverridePost = isEng ? '4.三總工務所' : '5.三總重症大樓';
+      }
+      setOverridePost(currentOverridePost, false);
+
+      if (targetShift) {
+        if (targetShift.includes('晚') || targetShift.includes('夜') || targetShift.includes('B')) {
+          setOverrideShift('晚班', 'B', false);
+        } else {
+          setOverrideShift('早班', 'A', false);
+        }
+      } else {
+        setOverrideShift('早班', 'A', false);
+      }
+
+      const dateInput = document.getElementById('overrideDateInput');
+      if (targetDate) {
+        let normalizedDate = targetDate.replace(/\//g, '-');
+        if (normalizedDate.length === 5) {
+          normalizedDate = `${selectedYear}-${normalizedDate}`;
+        }
+        currentOverrideDate = normalizedDate;
+      } else {
+        const yyyy = selectedYear || now.getFullYear();
+        const mm = String(selectedMonth || (now.getMonth() + 1)).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        currentOverrideDate = `${yyyy}-${mm}-${dd}`;
+      }
+      if (dateInput) dateInput.value = currentOverrideDate;
+
+      onOverrideParamsChange();
+      renderActiveOverridesList();
+
+      const modal = document.getElementById('shiftOverrideModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeShiftOverrideModal() {
+      const modal = document.getElementById('shiftOverrideModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function setOverridePost(postName, triggerUpdate = true) {
+      currentOverridePost = postName;
+      const engBtn = document.getElementById('overridePostEngBtn');
+      const icuBtn = document.getElementById('overridePostIcuBtn');
+      if (engBtn && icuBtn) {
+        if (postName.includes('工務所')) {
+          engBtn.className = 'h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-gradient-to-r from-purple-600 to-sky-600 text-white shadow-md border-purple-500';
+          icuBtn.className = 'h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750';
+        } else {
+          icuBtn.className = 'h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-gradient-to-r from-purple-600 to-sky-600 text-white shadow-md border-purple-500';
+          engBtn.className = 'h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750';
+        }
+      }
+      if (triggerUpdate) onOverrideParamsChange();
+    }
+
+    function setOverrideShift(shiftName, code, triggerUpdate = true) {
+      currentOverrideShift = shiftName;
+      currentOverrideShiftCode = code;
+      const aBtn = document.getElementById('overrideShiftABtn');
+      const bBtn = document.getElementById('overrideShiftBBtn');
+      if (aBtn && bBtn) {
+        if (code === 'A') {
+          aBtn.className = 'h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-md border-amber-400 font-black';
+          bBtn.className = 'h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750';
+        } else {
+          bBtn.className = 'h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-sky-500 text-slate-950 shadow-md border-sky-400 font-black';
+          aBtn.className = 'h-9 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750';
+        }
+      }
+      if (triggerUpdate) onOverrideParamsChange();
+    }
+
+    function setOverrideDateQuick(rel) {
+      const now = new Date();
+      let target = new Date();
+      if (rel === 'tomorrow') {
+        target.setDate(now.getDate() + 1);
+      }
+      const yyyy = target.getFullYear();
+      const mm = String(target.getMonth() + 1).padStart(2, '0');
+      const dd = String(target.getDate()).padStart(2, '0');
+      currentOverrideDate = `${yyyy}-${mm}-${dd}`;
+      const input = document.getElementById('overrideDateInput');
+      if (input) input.value = currentOverrideDate;
+      onOverrideParamsChange();
+    }
+
+    function setOverrideDateSpecific(dateStr) {
+      let normalized = dateStr.replace(/\//g, '-');
+      currentOverrideDate = normalized;
+      const input = document.getElementById('overrideDateInput');
+      if (input) input.value = currentOverrideDate;
+      onOverrideParamsChange();
+    }
+
+    function setOverridePersonChip(personStr) {
+      const input = document.getElementById('overridePersonInput');
+      if (input) {
+        input.value = personStr;
+        input.focus();
+      }
+    }
+
+    function getOverrideSlotKey(tabName, dateStr, shiftName) {
+      let normDate = dateStr.replace(/-/g, '/');
+      return `${tabName}_${normDate}_${shiftName}`;
+    }
+
+    function onOverrideParamsChange() {
+      const dateInput = document.getElementById('overrideDateInput');
+      if (dateInput && dateInput.value) {
+        currentOverrideDate = dateInput.value;
+      }
+      if (!currentOverrideDate) return;
+
+      const normDate = currentOverrideDate.replace(/-/g, '/');
+      const slotKey = getOverrideSlotKey(currentOverridePost, normDate, currentOverrideShift);
+
+      let cloudOriginal = '—';
+      const isEng = currentOverridePost.includes('工務所');
+      const tabKey = isEng ? '4.三總工務所' : '5.三總重症大樓';
+      
+      let sourceRows = [];
+      if (typeof rawScheduleData !== 'undefined' && rawScheduleData && rawScheduleData.rows && (rawScheduleData.tab_name === tabKey || currentTabName === tabKey)) {
+        sourceRows = rawScheduleData.rows;
+      } else if (typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined' && EMBEDDED_SCHEDULE_DATA_9[tabKey]) {
+        sourceRows = EMBEDDED_SCHEDULE_DATA_9[tabKey].rows || [];
+      }
+
+      for (const r of sourceRows) {
+        const rDate = (r['日期'] || '').trim().replace(/-/g, '/');
+        if (rDate === normDate || normDate.endsWith(rDate) || rDate.endsWith(normDate)) {
+          if (currentOverrideShift === '早班') {
+            cloudOriginal = r['早班 (07-19)'] || r['早班'] || '—';
+          } else {
+            cloudOriginal = r['晚班 (19-07)'] || r['晚班'] || '—';
+          }
+          break;
+        }
+      }
+
+      const cmpCloud = document.getElementById('cmpCloudOriginalText');
+      if (cmpCloud) cmpCloud.textContent = cloudOriginal;
+
+      const overrides = getManualShiftOverrides();
+      const currentOverride = overrides[slotKey];
+      const cmpOverride = document.getElementById('cmpFrontendOverrideText');
+      const personInput = document.getElementById('overridePersonInput');
+      const removeBtn = document.getElementById('removeCurrentOverrideBtn');
+
+      if (currentOverride && currentOverride.person) {
+        if (cmpOverride) cmpOverride.innerHTML = `<span class="text-amber-300 font-black">${currentOverride.person}</span> <span class="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[9px] ml-1">暫代中</span>`;
+        if (personInput && !personInput.value) {
+          personInput.value = currentOverride.person;
+        }
+        if (removeBtn) removeBtn.style.display = 'inline-flex';
+      } else {
+        if (cmpOverride) cmpOverride.innerHTML = `<span class="text-slate-500 italic">(尚無手動暫代，100% 以雲端正本為準)</span>`;
+        if (removeBtn) removeBtn.style.display = 'none';
+      }
+    }
+
+    function saveShiftOverride() {
+      const personInput = document.getElementById('overridePersonInput');
+      const person = personInput ? personInput.value.trim() : '';
+
+      if (!person) {
+        showToast('⚠️ 請輸入或點選要強制填入的暫代人員姓名！', 'warning');
+        if (personInput) personInput.focus();
+        return;
+      }
+
+      const dateInput = document.getElementById('overrideDateInput');
+      if (dateInput && dateInput.value) {
+        currentOverrideDate = dateInput.value;
+      }
+
+      const normDate = currentOverrideDate.replace(/-/g, '/');
+      const slotKey = getOverrideSlotKey(currentOverridePost, normDate, currentOverrideShift);
+
+      const cmpCloud = document.getElementById('cmpCloudOriginalText');
+      const originalPerson = cmpCloud ? cmpCloud.textContent.trim() : '—';
+
+      const overrides = getManualShiftOverrides();
+      overrides[slotKey] = {
+        tab: currentOverridePost,
+        date: normDate,
+        shift: currentOverrideShift,
+        shift_code: currentOverrideShiftCode,
+        person: person,
+        original: originalPerson,
+        updated_at: new Date().toLocaleString('zh-TW', { hour12: false })
+      };
+
+      saveManualShiftOverridesToStorage(overrides);
+      showToast(`✅ 已登記前端暫代班：${currentOverridePost} ${normDate} [${currentOverrideShiftCode}班] ➜ ${person}`, 'success');
+
+      closeShiftOverrideModal();
+      if (typeof rawScheduleData !== 'undefined' && rawScheduleData) {
+        renderFullScheduleTable(rawScheduleData);
+      } else {
+        fetchFullSchedule(false);
+      }
+    }
+
+    function removeCurrentShiftOverride() {
+      const normDate = currentOverrideDate.replace(/-/g, '/');
+      const slotKey = getOverrideSlotKey(currentOverridePost, normDate, currentOverrideShift);
+      const overrides = getManualShiftOverrides();
+
+      if (overrides[slotKey]) {
+        delete overrides[slotKey];
+        saveManualShiftOverridesToStorage(overrides);
+        showToast(`🔄 已清除此班暫代，100% 恢復為雲端試算表正本！`, 'info');
+      }
+
+      closeShiftOverrideModal();
+      if (typeof rawScheduleData !== 'undefined' && rawScheduleData) {
+        renderFullScheduleTable(rawScheduleData);
+      } else {
+        fetchFullSchedule(false);
+      }
+    }
+
+    function clearAllShiftOverrides() {
+      if (confirm('確定要清空所有「前端手動暫代班」，全部還原為「公司共享試算表正本」嗎？')) {
+        localStorage.removeItem(SHIFT_OVERRIDES_STORAGE_KEY);
+        updateOverrideNavbarBadge();
+        showToast(`🗑️ 已清空所有前端暫代班，全面恢復雲端試算表正本！`, 'info');
+        closeShiftOverrideModal();
+        if (typeof rawScheduleData !== 'undefined' && rawScheduleData) {
+          renderFullScheduleTable(rawScheduleData);
+        } else {
+          fetchFullSchedule(false);
+        }
+      }
+    }
+
+    function renderActiveOverridesList() {
+      const container = document.getElementById('activeOverridesListContainer');
+      if (!container) return;
+
+      const overrides = getManualShiftOverrides();
+      const keys = Object.keys(overrides);
+
+      if (keys.length === 0) {
+        container.innerHTML = '<div class="text-slate-600 text-center py-2 text-[11px] italic">目前無任何手動暫代，全班表皆為雲端正本</div>';
+        return;
+      }
+
+      let html = '';
+      keys.forEach(k => {
+        const item = overrides[k];
+        html += `
+          <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px]">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 text-[9px] shrink-0">${item.shift_code}班</span>
+              <span class="text-slate-300 font-mono shrink-0">${item.date.replace('2026/', '')}</span>
+              <span class="text-slate-400 truncate shrink-0">${item.tab.includes('工務所') ? '工務' : '重症'}</span>
+              <span class="text-amber-300 font-bold truncate">${item.person}</span>
+            </div>
+            <button 
+              type="button" 
+              onclick="event.stopPropagation(); deleteSingleOverride('${k}')" 
+              title="刪除此筆暫代"
+              class="text-slate-500 hover:text-rose-400 p-1 text-xs shrink-0 ml-1"
+            >
+              <i class="fa-solid fa-trash-can text-[10px]"></i>
+            </button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function deleteSingleOverride(key) {
+      const overrides = getManualShiftOverrides();
+      if (overrides[key]) {
+        delete overrides[key];
+        saveManualShiftOverridesToStorage(overrides);
+        showToast('已移除該筆暫代班', 'info');
+        onOverrideParamsChange();
+        renderActiveOverridesList();
+        if (typeof rawScheduleData !== 'undefined' && rawScheduleData) {
+          renderFullScheduleTable(rawScheduleData);
+        }
+      }
+    }
+
     // 🔤 人員名稱格式化：100% 水平垂直居中、固定寬高與均勻字距，徹底杜絕歪斜
     // 🔒 資安防護：前天及更早之排班，電話不浮窗顯示 (Admin 登入解鎖者無此限制)
     // 🟢 替補人員 (未執班前)：淡綠色呼吸燈外框 High-Light 顯示
-    function formatName(nameStr, isHistorical = false, hidePhone = false, isUpcomingSubstitute = false) {
+    // 🥈 手動暫代班 (次優先)：琥珀色外框 High-Light 顯示
+    function formatName(nameStr, isHistorical = false, hidePhone = false, isUpcomingSubstitute = false, isManualOverride = false, targetDate = '', targetShift = '', targetTab = '') {
       if (!nameStr || nameStr === '-' || nameStr === '—') return '<span class="inline-block text-slate-600 font-bold text-sm">—</span>';
       
       const items = nameStr.split(/[、,]+/).filter(Boolean);
@@ -4388,6 +4941,31 @@
         const gTagHtml = isGShift 
           ? `<span class="ml-1 px-1 py-0.5 rounded text-[9px] font-black bg-cyan-400 text-slate-950 leading-none shrink-0 shadow-sm" title="⚡ G 班 ｜ 6小時1000元">G 6h</span>` 
           : '';
+
+        // 🌟 0. 前端手動改班之暫代人員 (次優先權)：琥珀金呼吸光 High-Light
+        if (isManualOverride) {
+          const telHref = phone ? `tel:${phone.replace(/[-\s]/g, '')}` : '#';
+          return `
+            <div class="relative group inline-flex items-center justify-center whitespace-nowrap">
+              <button 
+                type="button" 
+                onclick="event.stopPropagation(); openShiftOverrideModal('${targetDate}', '${targetShift}', '${targetTab}')"
+                title="🥈 前端手動暫代（次優先）｜ 點擊修改或還原為雲端正本"
+                class="substitute-manual-badge inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-1.5 sm:pl-2 pr-1 rounded-lg bg-amber-950/70 border border-amber-400 text-amber-200 text-[13px] sm:text-[14px] font-black tracking-wider text-left transition shadow-[0_0_10px_rgba(245,158,11,0.3)] active:scale-95 whitespace-nowrap cursor-pointer"
+              >
+                <span class="text-left truncate max-w-[46px] sm:max-w-[54px]">${cleanName}</span>
+                ${gTagHtml}
+                <span class="ml-auto px-1 py-0.5 rounded text-[9px] font-black bg-amber-400 text-slate-950 leading-none shrink-0 shadow-sm">暫代</span>
+                <i class="fa-solid fa-pen text-[8px] text-amber-300 opacity-90 ml-0.5 pointer-events-none"></i>
+              </button>
+              <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-amber-400 text-amber-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
+                <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px]">前端暫代</span>
+                ${phone ? `<a href="${telHref}" class="font-bold underline hover:text-white">${phone}</a>` : ''}
+                <span class="text-[10px] text-amber-400/80 bg-slate-900 px-1.5 py-0.5 rounded">(點擊修改/還原)</span>
+              </div>
+            </div>
+          `;
+        }
 
         // 🌟 1. 請假替補人員（在還沒執班前）：淡綠色呼吸燈外框 High-Light
         if (isUpcomingSubstitute) {
@@ -4658,12 +5236,61 @@
         return;
       }
 
+      const isEng = (currentTabName.includes('4.') || currentTabName.includes('工務所'));
+      const currentTabKey = isEng ? '4.三總工務所' : '5.三總重症大樓';
+      const manualOverrides = getManualShiftOverrides();
+      let activeOverrideCount = 0;
+
+      Object.keys(manualOverrides).forEach(k => {
+        if (k.startsWith(currentTabKey)) activeOverrideCount++;
+      });
+
+      const now = new Date();
+      let updateDayStr = `${now.getMonth() + 1}/${now.getDate()}日`;
+      if (data && data.updated_at) {
+        const mMatch = data.updated_at.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (mMatch) {
+          updateDayStr = `${parseInt(mMatch[2], 10)}/${parseInt(mMatch[3], 10)}日`;
+        }
+      }
+
+      let overrideBannerHtml = '';
+      if (activeOverrideCount > 0) {
+        overrideBannerHtml = `
+          <div class="mb-3 bg-amber-950/40 border border-amber-500/50 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between text-xs text-amber-200 shadow-md flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span>目前生效 <strong class="text-amber-300 font-extrabold text-sm">${activeOverrideCount}</strong> 筆前端手動暫代班 (次優先) ｜ 隨時可一鍵還原為雲端正本</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+              <button type="button" onclick="openShiftOverrideModal()" class="px-2.5 py-1 rounded-xl bg-amber-500/25 hover:bg-amber-500/40 border border-amber-500 text-amber-200 font-bold transition text-xs flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-user-pen text-[10px]"></i>
+                <span>管理暫代</span>
+              </button>
+              <button type="button" onclick="clearAllShiftOverrides()" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-rose-900/50 border border-slate-700 hover:border-rose-500 text-slate-300 hover:text-rose-300 font-bold transition text-xs flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                <span>全部還原</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
       
       let html = `
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        ${overrideBannerHtml}
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-table-list text-emerald-400"></i>
             <span class="text-sm font-bold text-white">人員班表(即時雲端) <span class="text-xs text-emerald-400 font-bold">(${selectedMonth === REAL_CURRENT_MONTH ? "本月" : selectedMonth + "月"}${data.rows.length}天)</span></span>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-mono">
+            <span class="px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-700 text-amber-300 font-bold shadow-sm flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+              <span>目前版本1.095,最後更新${updateDayStr}</span>
+            </span>
           </div>
         </div>
 
@@ -4680,21 +5307,38 @@
             <tbody class="divide-y divide-slate-800/90">
       `;
 
-      const now = new Date();
       const todayShort = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
       const todayFull = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
 
       data.rows.forEach(r => {
         let rawDate = (r['日期'] || '-').trim();
         let dateStr = rawDate;
+        let fullDateStr = rawDate;
         if (dateStr.length > 5 && dateStr.includes('/')) {
           const parts = dateStr.split('/');
           if (parts.length === 3) dateStr = `${parts[1]}/${parts[2]}`;
+        } else if (dateStr.length <= 5 && dateStr.includes('/')) {
+          fullDateStr = `${selectedYear}/${rawDate}`;
         }
 
         const weekStr = (r['星期'] || '').trim();
-        const early = r['早班 (07-19)'] || r['早班'] || '-';
-        const late = r['晚班 (19-07)'] || r['晚班'] || '-';
+        let early = r['早班 (07-19)'] || r['早班'] || '-';
+        let late = r['晚班 (19-07)'] || r['晚班'] || '-';
+
+        // 🌟 次優先：檢查是否有前端手動暫代
+        const keyDay = `${currentTabKey}_${fullDateStr}_早班`;
+        const keyNight = `${currentTabKey}_${fullDateStr}_晚班`;
+        let isDayManualOverride = false;
+        let isNightManualOverride = false;
+
+        if (manualOverrides[keyDay] && manualOverrides[keyDay].person) {
+          early = manualOverrides[keyDay].person;
+          isDayManualOverride = true;
+        }
+        if (manualOverrides[keyNight] && manualOverrides[keyNight].person) {
+          late = manualOverrides[keyNight].person;
+          isNightManualOverride = true;
+        }
 
         // 🟢 替補人員 (在還沒執班前) 自動偵測
         const isDayUpcoming = isShiftUpcoming(rawDate, '早班');
@@ -4707,8 +5351,8 @@
         const isExplicitDaySub = subsList.some(s => typeof s === 'string' && (s.includes('day') || s.includes('早')));
         const isExplicitNightSub = subsList.some(s => typeof s === 'string' && (s.includes('night') || s.includes('晚')));
 
-        const isDaySub = isExplicitDaySub || early.includes('(代)') || early.includes('(替)') || early.includes('(支)') || early.includes('(換)') || early.includes('【代】') || early.includes('【替】') || early.includes('代班') || early.includes('替補') || early.includes('機動') || early.includes('支援');
-        const isNightSub = isExplicitNightSub || late.includes('(代)') || late.includes('(替)') || late.includes('(支)') || late.includes('(換)') || late.includes('【代】') || late.includes('【替】') || late.includes('代班') || late.includes('替補') || late.includes('機動') || late.includes('支援');
+        const isDaySub = isDayManualOverride || isExplicitDaySub || early.includes('(代)') || early.includes('(替)') || early.includes('(支)') || early.includes('(換)') || early.includes('【代】') || early.includes('【替】') || early.includes('代班') || early.includes('替補') || early.includes('機動') || early.includes('支援');
+        const isNightSub = isNightManualOverride || isExplicitNightSub || late.includes('(代)') || late.includes('(替)') || late.includes('(支)') || late.includes('(換)') || late.includes('【代】') || late.includes('【替】') || late.includes('代班') || late.includes('替補') || late.includes('機動') || late.includes('支援');
 
         const isDayUpcomingSubstitute = (isDayUpcoming || isExplicitDaySub) && isDaySub;
         const isNightUpcomingSubstitute = (isNightUpcoming || isExplicitNightSub) && isNightSub;
@@ -4724,7 +5368,6 @@
         let weekDisplayHtml = `<span class="px-1.5 py-0.5 rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
 
         if (isToday) {
-          // 🔥 今天的日期：底色 High Light 暖色系琥珀金光，日期保持與其他列完全相同的等寬版型
           rowClass = 'bg-gradient-to-r from-amber-500/25 via-amber-500/35 to-amber-500/25 border-y-2 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] ring-1 ring-amber-400/60 font-black';
           dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center py-0.5 rounded-md bg-amber-500 text-slate-950 font-black text-xs sm:text-sm font-mono shadow-md">${dateStr}</span>`;
           weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded-md bg-amber-500 text-slate-950 font-black text-[11px] shadow-md">${weekStr}</span>`;
@@ -4745,21 +5388,19 @@
 
         const isHistorical = !(selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH);
 
-        // 🔒 前天與更早之排班判定 (今天 = now.getDate(), 昨天 = now.getDate() - 1, 前天 = now.getDate() - 2)
         let rowDayNum = 0;
         if (dateStr.includes('/')) {
           const parts = dateStr.split('/');
           rowDayNum = parseInt(parts[parts.length - 1], 10) || 0;
         }
-        // 若當前月份且日期 <= 今天 - 2 (前天或更早)，啟動電話隱藏保護
         const isBeforeYesterday = (selectedYear === now.getFullYear() && selectedMonth === (now.getMonth() + 1)) && (rowDayNum > 0 && rowDayNum <= (now.getDate() - 2));
 
         html += `
           <tr class="${rowClass} transition">
-            <td class="w-[17%] py-2.5 px-1 whitespace-nowrap text-center text-xs sm:text-sm">${dateDisplayHtml}</td>
-            <td class="w-[11%] py-2.5 px-0.5 whitespace-nowrap text-center">${weekDisplayHtml}</td>
-            <td class="w-[36%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium">${formatName(early, isHistorical, isBeforeYesterday, isDayUpcomingSubstitute)}</td>
-            <td class="w-[36%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium">${formatName(late, isHistorical, isBeforeYesterday, isNightUpcomingSubstitute)}</td>
+            <td onclick="openShiftOverrideModal('${fullDateStr}', '早班', '${currentTabKey}')" class="w-[17%] py-2.5 px-1 whitespace-nowrap text-center text-xs sm:text-sm cursor-pointer" title="點擊手動改班">${dateDisplayHtml}</td>
+            <td onclick="openShiftOverrideModal('${fullDateStr}', '早班', '${currentTabKey}')" class="w-[11%] py-2.5 px-0.5 whitespace-nowrap text-center cursor-pointer" title="點擊手動改班">${weekDisplayHtml}</td>
+            <td onclick="openShiftOverrideModal('${fullDateStr}', '早班', '${currentTabKey}')" class="w-[36%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium cursor-pointer" title="點擊手動改班/暫代">${formatName(early, isHistorical, isBeforeYesterday, isDayUpcomingSubstitute, isDayManualOverride, fullDateStr, '早班', currentTabKey)}</td>
+            <td onclick="openShiftOverrideModal('${fullDateStr}', '晚班', '${currentTabKey}')" class="w-[36%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium cursor-pointer" title="點擊手動改班/暫代">${formatName(late, isHistorical, isBeforeYesterday, isNightUpcomingSubstitute, isNightManualOverride, fullDateStr, '晚班', currentTabKey)}</td>
           </tr>
         `;
       });
@@ -4778,6 +5419,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       restoreAdminSession();
       updateMonthDisplay();
+      updateOverrideNavbarBadge();
       fetchFullSchedule();
       startCloudVersionHandshake();
     });
