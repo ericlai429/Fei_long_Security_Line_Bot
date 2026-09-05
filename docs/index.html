@@ -97,6 +97,32 @@
       border: 2px solid rgb(52, 211, 153) !important;
       color: #ecfdf5 !important;
     }
+
+    /* ✨ 2026年9月 金黃色字體邊緣呼吸燈效 (Golden Text Glow Pulse) */
+    @keyframes goldenTextGlowPulse {
+      0%, 100% {
+        color: #fef08a;
+        text-shadow: 
+          0 0 4px rgba(245, 158, 11, 0.8),
+          0 0 10px rgba(245, 158, 11, 0.6),
+          0 0 20px rgba(217, 119, 6, 0.4);
+        filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5));
+      }
+      50% {
+        color: #ffffff;
+        text-shadow: 
+          0 0 6px rgba(253, 224, 71, 1),
+          0 0 14px rgba(245, 158, 11, 0.95),
+          0 0 25px rgba(245, 158, 11, 0.85),
+          0 0 38px rgba(217, 119, 6, 0.7);
+        filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.85));
+      }
+    }
+    .golden-glow-pulse {
+      animation: goldenTextGlowPulse 2.2s infinite ease-in-out !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.05em;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
@@ -830,7 +856,7 @@
 
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-calendar-days text-purple-400 text-sm"></i>
-        <span id="currentMonthDisplay" class="font-extrabold text-sm sm:text-base text-white font-mono tracking-wide">2026 年 9 月</span>
+        <span id="currentMonthDisplay" class="font-extrabold text-sm sm:text-base text-white font-mono tracking-wide golden-glow-pulse">2026 年 9 月</span>
         <span id="monthTag" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-800 shadow-sm">本月即時 (9月)</span>
       </div>
 
@@ -1365,7 +1391,15 @@
       const prevBtn = document.getElementById('prevMonthBtn');
       const nextBtn = document.getElementById('nextMonthBtn');
 
-      if (display) display.textContent = `${selectedYear} 年 ${selectedMonth} 月`;
+      if (display) {
+        display.textContent = `${selectedYear} 年 ${selectedMonth} 月`;
+        // 🌟 切換到 2026 年 9 月 時，字的邊緣顯示金黃色的呼吸燈效
+        if (selectedYear === 2026 && selectedMonth === 9) {
+          display.classList.add('golden-glow-pulse');
+        } else {
+          display.classList.remove('golden-glow-pulse');
+        }
+      }
       
       const monthDiff = (selectedYear - REAL_CURRENT_YEAR) * 12 + (selectedMonth - REAL_CURRENT_MONTH);
 
