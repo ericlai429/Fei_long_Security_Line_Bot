@@ -12,6 +12,32 @@
       "leader_email": "ericlai429@gmail.com",
       "is_email_verified": false,
       "verified_leader_user_id": ""
+    },
+    "test_leader_group_01": {
+      "group_id": "test_leader_group_01",
+      "group_name": "急診第一小隊",
+      "expected_group_name": "急診第一小隊",
+      "sheet_tab": "急診與中控小隊",
+      "leader_email": "ericlai429@gmail.com",
+      "is_email_verified": false,
+      "verified_leader_user_id": "",
+      "pin_code": "8821",
+      "pin_updated_at": "2026-09-05T12:13:36.878526",
+      "is_unlocked": true,
+      "unlocked_with_pin": "8821"
+    },
+    "mismatch_group_123": {
+      "group_id": "mismatch_group_123",
+      "group_name": "外部惡搞群",
+      "expected_group_name": "三總保全內部群",
+      "sheet_tab": "三總保全內部群",
+      "leader_email": "",
+      "is_email_verified": false,
+      "verified_leader_user_id": "",
+      "pin_code": "8888",
+      "pin_updated_at": "2026-09-05T12:13:36.914304",
+      "is_unlocked": false,
+      "unlocked_with_pin": ""
     }
   },
   "roles": {

@@ -423,6 +423,46 @@
         </a>
       </div>
 
+      <!-- 👑 管理者金庫控制列：人員切換 ＆ 8月(上月) / 9月(本月) 雙分頁按鈕 -->
+      <div class="bg-slate-950 border border-amber-500/50 rounded-2xl p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-lg">
+        <!-- 人員切換選單 -->
+        <div class="flex items-center gap-2 min-w-[180px]">
+          <span class="text-xs font-bold text-amber-300 flex items-center gap-1 shrink-0">
+            <i class="fa-solid fa-user-shield text-amber-400"></i>
+            <span>查閱人員:</span>
+          </span>
+          <select 
+            id="adminVaultPersonSelect" 
+            onchange="switchAdminVaultPerson(this.value)" 
+            class="h-8 bg-slate-900 border border-amber-600/80 rounded-xl px-2.5 text-xs text-amber-200 font-bold focus:outline-none focus:border-amber-400 cursor-pointer shadow-inner flex-1"
+          >
+            <!-- 動態填入保全同仁名單 -->
+          </select>
+        </div>
+
+        <!-- 8月(上月) 與 9月(本月) 雙分頁切換按鈕 -->
+        <div class="flex items-center gap-1.5 p-1 bg-slate-900/90 border border-slate-800 rounded-xl">
+          <button 
+            type="button" 
+            id="adminVaultTabBtn8" 
+            onclick="switchAdminVaultMonth(8)" 
+            class="h-7 px-3 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <i class="fa-solid fa-calendar text-[10px]"></i>
+            <span>8月 (上月)</span>
+          </button>
+          <button 
+            type="button" 
+            id="adminVaultTabBtn9" 
+            onclick="switchAdminVaultMonth(9)" 
+            class="h-7 px-3 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <i class="fa-solid fa-star text-[10px]"></i>
+            <span>9月 (本月)</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Dynamic Content Area -->
       <div id="adminVaultContentArea" class="flex-1 overflow-y-auto space-y-3.5 pr-1">
         <!-- Renders manager asset info dynamically -->
@@ -1382,6 +1422,9 @@
     function extractGuardNames() {
       const names = new Set();
       const sources = [EMBEDDED_SCHEDULE_DATA_8];
+      if (typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined' && EMBEDDED_SCHEDULE_DATA_9) {
+        sources.push(EMBEDDED_SCHEDULE_DATA_9);
+      }
       if (rawScheduleData && rawScheduleData.rows) {
         sources.push({ current: rawScheduleData });
       }
@@ -1987,9 +2030,63 @@
       }, 1000);
     }
 
-    function getManagerDailyShiftDetails(dayIndex) {
+    let adminVaultActiveMonth = 9; // 預設 9 月 (本月)
+    let adminVaultSelectedPerson = localStorage.getItem('admin_vault_person') || '賴鯤仲';
+
+    function switchAdminVaultMonth(month) {
+      adminVaultActiveMonth = month;
+      localStorage.setItem('admin_vault_active_month', month);
+      updateAdminVaultTabButtons();
+      renderAdminVaultView();
+      generateAndDrawRedKLineChart();
+      showToast(`📅 已切換至 ${month}月份 金庫與 K 線圖！`, 'info');
+    }
+
+    function switchAdminVaultPerson(person) {
+      adminVaultSelectedPerson = person;
+      localStorage.setItem('admin_vault_person', person);
+      renderAdminVaultView();
+      generateAndDrawRedKLineChart();
+      showToast(`👤 已切換觀測同仁：${person}`, 'info');
+    }
+
+    function updateAdminVaultTabButtons() {
+      const btn8 = document.getElementById('adminVaultTabBtn8');
+      const btn9 = document.getElementById('adminVaultTabBtn9');
+      if (!btn8 || !btn9) return;
+
+      if (adminVaultActiveMonth === 8) {
+        btn8.className = 'h-7 px-3 rounded-lg text-xs font-black bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md ring-1 ring-amber-300 flex items-center gap-1.5 cursor-pointer';
+        btn9.className = 'h-7 px-3 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-transparent flex items-center gap-1.5 cursor-pointer';
+      } else {
+        btn8.className = 'h-7 px-3 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-transparent flex items-center gap-1.5 cursor-pointer';
+        btn9.className = 'h-7 px-3 rounded-lg text-xs font-black bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 shadow-md ring-1 ring-emerald-300 flex items-center gap-1.5 cursor-pointer';
+      }
+    }
+
+    function updateAdminVaultPersonSelect() {
+      const select = document.getElementById('adminVaultPersonSelect');
+      if (!select) return;
+
+      const allNames = extractGuardNames();
+      if (!allNames.includes('賴鯤仲')) allNames.unshift('賴鯤仲');
+      
+      const current = adminVaultSelectedPerson || '賴鯤仲';
+      select.innerHTML = allNames.map(name => 
+        `<option value="${name}" ${name === current ? 'selected' : ''}>${name}${name === '賴鯤仲' ? ' (管理員)' : ''}</option>`
+      ).join('');
+    }
+
+    function getManagerDailyShiftDetails(dayIndex, targetMonth = adminVaultActiveMonth, targetPerson = adminVaultSelectedPerson) {
+      const month = targetMonth || 9;
+      const numDays = (month === 8) ? 31 : 30;
+      if (dayIndex < 0 || dayIndex >= numDays) {
+        return { hours: 0, earned: 0, hasDayShift: false, hasNightShift: false, isMobileSupport: false, hasGShift: false };
+      }
+
       const dateNum = dayIndex + 1;
-      const dateStr = `2026/08/${String(dateNum).padStart(2, '0')}`;
+      const monthStr = String(month).padStart(2, '0');
+      const dateStr = `2026/${monthStr}/${String(dateNum).padStart(2, '0')}`;
       
       let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
       let nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
@@ -1999,11 +2096,13 @@
 
       let hours = 0;
       let earned = 0;
-      let managerName = localStorage.getItem('feilong_vault_my_name') || '賴鯤仲';
-      const cleanManager = cleanPersonName(managerName);
+      const cleanManager = cleanPersonName(targetPerson || '賴鯤仲');
+      const isManagerAdmin = (cleanManager === '賴鯤仲');
 
-      // 🌟 嚴格純淨 8 月份資料庫，絕不混入其他月份，日期精確全字串比對 2026/08/XX
-      const datasets = [EMBEDDED_SCHEDULE_DATA_8];
+      // 🌟 嚴格純淨月份資料庫隔離：8月絕不混入9月，9月絕不混入8月！
+      const dataset = (month === 8) ? EMBEDDED_SCHEDULE_DATA_8 : EMBEDDED_SCHEDULE_DATA_9;
+      const datasets = dataset ? [dataset] : [];
+      const manualOverrides = (month === 9) ? getManualShiftOverrides() : {};
 
       const shiftDedupe = new Set();
       let hasDayShift = false;
@@ -2020,11 +2119,23 @@
             const rDate = r['日期'] || '';
             if (rDate === dateStr || rDate.includes(dateStr)) {
               const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
-              const dayVal = r['早班 (07-19)'] || '';
-              const nightVal = r['晚班 (19-07)'] || '';
+              let dayVal = r['早班 (07-19)'] || '';
+              let nightVal = r['晚班 (19-07)'] || '';
               const supportVal = r['機動支援'] || r['機動'] || r['支援'] || '';
-              const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
 
+              // 🌟 9月份套用前端手動改班/暫代次優先覆蓋
+              if (month === 9) {
+                const keyDay = `${tabKey}_${dateStr}_早班`;
+                const keyNight = `${tabKey}_${dateStr}_晚班`;
+                if (manualOverrides[keyDay] && manualOverrides[keyDay].person) {
+                  dayVal = manualOverrides[keyDay].person;
+                }
+                if (manualOverrides[keyNight] && manualOverrides[keyNight].person) {
+                  nightVal = manualOverrides[keyNight].person;
+                }
+              }
+
+              const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
               const isG = (dayVal && (dayVal.includes('G班') || dayVal.includes('G 6h') || dayVal.includes('6h') || dayVal.includes('6小時'))) ||
                           (nightVal && (nightVal.includes('G班') || nightVal.includes('G 6h') || nightVal.includes('6h') || nightVal.includes('6小時')));
 
@@ -2047,6 +2158,7 @@
                   hasDayShift = true;
                 }
               }
+
               if (nightVal.trim() && !isG && !isGreenT5 && !nightVal.includes('T5')) {
                 if (matchGuardInCell(cleanManager, nightVal)) {
                   const key = `NIGHT_${dateNum}_${postName}`;
@@ -2058,6 +2170,7 @@
                   }
                 }
               }
+
               if (supportVal.trim() && matchGuardInCell(cleanManager, supportVal)) {
                 const key = `SUPPORT_${dateNum}_${postName}`;
                 if (!shiftDedupe.has(key)) {
@@ -2072,46 +2185,50 @@
         });
       });
 
-      // T5 綠底夜班 ($1,700)
-      let greenT5DatesStr = localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29,31';
-      const greenDatesList = greenT5DatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-      if (greenDatesList.includes(dateNum)) {
-        const key = `T5_GREEN_${dateNum}`;
-        if (!shiftDedupe.has(key)) {
-          shiftDedupe.add(key);
-          hours += 12;
-          earned += greenT5Rate;
-          hasNightShift = true;
+      // 🌟 核心防污染防溢出：僅在 8月份 且為 管理者本人 (賴鯤仲) 時，才加算 8月特有外加班次！
+      // 絕不外溢至 9月份，也絕不污染給其他同仁！
+      if (month === 8 && isManagerAdmin) {
+        // T5 綠底夜班 ($1,700)
+        let greenT5DatesStr = localStorage.getItem('admin_t5_green_dates') || '3,6,13,17,22,24,29,31';
+        const greenDatesList = greenT5DatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        if (greenDatesList.includes(dateNum)) {
+          const key = `T5_GREEN_${dateNum}`;
+          if (!shiftDedupe.has(key)) {
+            shiftDedupe.add(key);
+            hours += 12;
+            earned += greenT5Rate;
+            hasNightShift = true;
+          }
         }
-      }
 
-      // 🛵 機動支援哨指定日期 ($1,800)
-      let mobileSupportDatesStr = localStorage.getItem('admin_mobile_support_dates');
-      if (mobileSupportDatesStr === null || mobileSupportDatesStr === '1,7,11,17,21' || mobileSupportDatesStr === '1,7,12,17,21') {
-        mobileSupportDatesStr = '1,7,12,19,21';
-        localStorage.setItem('admin_mobile_support_dates', mobileSupportDatesStr);
-      }
-      const mobileSupportDatesList = mobileSupportDatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-      if (mobileSupportDatesList.includes(dateNum)) {
-        const key = `MOBILE_SUPPORT_${dateNum}`;
-        if (!shiftDedupe.has(key)) {
-          shiftDedupe.add(key);
-          hours += 12;
-          earned += mobileSupportRate;
-          isMobileSupport = true;
+        // 🛵 機動支援哨指定日期 ($1,800)
+        let mobileSupportDatesStr = localStorage.getItem('admin_mobile_support_dates');
+        if (mobileSupportDatesStr === null || mobileSupportDatesStr === '1,7,11,17,21' || mobileSupportDatesStr === '1,7,12,17,21') {
+          mobileSupportDatesStr = '1,7,12,19,21';
+          localStorage.setItem('admin_mobile_support_dates', mobileSupportDatesStr);
         }
-      }
+        const mobileSupportDatesList = mobileSupportDatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        if (mobileSupportDatesList.includes(dateNum)) {
+          const key = `MOBILE_SUPPORT_${dateNum}`;
+          if (!shiftDedupe.has(key)) {
+            shiftDedupe.add(key);
+            hours += 12;
+            earned += mobileSupportRate;
+            isMobileSupport = true;
+          }
+        }
 
-      // ⚡ G 班執勤指定日期 ($1,000 / 6h)
-      let gDatesStr = localStorage.getItem('admin_g_dates') || '';
-      const gDatesList = gDatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-      if (gDatesList.includes(dateNum)) {
-        const key = `G_SHIFT_${dateNum}`;
-        if (!shiftDedupe.has(key)) {
-          shiftDedupe.add(key);
-          hours += 6;
-          earned += gRate;
-          hasGShift = true;
+        // ⚡ G 班執勤指定日期 ($1,000 / 6h)
+        let gDatesStr = localStorage.getItem('admin_g_dates') || '';
+        const gDatesList = gDatesStr.split(/[,、\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        if (gDatesList.includes(dateNum)) {
+          const key = `G_SHIFT_${dateNum}`;
+          if (!shiftDedupe.has(key)) {
+            shiftDedupe.add(key);
+            hours += 6;
+            earned += gRate;
+            hasGShift = true;
+          }
         }
       }
 
@@ -2119,13 +2236,20 @@
     }
 
     function generateAndDrawRedKLineChart() {
-      let currentAsset = minuteAssetBonus;
+      const month = adminVaultActiveMonth || 9;
+      const person = adminVaultSelectedPerson || '賴鯤仲';
+      const cleanManager = cleanPersonName(person);
+      const isManagerAdmin = (cleanManager === '賴鯤仲');
+      const numDays = (month === 8) ? 31 : 30;
+
+      // 當月動態心跳累積收益 (若是 8月份歷史資料，不加即時心跳分秒)
+      let currentAsset = (isManagerAdmin && month === 9) ? minuteAssetBonus : 0;
       let totalAccumulatedMinutes = 0;
       globalDailyKLines = [];
 
-      for (let day = 0; day < 31; day++) {
+      for (let day = 0; day < numDays; day++) {
         const open = currentAsset;
-        const shiftInfo = getManagerDailyShiftDetails(day);
+        const shiftInfo = getManagerDailyShiftDetails(day, month, person);
         const hoursWorked = shiftInfo.hours;
         const minutesWorked = hoursWorked * 60;
         totalAccumulatedMinutes += minutesWorked;
@@ -2157,8 +2281,8 @@
       const liveAssetEl = document.getElementById('liveCumulativeAssetDisplay');
       if (liveAssetEl) liveAssetEl.textContent = `$${Math.round(currentAsset).toLocaleString()} 元`;
 
-      drawRedKLineChart('redKLineCanvas', globalDailyKLines);
-      setupKLineHoverInspector('redKLineCanvas', globalDailyKLines);
+      drawRedKLineChart('redKLineCanvas', globalDailyKLines, null, month);
+      setupKLineHoverInspector('redKLineCanvas', globalDailyKLines, month);
     }
 
     function getTaipeiNow() {
@@ -2169,7 +2293,7 @@
 
     let activeKLineHoverIndex = null;
 
-    function drawRedKLineChart(canvasId, dailyKLines, activeIndex = null) {
+    function drawRedKLineChart(canvasId, dailyKLines, activeIndex = null, month = adminVaultActiveMonth) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -2195,9 +2319,9 @@
       const chartWidth = width - padding.left - padding.right;
       const chartHeight = height - padding.top - padding.bottom;
 
-      // Y 軸刻度：以每 $5,000 為一分隔，最高對齊至 $55,000
+      // Y 軸刻度：以每 $5,000 為一分隔
       const stepVal = 5000;
-      const rawMax = Math.max(...dailyKLines.map(k => k.high), 50000);
+      const rawMax = Math.max(...dailyKLines.map(k => k.high), 30000);
       const maxVal = Math.ceil(rawMax / stepVal) * stepVal;
       const minVal = 0;
 
@@ -2218,12 +2342,11 @@
         ctx.fillText(`$${v.toLocaleString()}`, width - padding.right + 6, y + 3);
       }
 
-      // 繪製 31 根紅色 K 線棒 (Red Candlesticks)
       const numDays = dailyKLines.length;
       const candleWidth = Math.max(3, (chartWidth / numDays) * 0.6);
       const slotWidth = chartWidth / numDays;
 
-      // 讀取當前台北時間 (Asia/Taipei UTC+8)，預設錨定當台北時間當前日期與分鐘
+      // 讀取當前台北時間 (Asia/Taipei UTC+8)
       const tNow = getTaipeiNow();
       const tYear = tNow.getFullYear();
       const tMonth = tNow.getMonth() + 1;
@@ -2231,15 +2354,16 @@
       const tHour = tNow.getHours();
       const tMinute = tNow.getMinutes();
 
-      let defaultDayIdx = (tYear === 2026 && tMonth === 8) ? (tDate - 1) : (numDays - 1);
-      if (defaultDayIdx < 0) defaultDayIdx = 0;
-      if (defaultDayIdx >= numDays) defaultDayIdx = numDays - 1;
+      let defaultDayIdx = numDays - 1;
+      if (tYear === 2026 && tMonth === month) {
+        defaultDayIdx = Math.min(numDays - 1, Math.max(0, tDate - 1));
+      }
 
       const activeIdxToUse = (activeIndex !== null && activeIndex >= 0 && activeIndex < numDays) 
         ? activeIndex 
         : defaultDayIdx;
 
-      // 垂直網格線 (Vertical Grid Lines 1..31)
+      // 垂直網格線 (Vertical Grid Lines)
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 0.5;
       dailyKLines.forEach((k, i) => {
@@ -2276,7 +2400,7 @@
 
         ctx.fillRect(x - candleWidth / 2, topY - (isRestDay ? 2 : 0), candleWidth, bodyHeight);
 
-        // 標記日期 X 軸 (明顯清晰顯示 1, 2, 3, 4 ... 直到 31)
+        // 標記日期 X 軸 (明顯清晰顯示 1, 2, 3, 4 ... 直到 numDays)
         ctx.fillStyle = (i === activeIdxToUse) ? '#f59e0b' : '#e2e8f0';
         ctx.font = (i === activeIdxToUse) ? 'bold 10px monospace' : '9px monospace';
         ctx.textAlign = 'center';
@@ -2301,13 +2425,10 @@
         let anchorX = padding.left + activeIdxToUse * slotWidth + slotWidth / 2;
         let displayAsset = targetItem.close;
 
-        // 若為預設當前台北時間（未懸停狀態），套用早班 07:00~19:00 與晚班 19:00~07:00 時間軸
-        if (activeIndex === null && activeIdxToUse === defaultDayIdx) {
+        if (activeIndex === null && activeIdxToUse === defaultDayIdx && tYear === 2026 && tMonth === month) {
           const minuteInDay = tHour * 60 + tMinute;
-          
           let dutyMinutesPassed = 0;
 
-          // 早班邏輯: 07:00 (420分) ~ 19:00 (1140分)
           if (targetItem.hasDayShift) {
             if (minuteInDay >= 420 && minuteInDay <= 1140) {
               dutyMinutesPassed += (minuteInDay - 420);
@@ -2316,16 +2437,14 @@
             }
           }
 
-          // 晚班邏輯: 19:00 (1140分) ~ 次日 07:00 (420分)
           if (targetItem.hasNightShift) {
             if (minuteInDay >= 1140) {
               dutyMinutesPassed += (minuteInDay - 1140);
             } else if (minuteInDay < 420) {
-              dutyMinutesPassed += (300 + minuteInDay); // 跨夜前半段 300分 (19:00~24:00) + 凌晨00:00至今
+              dutyMinutesPassed += (300 + minuteInDay);
             }
           }
 
-          // 若本日沒有班次或已過執勤時間
           if (!targetItem.hasDayShift && !targetItem.hasNightShift) {
             dutyMinutesPassed = 0;
           } else if (targetItem.hoursWorked > 0 && dutyMinutesPassed === 0 && minuteInDay > 1140 && targetItem.hasDayShift && !targetItem.hasNightShift) {
@@ -2342,7 +2461,7 @@
 
         const anchorY = padding.top + chartHeight * (1 - (displayAsset - minVal) / (maxVal - minVal));
 
-        // 1. 垂直橫移虛線 (Vertical Dotted Cursor Line 預設錨定當天日期與分鐘)
+        // 1. 垂直橫移虛線 (Vertical Dotted Cursor Line)
         ctx.save();
         ctx.setLineDash([4, 3]);
         ctx.strokeStyle = '#f43f5e';
@@ -2378,7 +2497,7 @@
         ctx.fill();
         ctx.stroke();
 
-        // 4. 右側 Y 軸錨定金額浮動標籤 (Floating Y-Axis Price Pill 顯影 1 日至今此刻累積資產)
+        // 4. 右側 Y 軸錨定金額浮動標籤
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
         if (ctx.roundRect) ctx.roundRect(width - padding.right + 2, anchorY - 10, 62, 20, 4);
@@ -2390,7 +2509,7 @@
         ctx.textAlign = 'center';
         ctx.fillText(`$${Math.round(displayAsset).toLocaleString()}`, width - padding.right + 33, anchorY + 4);
 
-        // 5. 更新頂部與右下角提示欄，精準加總 1 日至今日此刻 (對齊至目前時間/分鐘)
+        // 5. 更新頂部與提示欄
         const liveAssetEl = document.getElementById('liveCumulativeAssetDisplay');
         if (liveAssetEl && activeIndex === null) {
           liveAssetEl.textContent = `$${Math.round(displayAsset).toLocaleString()} 元`;
@@ -2398,17 +2517,20 @@
 
         const detailEl = document.getElementById('klineTooltipDetail');
         if (detailEl && activeIndex === null) {
-          const timeStr = `${String(tHour).padStart(2,'0')}:${String(tMinute).padStart(2,'0')}`;
-          let shiftNameTag = '非執勤時段';
-          if (tHour >= 7 && tHour < 19) shiftNameTag = '☀️ 早班時段';
-          else shiftNameTag = '🌙 晚班時段';
-
-          detailEl.innerHTML = `🇹🇼 1日至今日此刻累積 (8月${tDate}日 ${timeStr} ｜ ${shiftNameTag}) ｜ 動態累積資產: <span class="text-amber-300 font-black">$${Math.round(displayAsset).toLocaleString()} 元</span>`;
+          if (month === tMonth) {
+            const timeStr = `${String(tHour).padStart(2,'0')}:${String(tMinute).padStart(2,'0')}`;
+            let shiftNameTag = '非執勤時段';
+            if (tHour >= 7 && tHour < 19) shiftNameTag = '☀️ 早班時段';
+            else shiftNameTag = '🌙 晚班時段';
+            detailEl.innerHTML = `🇹🇼 1日至今日此刻累積 (${month}月${tDate}日 ${timeStr} ｜ ${shiftNameTag}) ｜ 動態累積資產: <span class="text-amber-300 font-black">$${Math.round(displayAsset).toLocaleString()} 元</span>`;
+          } else {
+            detailEl.innerHTML = `📅 ${month}月份歷史全期結算 ｜ 總累積分鐘: ${targetItem.totalAccumulatedMinutes.toLocaleString()} 分 ｜ 終點收盤資產: <span class="text-amber-300 font-black">$${Math.round(targetItem.close).toLocaleString()} 元</span>`;
+          }
         }
       }
     }
 
-    function setupKLineHoverInspector(canvasId, klines) {
+    function setupKLineHoverInspector(canvasId, klines, month = adminVaultActiveMonth) {
       const canvas = document.getElementById(canvasId);
       if (!canvas || canvas.dataset.hoverBound) return;
       canvas.dataset.hoverBound = "true";
@@ -2428,7 +2550,7 @@
         if (index >= klines.length) index = klines.length - 1;
 
         activeKLineHoverIndex = index;
-        drawRedKLineChart(canvasId, klines, index);
+        drawRedKLineChart(canvasId, klines, index, month);
 
         const item = klines[index];
         const detailEl = document.getElementById('klineTooltipDetail');
@@ -2436,7 +2558,7 @@
           const shiftNote = item.hoursWorked > 0 
             ? `執勤 ${item.minutesWorked} 分 (${item.hoursWorked}h)`
             : `🌴 休假 (當日無排班)`;
-          detailEl.innerHTML = `📅 8月${item.day}日 ｜ ${shiftNote} ｜ 累積 ${item.totalAccumulatedMinutes.toLocaleString()} 分鐘 ｜ 收盤資產: <span class="text-amber-300 font-black">$${Math.round(item.close).toLocaleString()} 元</span>`;
+          detailEl.innerHTML = `📅 ${month}月${item.day}日 ｜ ${shiftNote} ｜ 累積 ${item.totalAccumulatedMinutes.toLocaleString()} 分鐘 ｜ 收盤資產: <span class="text-amber-300 font-black">$${Math.round(item.close).toLocaleString()} 元</span>`;
         }
       };
 
@@ -2455,6 +2577,8 @@
       triggerCoinRain();
       const modal = document.getElementById('adminVaultModal');
       if (modal) modal.style.display = 'flex';
+      updateAdminVaultPersonSelect();
+      updateAdminVaultTabButtons();
       renderAdminVaultView();
       startHeartbeatClock();
       setTimeout(() => generateAndDrawRedKLineChart(), 150);
@@ -3012,42 +3136,20 @@
       const container = document.getElementById('adminVaultContentArea');
       if (!container) return;
 
+      const month = adminVaultActiveMonth || 9;
+      const person = adminVaultSelectedPerson || '賴鯤仲';
+      const cleanManager = cleanPersonName(person);
+      const isManagerAdmin = (cleanManager === '賴鯤仲');
+      const numDays = (month === 8) ? 31 : 30;
+
       let tsghDayCount = 0;
       let tsghNightCount = 0;
+      let gCount = 0;
 
-      // 載入綠底夜班日期紀錄 (預設 8 月份: 3,6,13,17,22,24,29)
-      let greenT5DatesStr = localStorage.getItem('admin_t5_green_dates');
-      if (greenT5DatesStr === null) {
-        greenT5DatesStr = '3,6,13,17,22,24,29,31';
-        localStorage.setItem('admin_t5_green_dates', greenT5DatesStr);
-      }
-
-      const greenT5NightCount = parseDatesCount(greenT5DatesStr);
-
-      // 讀取 4 大額外手動記帳資產 (現金, 邦邦, 派派, 託託) 記憶存檔
-      let manualCash = localStorage.getItem('admin_vault_cash') || '';
-      let manualBangBang = localStorage.getItem('admin_vault_bangbang') || '';
-      let manualPaiPai = localStorage.getItem('admin_vault_paipai') || '';
-      let manualTuoTuo = localStorage.getItem('admin_vault_tuotuo') || '';
-
-      const numCash = parseFloat(manualCash) || 0;
-      const numBangBang = parseFloat(manualBangBang) || 0;
-      const numPaiPai = parseFloat(manualPaiPai) || 0;
-      const numTuoTuo = parseFloat(manualTuoTuo) || 0;
-
-      const formattedCash = numCash > 0 ? numCash.toLocaleString('en-US') : '';
-      const formattedBangBang = numBangBang > 0 ? numBangBang.toLocaleString('en-US') : '';
-      const formattedPaiPai = numPaiPai > 0 ? numPaiPai.toLocaleString('en-US') : '';
-      const formattedTuoTuo = numTuoTuo > 0 ? numTuoTuo.toLocaleString('en-US') : '';
-
-      // 掃描動態與靜態班表資料
-      const datasets = [EMBEDDED_SCHEDULE_DATA_8];
-      if (rawScheduleData && rawScheduleData.rows) {
-        datasets.push({ [currentTabName || 'current']: rawScheduleData });
-      }
-
-      let managerName = localStorage.getItem('feilong_vault_my_name') || '賴鯤仲';
-      const cleanManager = cleanPersonName(managerName);
+      // 🌟 嚴格純淨月份資料庫隔離：選 8月 僅載入 8月，選 9月 僅載入 9月！
+      const dataset = (month === 8) ? EMBEDDED_SCHEDULE_DATA_8 : EMBEDDED_SCHEDULE_DATA_9;
+      const datasets = dataset ? [dataset] : [];
+      const manualOverrides = (month === 9) ? getManualShiftOverrides() : {};
       const shiftDedupe = new Set();
 
       datasets.forEach(dataObj => {
@@ -3059,12 +3161,34 @@
           tabData.rows.forEach(r => {
             const dateStr = r['日期'] || '';
             const postName = r['哨點/崗位'] || tabData.tab_name || tabKey;
-            const dayVal = r['早班 (07-19)'] || '';
-            const nightVal = r['晚班 (19-07)'] || '';
+            let dayVal = r['早班 (07-19)'] || '';
+            let nightVal = r['晚班 (19-07)'] || '';
+
+            // 🌟 9月份套用前端手動暫代次優先覆蓋
+            if (month === 9) {
+              const keyDay = `${tabKey}_${dateStr}_早班`;
+              const keyNight = `${tabKey}_${dateStr}_晚班`;
+              if (manualOverrides[keyDay] && manualOverrides[keyDay].person) {
+                dayVal = manualOverrides[keyDay].person;
+              }
+              if (manualOverrides[keyNight] && manualOverrides[keyNight].person) {
+                nightVal = manualOverrides[keyNight].person;
+              }
+            }
 
             const isGreenT5 = postName.includes('T5') || postName.includes('商業大樓') || (r['M6_is_green'] === true);
+            const isG = (dayVal && (dayVal.includes('G班') || dayVal.includes('G 6h') || dayVal.includes('6h') || dayVal.includes('6小時'))) ||
+                        (nightVal && (nightVal.includes('G班') || nightVal.includes('G 6h') || nightVal.includes('6h') || nightVal.includes('6小時')));
 
-            if (dayVal.trim()) {
+            if (isG && (matchGuardInCell(cleanManager, dayVal) || matchGuardInCell(cleanManager, nightVal))) {
+              const gKey = `${dateStr}_G_${postName}`;
+              if (!shiftDedupe.has(gKey)) {
+                shiftDedupe.add(gKey);
+                gCount++;
+              }
+            }
+
+            if (dayVal.trim() && !isG) {
               if (matchGuardInCell(cleanManager, dayVal)) {
                 const dKey = `${dateStr}_DAY_${postName}`;
                 if (!shiftDedupe.has(dKey)) {
@@ -3074,7 +3198,7 @@
               }
             }
 
-            if (nightVal.trim() && !isGreenT5 && !nightVal.includes('T5')) {
+            if (nightVal.trim() && !isG && !isGreenT5 && !nightVal.includes('T5')) {
               if (matchGuardInCell(cleanManager, nightVal)) {
                 const nKey = `${dateStr}_NIGHT_${postName}`;
                 if (!shiftDedupe.has(nKey)) {
@@ -3087,54 +3211,79 @@
         });
       });
 
-      // 🌟 純動態精準計算：直接讀取三總實際排班早班與晚班班次
-      localStorage.removeItem('admin_custom_day_count');
-      localStorage.removeItem('admin_custom_night_count');
-
+      // 費率標準
       let dayRate = parseInt(localStorage.getItem('admin_day_rate') || '1800', 10);
       let nightRate = parseInt(localStorage.getItem('admin_night_rate') || '1800', 10);
       let greenT5Rate = parseInt(localStorage.getItem('admin_t5_green_rate') || '1700', 10);
       let mobileSupportRate = parseInt(localStorage.getItem('admin_mobile_support_rate') || '1800', 10);
       let gRate = parseInt(localStorage.getItem('admin_g_rate') || '1000', 10);
 
-      let gDatesStr = localStorage.getItem('admin_g_dates') || '';
-      let gCount = parseDatesCount(gDatesStr);
-      let storedGCount = localStorage.getItem('admin_g_count');
-      if (storedGCount !== null && !gDatesStr) {
-        gCount = parseInt(storedGCount, 10) || 0;
-      }
-      localStorage.setItem('admin_g_count', gCount);
-      const gTotal = gCount * gRate;
+      // 🌟 徹底杜絕資料污染：
+      // 1. T5 綠底夜班 (8班) 與 機動支援哨 (5班) 為「賴鯤仲」在「8月份」的特有外加紀錄！
+      // 2. 當切換至 9月份 或 查閱其他同仁時，絕不強加賴鯤仲特有勤務！
+      let greenT5NightCount = 0;
+      let greenT5DatesStr = '';
+      let mobileSupportCount = 0;
+      let mobileSupportDatesStr = '';
+      let numCash = 0, numBangBang = 0, numPaiPai = 0, numTuoTuo = 0;
+      let formattedCash = '', formattedBangBang = '', formattedPaiPai = '', formattedTuoTuo = '';
 
-      const cloudRegularHours = 354; // 雲端試算表常規班表總時數
-      const defaultCalculatedHours = cloudRegularHours + (greenT5NightCount * 12) + (gCount * 6); // 354 + 84 + (gCount * 6)
+      if (month === 8 && isManagerAdmin) {
+        greenT5DatesStr = localStorage.getItem('admin_t5_green_dates');
+        if (greenT5DatesStr === null) {
+          greenT5DatesStr = '3,6,13,17,22,24,29,31';
+          localStorage.setItem('admin_t5_green_dates', greenT5DatesStr);
+        }
+        greenT5NightCount = parseDatesCount(greenT5DatesStr);
 
-      let storedAuditHours = localStorage.getItem('admin_salary_audit_hours');
-      let auditTotalHours = defaultCalculatedHours;
-      if (storedAuditHours !== null) {
-        const parsed = parseFloat(storedAuditHours);
-        if (!isNaN(parsed) && parsed >= defaultCalculatedHours) {
-          auditTotalHours = parsed;
+        mobileSupportDatesStr = localStorage.getItem('admin_mobile_support_dates');
+        if (mobileSupportDatesStr === null || mobileSupportDatesStr === '1,7,11,17,21' || mobileSupportDatesStr === '1,7,12,17,21') {
+          mobileSupportDatesStr = '1,7,12,19,21';
+          localStorage.setItem('admin_mobile_support_dates', mobileSupportDatesStr);
+        }
+        mobileSupportCount = parseDatesCount(mobileSupportDatesStr);
+
+        let gDatesStr = localStorage.getItem('admin_g_dates') || '';
+        let customGCount = parseDatesCount(gDatesStr);
+        if (customGCount > 0) gCount = customGCount;
+        else {
+          let storedGCount = localStorage.getItem('admin_g_count');
+          if (storedGCount !== null) gCount = parseInt(storedGCount, 10) || 0;
         }
       }
-      localStorage.setItem('admin_salary_audit_hours', auditTotalHours);
-      let auditDaysResult = (auditTotalHours / 12).toFixed(1);
 
-      let mobileSupportDatesStr = localStorage.getItem('admin_mobile_support_dates');
-      if (mobileSupportDatesStr === null || mobileSupportDatesStr === '1,7,11,17,21' || mobileSupportDatesStr === '1,7,12,17,21') {
-        mobileSupportDatesStr = '1,7,12,19,21';
-        localStorage.setItem('admin_mobile_support_dates', mobileSupportDatesStr);
+      // 4 大手動記帳資產 (僅管理者本人載入，他人不強加)
+      if (isManagerAdmin) {
+        let manualCash = localStorage.getItem('admin_vault_cash') || '';
+        let manualBangBang = localStorage.getItem('admin_vault_bangbang') || '';
+        let manualPaiPai = localStorage.getItem('admin_vault_paipai') || '';
+        let manualTuoTuo = localStorage.getItem('admin_vault_tuotuo') || '';
+
+        numCash = parseFloat(manualCash) || 0;
+        numBangBang = parseFloat(manualBangBang) || 0;
+        numPaiPai = parseFloat(manualPaiPai) || 0;
+        numTuoTuo = parseFloat(manualTuoTuo) || 0;
+
+        formattedCash = numCash > 0 ? numCash.toLocaleString('en-US') : '';
+        formattedBangBang = numBangBang > 0 ? numBangBang.toLocaleString('en-US') : '';
+        formattedPaiPai = numPaiPai > 0 ? numPaiPai.toLocaleString('en-US') : '';
+        formattedTuoTuo = numTuoTuo > 0 ? numTuoTuo.toLocaleString('en-US') : '';
       }
-      let mobileSupportCount = parseDatesCount(mobileSupportDatesStr);
-      localStorage.setItem('admin_mobile_support_count', mobileSupportCount);
-      const mobileSupportTotal = mobileSupportCount * mobileSupportRate;
 
       const tsghDayTotal = tsghDayCount * dayRate;
       const tsghNightTotal = tsghNightCount * nightRate;
       const greenT5Total = greenT5NightCount * greenT5Rate;
+      const mobileSupportTotal = mobileSupportCount * mobileSupportRate;
+      const gTotal = gCount * gRate;
       const grandTotal = tsghDayTotal + tsghNightTotal + greenT5Total + mobileSupportTotal + gTotal;
-      const finalCombinedGrandTotal = grandTotal + numCash + numBangBang + numPaiPai + numTuoTuo;
+      const finalCombinedGrandTotal = isManagerAdmin ? (grandTotal + numCash + numBangBang + numPaiPai + numTuoTuo) : grandTotal;
       const totalDutyMinutes = ((tsghDayCount + tsghNightCount + greenT5NightCount + mobileSupportCount) * 12 + (gCount * 6)) * 60;
+
+      // 資水檢查欄位
+      const cloudRegularHours = (tsghDayCount + tsghNightCount) * 12;
+      const defaultCalculatedHours = cloudRegularHours + (greenT5NightCount * 12) + (mobileSupportCount * 12) + (gCount * 6);
+      let auditTotalHours = defaultCalculatedHours;
+      let auditDaysResult = (auditTotalHours / 12).toFixed(1);
 
       container.innerHTML = `
         <div class="space-y-4 animate-fade-in font-sans">
@@ -3151,8 +3300,8 @@
               <div class="text-center">
                 <div class="text-xs font-bold text-amber-300 flex items-center justify-center gap-1.5">
                   <i class="fa-solid fa-crown text-amber-400"></i>
-                  <span>管理者個人當月獨立班表金庫</span>
-                  <span class="text-[10px] bg-amber-950 text-amber-400 px-2 py-0.5 rounded-full border border-amber-800 font-mono">115年8月份</span>
+                  <span>管理者金庫 ｜ <strong class="text-white underline">${cleanManager}</strong></span>
+                  <span class="text-[10px] ${month === 8 ? 'bg-amber-950 text-amber-300 border-amber-700' : 'bg-emerald-950 text-emerald-300 border-emerald-700'} px-2 py-0.5 rounded-full border font-mono">115年${month}月份 (${month === 8 ? '上月 31天' : '本月 30天'})</span>
                 </div>
                 <div class="text-base font-black text-white mt-0.5">個人當月班表總收入與資產統計</div>
               </div>
@@ -3179,12 +3328,12 @@
             </div>
           </div>
 
-          <!-- 📈 115年8月份資產收益紅色 K 線圖 (置於小金豬正下方 ｜ 自帶 1 分鐘心跳時鐘 ｜ 每分鐘收入總合) -->
+          <!-- 📈 當月資產收益紅色 K 線圖 -->
           <div class="bg-slate-950 border border-rose-600/60 rounded-2xl p-4 space-y-3 shadow-2xl relative overflow-hidden">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="text-xs font-black text-rose-400 flex items-center gap-2">
-                <span>📈 8月份資產收益紅色 K 線圖</span>
-                <span class="text-[10px] text-slate-400 font-mono font-normal">(x=30 收入曲線 ｜ 精度至分)</span>
+                <span>📈 ${month}月份資產收益紅色 K 線圖</span>
+                <span class="text-[10px] text-slate-400 font-mono font-normal">(x=${numDays} 收入曲線 ｜ 精度至分)</span>
               </div>
               
               <div class="flex flex-wrap items-center gap-2">
@@ -3199,18 +3348,18 @@
                   <span class="text-emerald-300 font-bold">+$2.5元 / 分</span>
                 </div>
 
-                <!-- 💰 1日至今此刻累積資產 (紅色底色網格標籤 搬移至 1分心跳 右側) -->
+                <!-- 💰 1日至今此刻累積資產 -->
                 <div class="flex items-center gap-1.5 bg-rose-950/90 border border-rose-500/80 px-3 py-1 rounded-full text-xs font-mono shadow-md">
                   <span class="text-rose-300 font-bold flex items-center gap-1">
                     <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
-                    <span>1日至今此刻累積:</span>
+                    <span>${month === 9 ? '1日至今此刻累積:' : '8月全月結算收盤:'}</span>
                   </span>
                   <span id="liveCumulativeAssetDisplay" class="font-black text-amber-300 text-xs">$0 元</span>
                 </div>
               </div>
             </div>
 
-            <!-- 動態懸停提示資訊欄 (Hover Tooltip Inspector) -->
+            <!-- 動態懸停提示資訊欄 -->
             <div id="klineHoverTooltip" class="bg-slate-900/90 border border-rose-500/50 rounded-xl p-2 text-xs font-mono flex items-center justify-between text-slate-200 shadow-inner">
               <span class="text-slate-400 flex items-center gap-1">
                 <i class="fa-solid fa-hand-pointer text-amber-400 text-[11px]"></i>
@@ -3219,7 +3368,7 @@
               <span id="klineTooltipDetail" class="text-amber-300 font-black">當月累積 ${totalDutyMinutes.toLocaleString()} 分鐘 ｜ 總收入 $${grandTotal.toLocaleString()} 元</span>
             </div>
 
-            <!-- Canvas Container (Y 軸高度拉高 50%) -->
+            <!-- Canvas Container -->
             <div class="w-full h-[336px] sm:h-[360px] bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden cursor-crosshair">
               <canvas id="redKLineCanvas" class="w-full h-full block"></canvas>
             </div>
@@ -3249,33 +3398,17 @@
             </div>
           </div>
 
-          <!-- 五大勤務類別資產明細 (緊湊滿版設計 ｜ 防換行疊字) -->
+          <!-- 五大勤務類別資產明細 -->
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             <!-- 常規早班 -->
             <div class="bg-slate-950 border border-amber-900/60 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm">
               <div class="flex items-center justify-between text-xs font-bold text-amber-300 gap-1">
                 <span class="truncate whitespace-nowrap">☀️ 常規早班</span>
-                <div class="flex items-center gap-0.5 shrink-0">
-                  <input 
-                    type="number" 
-                    value="${tsghDayCount}" 
-                    onchange="updateAdminVaultShiftCounts(this.value, null)"
-                    class="w-9 h-5 bg-slate-900 border border-amber-700 rounded text-center font-mono text-amber-200 text-xs font-bold focus:outline-none focus:border-amber-400"
-                  >
-                  <span class="font-mono text-amber-200 text-[11px]">班</span>
-                </div>
+                <span class="font-mono text-amber-200 text-xs font-bold">${tsghDayCount} 班</span>
               </div>
               <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
                 <div class="text-sm sm:text-base font-black text-amber-300 font-mono whitespace-nowrap">$${tsghDayTotal.toLocaleString()}</div>
-                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
-                  <span class="whitespace-nowrap">單班:</span>
-                  <input 
-                    type="number" 
-                    value="${dayRate}" 
-                    onchange="updateAdminVaultRates(this.value, null, null, null, null)"
-                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-amber-300 text-[11px] focus:outline-none focus:border-amber-400"
-                  >
-                </div>
+                <div class="text-[10px] text-slate-400 shrink-0">@$${dayRate}</div>
               </div>
             </div>
 
@@ -3283,27 +3416,11 @@
             <div class="bg-slate-950 border border-indigo-900/60 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm">
               <div class="flex items-center justify-between text-xs font-bold text-indigo-300 gap-1">
                 <span class="truncate whitespace-nowrap">🌙 常規夜(B)班</span>
-                <div class="flex items-center gap-0.5 shrink-0">
-                  <input 
-                    type="number" 
-                    value="${tsghNightCount}" 
-                    onchange="updateAdminVaultShiftCounts(null, this.value)"
-                    class="w-9 h-5 bg-slate-900 border border-indigo-700 rounded text-center font-mono text-indigo-200 text-xs font-bold focus:outline-none focus:border-indigo-400"
-                  >
-                  <span class="font-mono text-indigo-200 text-[11px]">班</span>
-                </div>
+                <span class="font-mono text-indigo-200 text-xs font-bold">${tsghNightCount} 班</span>
               </div>
               <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
                 <div class="text-sm sm:text-base font-black text-indigo-300 font-mono whitespace-nowrap">$${tsghNightTotal.toLocaleString()}</div>
-                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
-                  <span class="whitespace-nowrap">單班:</span>
-                  <input 
-                    type="number" 
-                    value="${nightRate}" 
-                    onchange="updateAdminVaultRates(null, this.value, null, null, null)"
-                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-indigo-300 text-[11px] focus:outline-none focus:border-indigo-400"
-                  >
-                </div>
+                <div class="text-[10px] text-slate-400 shrink-0">@$${nightRate}</div>
               </div>
             </div>
 
@@ -3311,94 +3428,55 @@
             <div class="bg-slate-950 border border-emerald-800/80 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm">
               <div class="flex items-center justify-between text-xs font-bold text-emerald-300 gap-1">
                 <span class="flex items-center gap-1 truncate whitespace-nowrap">
-                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 ${greenT5NightCount > 0 ? 'animate-pulse' : ''} shrink-0"></span>
                   <span>🟩 T5夜班</span>
                 </span>
-                <span id="t5GreenCountDisplay" class="font-mono text-emerald-200 text-xs shrink-0">${greenT5NightCount} 班</span>
+                <span class="font-mono text-emerald-200 text-xs shrink-0">${greenT5NightCount} 班</span>
               </div>
               <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
-                <div id="t5GreenTotalDisplay" class="text-sm sm:text-base font-black text-emerald-300 font-mono whitespace-nowrap">$${greenT5Total.toLocaleString()}</div>
-                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
-                  <span class="whitespace-nowrap">單班:</span>
-                  <input 
-                    type="number" 
-                    value="${greenT5Rate}" 
-                    onchange="updateAdminVaultRates(null, null, this.value, null, null)"
-                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-emerald-300 text-[11px] focus:outline-none focus:border-emerald-400"
-                  >
-                </div>
+                <div class="text-sm sm:text-base font-black text-emerald-300 font-mono whitespace-nowrap">$${greenT5Total.toLocaleString()}</div>
+                <div class="text-[10px] text-slate-400 shrink-0">@$${greenT5Rate}</div>
               </div>
             </div>
 
             <!-- 🛵 機動支援哨 -->
             <div class="bg-slate-950 border border-purple-800/80 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm">
               <div class="flex items-center justify-between text-xs font-bold text-purple-300 gap-1">
-                <span class="flex items-center gap-1 truncate whitespace-nowrap" title="機動支援據點：例如聯合報 2班 B班 + 福清 2班 夜班 + 東方 1班 夜班 = 5 班">
+                <span class="flex items-center gap-1 truncate whitespace-nowrap">
                   <i class="fa-solid fa-motorcycle text-purple-400 text-xs shrink-0"></i>
                   <span>🛵 機動支援哨</span>
                 </span>
-                <div class="flex items-center gap-0.5 shrink-0">
-                  <input 
-                    type="number" 
-                    value="${mobileSupportCount}" 
-                    onchange="updateAdminVaultRates(null, null, null, null, this.value)"
-                    class="w-9 h-5 bg-slate-900 border border-purple-700 rounded text-center font-mono text-purple-300 text-xs font-bold focus:outline-none focus:border-purple-400"
-                  >
-                  <span class="font-mono text-purple-200 text-[11px]">班</span>
-                </div>
+                <span class="font-mono text-purple-200 text-xs shrink-0">${mobileSupportCount} 班</span>
               </div>
               <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
                 <div class="text-sm sm:text-base font-black text-purple-300 font-mono whitespace-nowrap">$${mobileSupportTotal.toLocaleString()}</div>
-                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
-                  <span class="whitespace-nowrap">單班:</span>
-                  <input 
-                    type="number" 
-                    value="${mobileSupportRate}" 
-                    onchange="updateAdminVaultRates(null, null, null, this.value, null)"
-                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-purple-300 text-[11px] focus:outline-none focus:border-purple-400"
-                  >
-                </div>
+                <div class="text-[10px] text-slate-400 shrink-0">@$${mobileSupportRate}</div>
               </div>
             </div>
 
             <!-- ⚡ G 班 (6小時 1000元) -->
             <div class="bg-slate-950 border border-cyan-800/80 rounded-xl p-2.5 flex flex-col justify-between space-y-1.5 shadow-sm col-span-2 sm:col-span-1">
               <div class="flex items-center justify-between text-xs font-bold text-cyan-300 gap-1">
-                <span class="flex items-center gap-1 truncate whitespace-nowrap" title="⚡ G 班：6小時 1,000 元收入">
+                <span class="flex items-center gap-1 truncate whitespace-nowrap">
                   <i class="fa-solid fa-bolt text-cyan-400 text-xs shrink-0"></i>
                   <span>⚡ G 班 (6h)</span>
                 </span>
-                <div class="flex items-center gap-0.5 shrink-0">
-                  <input 
-                    type="number" 
-                    value="${gCount}" 
-                    onchange="updateAdminVaultRates(null, null, null, null, null, this.value, null)"
-                    class="w-9 h-5 bg-slate-900 border border-cyan-700 rounded text-center font-mono text-cyan-200 text-xs font-bold focus:outline-none focus:border-cyan-400"
-                  >
-                  <span class="font-mono text-cyan-200 text-[11px]">班</span>
-                </div>
+                <span class="font-mono text-cyan-200 text-xs shrink-0">${gCount} 班</span>
               </div>
               <div class="flex items-baseline justify-between pt-1 border-t border-slate-900">
                 <div class="text-sm sm:text-base font-black text-cyan-300 font-mono whitespace-nowrap">$${gTotal.toLocaleString()}</div>
-                <div class="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
-                  <span class="whitespace-nowrap">單班:</span>
-                  <input 
-                    type="number" 
-                    value="${gRate}" 
-                    onchange="updateAdminVaultRates(null, null, null, null, null, null, this.value)"
-                    class="w-12 h-5 bg-slate-900 border border-slate-700 rounded text-center font-mono text-cyan-300 text-[11px] focus:outline-none focus:border-cyan-400"
-                  >
-                </div>
+                <div class="text-[10px] text-slate-400 shrink-0">@$${gRate}</div>
               </div>
             </div>
           </div>
 
-          <!-- 🟩 T5夜班執勤日期紀錄 (M6 欄位) -->
+          ${isManagerAdmin && month === 8 ? `
+          <!-- 🟩 T5夜班執勤日期紀錄 (8月份管理者外加) -->
           <div class="bg-gradient-to-r from-emerald-950/90 to-slate-950 border border-emerald-600/80 rounded-2xl p-3.5 space-y-2 shadow-lg">
             <div class="flex items-center justify-between">
               <div class="text-xs font-extrabold text-emerald-300 flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>🟩 T5夜班執勤日期紀錄</span>
+                <span>🟩 8月份 T5夜班執勤日期紀錄</span>
               </div>
               <div class="text-xs font-mono font-black text-emerald-300 bg-emerald-950 border border-emerald-700 px-2.5 py-0.5 rounded-full shadow-inner">
                 小計 <span id="t5GreenDaysSubtotal" class="text-amber-300 text-sm font-black">${greenT5NightCount}</span> 班
@@ -3410,23 +3488,23 @@
                 type="text" 
                 id="t5GreenDatesInput" 
                 value="${greenT5DatesStr}" 
-                placeholder="請輸入日期，例如: 3,6,13,17,22,24,29" 
+                placeholder="請輸入日期，例如: 3,6,13,17,22,24,29,31" 
                 oninput="updateT5GreenDatesRecord(this.value)"
                 class="w-full h-9 bg-slate-900 border border-emerald-700/80 rounded-xl px-3 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400 placeholder-slate-600 shadow-inner"
               >
             </div>
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1">
-              <span>💡 8月紀錄範例: 3,6,13,17,22,24,29 (以逗號區隔)</span>
+              <span>💡 8月紀錄: 3,6,13,17,22,24,29,31 (以逗號區隔)</span>
               <span id="t5GreenHintTotalDisplay" class="font-mono text-emerald-300 font-bold">共 $${greenT5Total.toLocaleString()} 元</span>
             </div>
           </div>
 
-          <!-- 🛵 機動支援執勤日期紀錄 -->
+          <!-- 🛵 機動支援執勤日期紀錄 (8月份管理者外加) -->
           <div class="bg-gradient-to-r from-amber-950/90 via-slate-950 to-amber-950/90 border border-amber-600/80 rounded-2xl p-3.5 space-y-2 shadow-lg">
             <div class="flex items-center justify-between">
               <div class="text-xs font-extrabold text-amber-300 flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-                <span>🛵 機動支援執勤日期紀錄</span>
+                <span>🛵 8月份 機動支援執勤日期紀錄</span>
               </div>
               <div class="text-xs font-mono font-black text-amber-300 bg-amber-950 border border-amber-700 px-2.5 py-0.5 rounded-full shadow-inner">
                 小計 <span id="mobileSupportDaysSubtotal" class="text-amber-300 text-sm font-black">${mobileSupportCount}</span> 班
@@ -3444,187 +3522,63 @@
               >
             </div>
             <div class="text-[11px] text-slate-400 flex items-center justify-between px-1">
-              <span>💡 8月紀錄範例: 1,7,12,19,21 (以逗號區隔)</span>
+              <span>💡 8月紀錄: 1,7,12,19,21 (以逗號區隔)</span>
               <span id="mobileSupportHintTotalDisplay" class="font-mono text-amber-300 font-bold">共 $${mobileSupportTotal.toLocaleString()} 元</span>
             </div>
           </div>
-
-          <!-- ⚡ G 班執勤日期紀錄 (6小時 1000元) -->
-          <div class="bg-gradient-to-r from-cyan-950/90 via-slate-950 to-cyan-950/90 border border-cyan-600/80 rounded-2xl p-3.5 space-y-2 shadow-lg">
-            <div class="flex items-center justify-between">
-              <div class="text-xs font-extrabold text-cyan-300 flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                <span>⚡ G 班執勤日期紀錄 (6小時 ｜ $1,000/班)</span>
-              </div>
-              <div class="text-xs font-mono font-black text-cyan-300 bg-cyan-950 border border-cyan-700 px-2.5 py-0.5 rounded-full shadow-inner">
-                小計 <span id="gDaysSubtotal" class="text-amber-300 text-sm font-black">${gCount}</span> 班 (${gCount * 6}h)
-              </div>
-            </div>
-
-            <div class="pt-0.5">
-              <input 
-                type="text" 
-                id="gDatesInput" 
-                value="${gDatesStr}" 
-                placeholder="請輸入日期，例如: 5,10,15" 
-                oninput="updateGDatesRecord(this.value)"
-                class="w-full h-9 bg-slate-900 border border-cyan-700/80 rounded-xl px-3 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400 placeholder-slate-600 shadow-inner"
-              >
-            </div>
-            <div class="text-[11px] text-slate-400 flex items-center justify-between px-1">
-              <span>💡 規格: 6 小時，收入 1,000 元 (以逗號區隔)</span>
-              <span id="gHintTotalDisplay" class="font-mono text-cyan-300 font-bold">共 $${gTotal.toLocaleString()} 元</span>
-            </div>
+          ` : `
+          <!-- 💡 勤務獨立隔離提示卡片 -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 flex items-center justify-between text-xs text-slate-400 shadow-sm">
+            <span class="flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+              <span>${month === 9 ? '💡 9月份三總工務所與重症大樓全面依據實際雲端排班實報實銷，無跨月溢出外加。' : `💡 ${cleanManager} 在 8月份純粹依據實際排班計算，不套用其他同仁特有外加津貼。`}</span>
+            </span>
+            <span class="text-amber-300 font-mono font-bold">${month}月實算</span>
           </div>
+          `}
 
-          <!-- 📊 當月資水檢查欄位 (總小時數 SUM(G12:AK12) / 12 = 上班班次) -->
+          <!-- 📊 當月工時與資水摘要欄位 -->
           <div class="bg-gradient-to-r from-indigo-950/90 via-slate-950 to-purple-950/90 border border-indigo-500/80 rounded-2xl p-3.5 space-y-3 shadow-xl">
             <div class="flex items-center justify-between">
               <div class="text-xs font-extrabold text-indigo-300 flex items-center gap-1.5">
-                <span>📊 當月資水檢查欄位 <span class="text-[10px] text-slate-400 font-mono font-normal">=SUM(G12:AK12)</span></span>
+                <span>📊 當月排班總工時與折合班次</span>
               </div>
               <div class="text-xs font-mono font-black text-amber-300 bg-indigo-950 border border-indigo-700 px-2.5 py-0.5 rounded-full shadow-inner">
-                檢查結果: <span id="auditDaysResultDisplay" class="text-emerald-300 text-sm font-black">${auditDaysResult}</span> 班
+                總計: <span class="text-emerald-300 text-sm font-black">${auditDaysResult}</span> 班
               </div>
             </div>
 
-            <!-- 5大勤務類別時數拆解細分網格 (包含 SUM(G12:AK12) 與 T5/G班 外加) -->
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
-              <!-- 常規班(時) -->
-              <div class="bg-slate-900/90 border border-sky-600/50 rounded-xl p-2 space-y-0.5">
-                <div class="text-[10px] font-bold text-sky-300 flex items-center justify-center gap-1">
-                  <i class="fa-solid fa-sun text-amber-400 text-[9px]"></i>
-                  <span>常規班(時)</span>
-                </div>
-                <div class="text-xs font-black font-mono text-sky-200">
-                  <span>${(tsghDayCount + tsghNightCount) * 12}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
-                </div>
-                <div class="text-[9px] text-slate-400 font-mono">
-                  (${tsghDayCount + tsghNightCount}班 = 早${tsghDayCount}+夜${tsghNightCount})
-                </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl">
+                <div class="text-[10px] text-slate-400">常規班工時</div>
+                <div class="font-mono font-black text-sky-300">${(tsghDayCount + tsghNightCount) * 12} h</div>
+                <div class="text-[9px] text-slate-500">${tsghDayCount + tsghNightCount} 班</div>
               </div>
-
-              <!-- 機動班(時) -->
-              <div class="bg-slate-900/90 border border-amber-600/50 rounded-xl p-2 space-y-0.5">
-                <div class="text-[10px] font-bold text-amber-300 flex items-center justify-center gap-1">
-                  <i class="fa-solid fa-motorcycle text-amber-400 text-[9px]"></i>
-                  <span>機動班(時)</span>
-                </div>
-                <div class="text-xs font-black font-mono text-amber-200">
-                  <span>${mobileSupportCount * 12}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
-                </div>
-                <div class="text-[9px] text-slate-400 font-mono">
-                  (${mobileSupportCount} 班機動支援)
-                </div>
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl">
+                <div class="text-[10px] text-slate-400">外加勤務工時</div>
+                <div class="font-mono font-black text-emerald-300">${(greenT5NightCount + mobileSupportCount) * 12} h</div>
+                <div class="text-[9px] text-slate-500">${greenT5NightCount + mobileSupportCount} 班</div>
               </div>
-
-              <!-- ⚡ G班(時) -->
-              <div class="bg-slate-900/90 border border-cyan-600/50 rounded-xl p-2 space-y-0.5">
-                <div class="text-[10px] font-bold text-cyan-300 flex items-center justify-center gap-1">
-                  <i class="fa-solid fa-bolt text-cyan-400 text-[9px]"></i>
-                  <span>G班(時)</span>
-                </div>
-                <div class="text-xs font-black font-mono text-cyan-200">
-                  <span>${gCount * 6}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
-                </div>
-                <div class="text-[9px] text-cyan-300 font-mono">
-                  (${gCount} 班 6h = ${gCount * 6}h)
-                </div>
+              <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl">
+                <div class="text-[10px] text-slate-400">G班工時</div>
+                <div class="font-mono font-black text-cyan-300">${gCount * 6} h</div>
+                <div class="text-[9px] text-slate-500">${gCount} 班</div>
               </div>
-
-              <!-- 雲端 SUM(G12:AK12) -->
-              <div class="bg-slate-900/90 border border-indigo-600/50 rounded-xl p-2 space-y-0.5">
-                <div class="text-[10px] font-bold text-indigo-300 flex items-center justify-center gap-1">
-                  <i class="fa-solid fa-file-excel text-emerald-400 text-[9px]"></i>
-                  <span>SUM(G12:AK12)</span>
-                </div>
-                <div class="text-xs font-black font-mono text-indigo-200">
-                  <span>354</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
-                </div>
-                <div class="text-[9px] text-emerald-400 font-mono font-bold">
-                  常規+機動 (29.5班)
-                </div>
+              <div class="bg-slate-900 border border-indigo-700 p-2 rounded-xl">
+                <div class="text-[10px] text-amber-300">總累計工時</div>
+                <div class="font-mono font-black text-amber-300">${auditTotalHours} h</div>
+                <div class="text-[9px] text-slate-400">${auditDaysResult} 班</div>
               </div>
-
-              <!-- T5綠底夜 (外加84h) -->
-              <div class="bg-slate-900/90 border border-emerald-600/50 rounded-xl p-2 space-y-0.5">
-                <div class="text-[10px] font-bold text-emerald-300 flex items-center justify-center gap-1">
-                  <i class="fa-solid fa-moon text-emerald-400 text-[9px]"></i>
-                  <span>外加 T5夜(時)</span>
-                </div>
-                <div class="text-xs font-black font-mono text-emerald-200">
-                  <span>${greenT5NightCount * 12}</span> <span class="text-[9px] text-slate-400 font-normal">h</span>
-                </div>
-                <div class="text-[9px] text-emerald-300 font-mono font-bold">
-                  外加 (${greenT5NightCount}班 = ${greenT5NightCount * 12}h)
-                </div>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
-              <!-- 總計小時數輸入/顯示欄 -->
-              <div class="bg-slate-900/90 border border-indigo-700/60 rounded-xl p-2.5 space-y-1">
-                <div class="text-[11px] font-bold text-indigo-300 flex items-center justify-between">
-                  <span>⏱️ 資水總時數 (SUM 354h + T5外加 ${greenT5NightCount * 12}h)</span>
-                  <span class="text-[9px] text-slate-400">可微調</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <input 
-                    type="number" 
-                    id="auditTotalHoursInput" 
-                    value="${auditTotalHours}" 
-                    oninput="updateSalaryAuditHours(this.value)"
-                    class="w-full h-8 bg-slate-950 border border-indigo-600 rounded-lg px-2 text-center text-sm font-black font-mono text-amber-300 focus:outline-none focus:border-amber-400"
-                  >
-                  <span class="text-xs text-slate-300 font-bold shrink-0">小時</span>
-                </div>
-              </div>
-
-              <!-- 資水轉換試算公式欄 -->
-              <div class="bg-slate-900/90 border border-indigo-700/60 rounded-xl p-2.5 space-y-1">
-                <div class="text-[11px] font-bold text-purple-300 flex items-center justify-between">
-                  <span>🧮 資水對照 (總小時 ÷ 12)</span>
-                  <span class="text-[9px] text-emerald-400 font-bold">12小時/班</span>
-                </div>
-                <div class="h-8 flex items-center justify-center gap-1 text-xs font-mono font-black text-slate-200 bg-slate-950 border border-slate-800 rounded-lg">
-                  <span id="auditFormulaHours" class="text-amber-300">${auditTotalHours}</span>
-                  <span class="text-slate-400">÷ 12 =</span>
-                  <span id="auditFormulaDays" class="text-emerald-300 text-sm">${auditDaysResult}</span>
-                  <span class="text-slate-300">班</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 🧩 零散班 5.5H 公司計薪進位 6H 提示卡片 -->
-            <div class="bg-amber-950/70 border border-amber-500/60 rounded-xl p-2 flex items-center justify-between text-[11px] text-amber-200 shadow-inner">
-              <div class="flex items-center gap-1.5 font-bold">
-                <i class="fa-solid fa-puzzle-piece text-amber-400"></i>
-                <span>零散班 5.5h 零星小時:</span>
-              </div>
-              <div class="text-[10px] font-mono text-amber-300">
-                不算A/B班 ➔ 實際 <span class="font-bold underline">5.5h</span>，公司計薪小計不注意進位算 <span class="font-black text-emerald-300 bg-amber-900 px-1.5 py-0.5 rounded border border-amber-600">6.0h</span> (+0.5h)
-              </div>
-            </div>
-
-            <div class="text-[11px] text-slate-400 flex items-center justify-between px-1 pt-0.5 border-t border-slate-900/80">
-              <span>💡 精準公式: SUM(G12:AK12) 354h + 外加 T5夜 ${greenT5NightCount * 12}h = ${354 + (greenT5NightCount * 12)}h (對應 ${((354 + (greenT5NightCount * 12))/12).toFixed(1)} 班)</span>
-              <button 
-                type="button" 
-                onclick="recalculateDefaultAuditHours()" 
-                class="text-indigo-400 hover:text-indigo-300 text-[10px] font-bold underline flex items-center gap-1 cursor-pointer"
-              >
-                <i class="fa-solid fa-rotate-left"></i>
-                <span>自動連動班表時數</span>
-              </button>
             </div>
           </div>
 
+          ${isManagerAdmin ? `
           <!-- 💼 4大額外資產手動記帳欄位 (現金, 邦邦, 派派, 託託) -->
           <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-3 shadow-xl">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 pb-2">
               <div class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                <span>💼 額外資產手動記帳欄位</span>
-                <span class="text-[10px] text-amber-400/90 font-mono">(會計逗號格式)</span>
+                <span>💼 管理者額外資產手動記帳</span>
+                <span class="text-[10px] text-amber-400/90 font-mono">(私人獨立存檔 ｜ 不影響他人)</span>
               </div>
               
               <div class="flex items-center gap-1.5">
@@ -3632,7 +3586,7 @@
                   type="button" 
                   onclick="fetchCloudVaultAssets(true)" 
                   class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] rounded-lg border border-sky-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="從 GitHub 讀取最新資產金額（NB 與手機共用同一份資料）"
+                  title="從 GitHub 讀取最新資產金額"
                 >
                   <span>☁️ 讀取雲端</span>
                 </button>
@@ -3645,24 +3599,13 @@
                 >
                   <span>💾 儲存至雲端</span>
                 </button>
-
-                <button 
-                  type="button" 
-                  onclick="openGhPatModal()" 
-                  class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-600/50 flex items-center gap-1 transition active:scale-95 cursor-pointer"
-                  title="檢視或修改瀏覽器已保存的 GitHub Token 憑證"
-                >
-                  <span>🔑 憑證</span>
-                </button>
               </div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <!-- 現金 -->
               <div class="bg-slate-900 border border-amber-600/50 rounded-xl p-2 space-y-1">
-                <div class="text-[11px] font-bold text-amber-300 flex items-center justify-between">
-                  <span>💵 現金</span>
-                </div>
+                <div class="text-[11px] font-bold text-amber-300">💵 現金</div>
                 <input 
                   type="text" 
                   inputmode="numeric"
@@ -3676,13 +3619,11 @@
 
               <!-- 邦邦 -->
               <div class="bg-slate-900 border border-sky-600/50 rounded-xl p-2 space-y-1">
-                <div class="text-[11px] font-bold text-sky-300 flex items-center justify-between">
-                  <span>🏦 邦邦</span>
-                </div>
+                <div class="text-[11px] font-bold text-sky-300">🏦 邦邦</div>
                 <input 
                   type="text" 
                   inputmode="numeric"
-                id="manualBangBangInput" 
+                  id="manualBangBangInput" 
                   value="${formattedBangBang}" 
                   oninput="updateManualVaultAssets(true, this)"
                   placeholder="0"
@@ -3692,9 +3633,7 @@
 
               <!-- 派派 -->
               <div class="bg-slate-900 border border-rose-600/50 rounded-xl p-2 space-y-1">
-                <div class="text-[11px] font-bold text-rose-300 flex items-center justify-between">
-                  <span>🪙 派派</span>
-                </div>
+                <div class="text-[11px] font-bold text-rose-300">🪙 派派</div>
                 <input 
                   type="text" 
                   inputmode="numeric"
@@ -3708,9 +3647,7 @@
 
               <!-- 託託 -->
               <div class="bg-slate-900 border border-purple-600/50 rounded-xl p-2 space-y-1">
-                <div class="text-[11px] font-bold text-purple-300 flex items-center justify-between">
-                  <span>💳 託託</span>
-                </div>
+                <div class="text-[11px] font-bold text-purple-300">💳 託託</div>
                 <input 
                   type="text" 
                   inputmode="numeric"
@@ -3722,34 +3659,24 @@
                 >
               </div>
             </div>
-
-            <!-- 🔗 跨裝置連動工具欄 -->
-            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-2 flex flex-wrap items-center justify-between gap-1.5 text-[11px] font-mono text-slate-400">
-              <span class="flex items-center gap-1 text-slate-300">
-                <i class="fa-solid fa-share-nodes text-amber-400"></i>
-                <span>雙向同步：點擊右上角「💾 儲存」或複製專屬連結</span>
-              </span>
-              <button 
-                type="button" 
-                onclick="copyVaultSyncUrl()" 
-                class="text-amber-400 hover:text-amber-300 font-bold underline flex items-center gap-1 cursor-pointer"
-              >
-                <i class="fa-solid fa-link text-[10px]"></i>
-                <span>🔗 複製 NB 同步網址傳送至手機</span>
-              </button>
-            </div>
           </div>
+          ` : `
+          <!-- 💼 訪客/其他同仁 4大資產提示 -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center text-xs text-slate-400">
+            <span>💼 4大額外手動資產（現金、邦邦、派派、託託）為管理者專屬個人記帳，查閱其他同仁純粹試算其排班收入。</span>
+          </div>
+          `}
 
-          <!-- 🌈 👑 金庫總計資產總合 (七色彩虹炫光外框卡片) -->
+          <!-- 🌈 👑 金庫總計資產總合 -->
           <div class="rainbow-glow-card rounded-3xl p-5 text-center space-y-2 relative overflow-hidden shadow-2xl">
             <div class="text-xs font-black text-amber-300 flex items-center justify-center gap-2 uppercase tracking-wider">
               <i class="fa-solid fa-crown text-amber-400 animate-bounce"></i>
-              <span>👑 金庫總計資產總合 👑</span>
+              <span>👑 ${cleanManager} 金庫總計資產總合 👑</span>
               <i class="fa-solid fa-crown text-amber-400 animate-bounce"></i>
             </div>
 
             <div class="text-[11px] text-slate-300 font-mono">
-              (班表K線收益 + 現金 + 邦邦 + 派派 + 託託 即時動態總合)
+              (${month}月份班表K線收益 ${isManagerAdmin ? '+ 現金 + 邦邦 + 派派 + 託託' : ''} 即時動態總合)
             </div>
 
             <div class="text-3xl sm:text-5xl font-black text-white font-mono tracking-widest drop-shadow-[0_0_25px_rgba(245,158,11,0.9)] flex items-center justify-center gap-1 py-1">
