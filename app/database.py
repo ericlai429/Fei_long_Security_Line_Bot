@@ -8,7 +8,7 @@ from app.config import settings
 from app.services.email_helper import normalize_and_validate_email
 
 DB_FILE = "data/storage.json"
-_lock = threading.Lock()
+_lock = threading.RLock()
 
 def _hash_pin(pin: str) -> str:
     """PBKDF2-HMAC-SHA256 100,000次迭代加鹽雜湊，杜絕明文儲存以符合高等級資安防護要求。"""

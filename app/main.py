@@ -2,6 +2,8 @@ import os
 import uuid
 import logging
 import re
+import json
+import hashlib
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, Request, Header, HTTPException, Response, Query, UploadFile, File
@@ -37,6 +39,15 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+if os.path.exists("docs/data"):
+    app.mount("/data", StaticFiles(directory="docs/data"), name="data")
+
+@app.get("/sw.js")
+def serve_sw():
+    for candidate in ["app/static/pwa/sw.js", "docs/sw.js", "sw.js"]:
+        if os.path.exists(candidate):
+            return FileResponse(candidate, media_type="application/javascript", headers={"Cache-Control": "no-store, no-cache, must-revalidate"})
+    raise HTTPException(status_code=404, detail="sw.js not found")
 
 @app.on_event("startup")
 def startup_event():
@@ -54,7 +65,7 @@ def health_check():
         "readonly_enforced": True
     }
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/dashboard", response_class=HTMLResponse)
 def root_dashboard():
     return f"""
     <!DOCTYPE html>
@@ -447,7 +458,10 @@ def admin_heartbeat(payload: HeartbeatPayload):
     }
 
 # --- PWA Web App Entry (Zero-Store) ---
+@app.get("/", response_class=HTMLResponse)
+@app.get("/index.html", response_class=HTMLResponse)
 @app.get("/pwa", response_class=HTMLResponse)
+@app.get("/pwa/index.html", response_class=HTMLResponse)
 def serve_pwa():
     pwa_file = os.path.join("app", "static", "pwa", "index.html")
     if os.path.exists(pwa_file):
@@ -486,9 +500,13 @@ def get_live_schedule(
             detail="安全邊界限制：一般連線者僅開放讀取 上個月(8月)、本月(9月) 與 下個月(10月) 之勤務排班資料！"
         )
 
-    group = admin_service.get_group_by_id(group_id) or {}
+    group = db.get_group(group_id) or {}
     target_tab = tab or group.get("sheet_tab", "三總保全內部群")
     schedule = sheets_service.get_parsed_schedule(target_tab, year=req_year, month=req_month)
+
+    rows = schedule.get("rows", [])
+    rows_str = json.dumps(rows, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
+    version_hash = hashlib.md5(rows_str.encode("utf-8")).hexdigest()
 
     return JSONResponse(
         content={
@@ -500,9 +518,58 @@ def get_live_schedule(
             "is_current_month": (req_year == 2026 and req_month == 9),
             "updated_at": schedule.get("updated_at"),
             "columns": schedule.get("columns", []),
-            "rows": schedule.get("rows", []),
+            "rows": rows,
             "members": schedule.get("members", []),
-            "posts": schedule.get("posts", [])
+            "posts": schedule.get("posts", []),
+            "version_hash": version_hash
+        },
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
+
+# --- Schedule Version Handshake API (Strictly Zero-Store 1-Min Check) ---
+@app.get("/api/schedule/handshake")
+def handshake_schedule_version(
+    group_id: str = "tsgh_internal",
+    tab: Optional[str] = None,
+    year: Optional[int] = None,
+    month: Optional[int] = None
+):
+    """
+    每分鐘輕量握手核對雲端試算表與排班資料版本：
+    - 核對當前月份與分隊檔案是否存在
+    - 計算最新資料 Hash 與更新時間
+    - 嚴格設置 no-store 標頭，禁止手機暫存檔快取
+    """
+    base_year = 2026
+    base_month = 9
+    req_year = year or base_year
+    req_month = month or base_month
+
+    group = db.get_group(group_id) or {}
+    target_tab = tab or group.get("sheet_tab", "4.三總工務所")
+    schedule = sheets_service.get_parsed_schedule(target_tab, year=req_year, month=req_month)
+    rows = schedule.get("rows", [])
+
+    # 計算資料版本 Hash (MD5, 嚴格對齊標準 JSON 格式)
+    rows_str = json.dumps(rows, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
+    version_hash = hashlib.md5(rows_str.encode("utf-8")).hexdigest()
+    spreadsheet_id = sheets_service.get_spreadsheet_id_for_month(req_year, req_month)
+
+    return JSONResponse(
+        content={
+            "status": "connected",
+            "tab_name": target_tab,
+            "year": req_year,
+            "month": req_month,
+            "has_file": len(rows) > 0,
+            "row_count": len(rows),
+            "version_hash": version_hash,
+            "updated_at": schedule.get("updated_at") or "2026-08-31 06:00",
+            "spreadsheet_id": spreadsheet_id
         },
         headers={
             "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",

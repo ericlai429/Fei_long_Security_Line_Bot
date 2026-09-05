@@ -21,13 +21,14 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertIn("no-store", res.headers.get("Cache-Control", ""))
         self.assertIn("飛龍保全", res.text)
-        self.assertIn("雙 PIN 碼", res.text)
+        self.assertIn("密碼", res.text)
+        self.assertIn("金庫", res.text)
 
     def test_dual_pin_verification(self):
-        # 1. Successful verification (Master 789 + Sub 8888)
+        # 1. Successful verification (Master qwer8875 + Sub 8888)
         res_ok = self.client.post("/api/auth/verify-pin", json={
             "group_id": "tsgh_internal",
-            "master_pin": "789",
+            "master_pin": "qwer8875",
             "sub_pin": "8888"
         })
         self.assertEqual(res_ok.status_code, 200)
@@ -86,6 +87,26 @@ class TestAPIEndpoints(unittest.TestCase):
         data = res.json()
         self.assertEqual(data["tab_name"], "三總保全內部群")
         self.assertTrue(len(data["rows"]) > 0)
+
+    def test_schedule_version_handshake_and_alignment(self):
+        for tab_name in ["4.三總工務所", "5.三總重症大樓"]:
+            # 1. 握手端點
+            r_hs = self.client.get(f"/api/schedule/handshake?tab={tab_name}&year=2026&month=9")
+            self.assertEqual(r_hs.status_code, 200)
+            self.assertIn("no-store", r_hs.headers.get("Cache-Control", ""))
+            hs_data = r_hs.json()
+            self.assertEqual(hs_data["status"], "connected")
+            self.assertTrue(hs_data["has_file"])
+            self.assertEqual(hs_data["row_count"], 30)
+            self.assertTrue(len(hs_data["version_hash"]) > 0)
+
+            # 2. 即時排班端點
+            r_live = self.client.get(f"/api/schedule/live?tab={tab_name}&year=2026&month=9")
+            self.assertEqual(r_live.status_code, 200)
+            self.assertIn("no-store", r_live.headers.get("Cache-Control", ""))
+            live_data = r_live.json()
+            self.assertEqual(len(live_data["rows"]), 30)
+            self.assertEqual(live_data["version_hash"], hs_data["version_hash"])
 
     def test_pdf_generate_and_download(self):
         res = self.client.get("/api/pdf/generate?group_id=tsgh_internal&tab=三總保全內部群")
