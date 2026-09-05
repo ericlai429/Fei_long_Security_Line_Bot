@@ -433,6 +433,109 @@ def sync_admin_live_data(payload: LiveSyncPayload):
         "rows_count": len(rows)
     }
 
+class UpdateScheduleSlotPayload(BaseModel):
+    tab_name: str
+    date: str
+    shift: str
+    person: str
+    master_pin: Optional[str] = None
+
+@app.post("/api/admin/schedule/update-slot")
+def update_schedule_slot(payload: UpdateScheduleSlotPayload):
+    tab_name = payload.tab_name.strip()
+    date_str = payload.date.strip().replace('-', '/')
+    shift = payload.shift.strip()
+    person = payload.person.strip()
+
+    is_icu = ("重症" in tab_name or "5." in tab_name)
+    target_file = os.path.join("docs", "data", "schedule_5_tsgh_icu.json" if is_icu else "schedule_4_tsgh_eng.json")
+    live_file = os.path.join("docs", "data", "schedule_live.json")
+    version_file = os.path.join("docs", "data", "schedule_version.json")
+    data_version_file = os.path.join("data", "schedule_version.json")
+
+    shift_col = "早班 (07-19)" if ("早" in shift or "A" in shift) else "晚班 (19-07)"
+    clean_name = re.sub(r'[\(（].*?[\)）]', '', person).strip()
+
+    updated = False
+    new_hash = ""
+
+    if os.path.exists(target_file):
+        with open(target_file, "r", encoding="utf-8") as f:
+            tdata = json.load(f)
+
+        for r in tdata.get("rows", []):
+            if date_str in r.get("日期", "") or r.get("日期", "").endswith(date_str[-5:]):
+                r[shift_col] = person
+                sub_tag = f"{'day' if '早' in shift_col else 'night'}_{clean_name}"
+                r["substitutes"] = [sub_tag]
+                updated = True
+                break
+
+        if updated:
+            if clean_name and clean_name not in tdata.get("members", []):
+                tdata["members"].append(clean_name)
+                tdata["members"].sort()
+
+            rows_str = json.dumps(tdata["rows"], sort_keys=True, ensure_ascii=False, separators=(',', ':'))
+            new_hash = hashlib.md5(rows_str.encode("utf-8")).hexdigest()
+            tdata["version_hash"] = new_hash
+            from datetime import datetime
+            tdata["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+            with open(target_file, "w", encoding="utf-8") as f:
+                json.dump(tdata, f, ensure_ascii=False, indent=2)
+
+            from app.database import db
+            db.save_schedule_snapshot(tab_name, tdata["rows"])
+
+    if os.path.exists(live_file):
+        with open(live_file, "r", encoding="utf-8") as f:
+            ldata = json.load(f)
+        key = "5.三總重症大樓" if is_icu else "4.三總工務所"
+        if key in ldata:
+            for r in ldata[key].get("rows", []):
+                if date_str in r.get("日期", "") or r.get("日期", "").endswith(date_str[-5:]):
+                    r[shift_col] = person
+                    sub_tag = f"{'day' if '早' in shift_col else 'night'}_{clean_name}"
+                    r["substitutes"] = [sub_tag]
+                    break
+            if clean_name and clean_name not in ldata[key].get("members", []):
+                ldata[key]["members"].append(clean_name)
+                ldata[key]["members"].sort()
+            rows_str = json.dumps(ldata[key]["rows"], sort_keys=True, ensure_ascii=False, separators=(',', ':'))
+            ldata[key]["version_hash"] = hashlib.md5(rows_str.encode("utf-8")).hexdigest()
+            from datetime import datetime
+            ldata[key]["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+            with open(live_file, "w", encoding="utf-8") as f:
+                json.dump(ldata, f, ensure_ascii=False, indent=2)
+
+    for vf in [version_file, data_version_file]:
+        if os.path.exists(vf):
+            with open(vf, "r", encoding="utf-8") as f:
+                vdata = json.load(f)
+            key = "5.三總重症大樓" if is_icu else "4.三總工務所"
+            if "tabs" in vdata and key in vdata["tabs"]:
+                if new_hash:
+                    vdata["tabs"][key]["version_hash"] = new_hash
+                from datetime import datetime
+                vdata["tabs"][key]["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+            from datetime import datetime
+            vdata["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+            with open(vf, "w", encoding="utf-8") as f:
+                json.dump(vdata, f, ensure_ascii=False, indent=2)
+
+    logger.info(f"Admin updated slot: {tab_name} {date_str} [{shift}] ➜ {person}")
+    return {
+        "status": "success",
+        "message": f"成功替換 {tab_name} {date_str} [{shift}] 為 {person} 並留存於系統！",
+        "tab_name": tab_name,
+        "date": date_str,
+        "shift": shift,
+        "person": person,
+        "version_hash": new_hash
+    }
+
+
 # --- Schedule Change Audit Logs & Admin Keep-Alive Heartbeat APIs ---
 @app.get("/api/admin/schedule/change-logs")
 def get_schedule_change_logs(tab_name: Optional[str] = None, query: Optional[str] = None, limit: int = 100):

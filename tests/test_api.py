@@ -167,5 +167,19 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(data["inspection"]["health_score"], 100)
         self.assertEqual(data["inspection"]["rare_char_analysis"]["rare_chars_detected_count"], 1)
 
+    def test_admin_update_schedule_slot(self):
+        res = self.client.post("/api/admin/schedule/update-slot", json={
+            "tab_name": "5.三總重症大樓",
+            "date": "2026/09/05",
+            "shift": "早班",
+            "person": "葉榮東 (0926-348-665)"
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "success")
+        self.assertIn("成功替換", data["message"])
+        self.assertEqual(data["person"], "葉榮東 (0926-348-665)")
+
 if __name__ == "__main__":
     unittest.main()
+
