@@ -38,22 +38,43 @@ class SheetsService:
             except Exception as ex:
                 logger.debug(f"Note loading token: {ex}")
 
+        # 1. 優先嘗試從 Google Service Account 檔案或環境變數載入永久憑證
         creds_file = settings.GOOGLE_SERVICE_ACCOUNT_FILE
+        sa_loaded = False
+
         if os.path.exists(creds_file):
             try:
                 with open(creds_file, 'r', encoding='utf-8') as f:
                     sa_info = json.load(f)
+                pk = sa_info.get("private_key", "")
+                if pk and "BEGIN PRIVATE KEY" in pk and "YOUR_PRIVATE_KEY" not in pk:
                     self.service_account_email = sa_info.get("client_email", "")
-
-                credentials = Credentials.from_service_account_file(creds_file, scopes=SCOPES)
-                self.client = gspread.authorize(credentials)
-                logger.info(f"Google Sheets API initialized in READ-ONLY mode. Service Account: {self.service_account_email}")
+                    credentials = Credentials.from_service_account_file(creds_file, scopes=SCOPES)
+                    self.client = gspread.authorize(credentials)
+                    sa_loaded = True
+                    logger.info(f"✅ Google Sheets API initialized with Service Account: {self.service_account_email}")
+                else:
+                    self.service_account_email = sa_info.get("client_email", "feilong-bot@feilong-security.iam.gserviceaccount.com")
+                    logger.info(f"Service Account file {creds_file} contains template/placeholder key. Ready for actual credentials.")
             except Exception as e:
-                logger.error(f"Failed to authenticate with Google Sheets: {e}")
+                logger.error(f"Failed to authenticate with Google Sheets from {creds_file}: {e}")
                 self.client = None
-        else:
+
+        if not sa_loaded and settings.GOOGLE_SERVICE_ACCOUNT_JSON:
+            try:
+                sa_info = json.loads(settings.GOOGLE_SERVICE_ACCOUNT_JSON)
+                pk = sa_info.get("private_key", "")
+                if pk and "BEGIN PRIVATE KEY" in pk:
+                    self.service_account_email = sa_info.get("client_email", "")
+                    credentials = Credentials.from_service_account_info(sa_info, scopes=SCOPES)
+                    self.client = gspread.authorize(credentials)
+                    sa_loaded = True
+                    logger.info(f"✅ Google Sheets API initialized via GOOGLE_SERVICE_ACCOUNT_JSON: {self.service_account_email}")
+            except Exception as ex:
+                logger.warning(f"Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON: {ex}")
+
+        if not sa_loaded and not self.service_account_email:
             self.service_account_email = "feilong-bot@feilong-security.iam.gserviceaccount.com"
-            logger.warning("Google Service Account file not found. Ready for User OAuth / Token / Direct Upload.")
 
     def set_user_oauth_token(self, token: str, user_email: str = "ericlai429@gmail.com") -> Tuple[bool, str]:
         """Sets Google User OAuth Access Token to fetch private sheets shared with the user."""
@@ -96,9 +117,18 @@ class SheetsService:
         has_custom = len(self.custom_sheet_data) > 0
         tabs = self.list_tabs()
 
+        if self.client and not self.user_access_token:
+            mode_desc = f"Google 服務帳號永久常駐 (Service Account: {self.service_account_email})"
+        elif self.user_access_token:
+            mode_desc = f"Google 帳號 OAuth 授權 ({self.connected_user_email})"
+        elif has_custom:
+            mode_desc = "直接檔案載入"
+        else:
+            mode_desc = "模擬展示模式 (Mock Mode) / 本地快照"
+
         return {
             "is_live_connected": is_live or has_custom,
-            "mode": f"Google 帳號 OAuth 授權 ({self.connected_user_email})" if self.user_access_token else ("直接檔案載入" if has_custom else "模擬展示模式 (Mock Mode)"),
+            "mode": mode_desc,
             "connected_user_email": self.connected_user_email,
             "service_account_email": self.service_account_email,
             "active_spreadsheet_id": self.active_spreadsheet_id,
@@ -292,6 +322,21 @@ class SheetsService:
             except Exception as ex:
                 logger.debug(f"GAS Bridge fetch failed: {ex}")
 
+        # 🌟 讀取 docs/data 最新排班檔案保底
+        target_file = None
+        if "工務所" in tab_name or "4." in tab_name:
+            target_file = os.path.join("docs", "data", "schedule_4_tsgh_eng.json")
+        elif "重症" in tab_name or "5." in tab_name:
+            target_file = os.path.join("docs", "data", "schedule_5_tsgh_icu.json")
+        if target_file and os.path.exists(target_file):
+            try:
+                with open(target_file, "r", encoding="utf-8") as f:
+                    file_data = json.load(f)
+                    if file_data and "rows" in file_data and len(file_data["rows"]) > 0:
+                        return file_data["rows"]
+            except Exception as ex:
+                logger.debug(f"Target file load note: {ex}")
+
         # 🌟 讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表快照
         from app.database import db
         snapshot = db.get_schedule_snapshot(tab_name)
@@ -318,6 +363,28 @@ class SheetsService:
                 "rows": [],
                 "members": [],
                 "posts": []
+            }
+
+        # 🌟 若 raw_data 已經是標準解析後的字典物件列表 (如 Admin snapshot 或快取 rows)
+        if isinstance(raw_data, list) and len(raw_data) > 0 and isinstance(raw_data[0], dict):
+            members_set = set()
+            for r in raw_data:
+                for k, v in r.items():
+                    if any(term in k for term in ["早班", "晚班", "機動", "支援"]):
+                        if v and v != "-" and v != "休":
+                            for name in re.split(r"[/,、\s]+", v):
+                                if name.strip():
+                                    members_set.add(name.strip())
+            return {
+                "tab_name": tab_name,
+                "year": target_year,
+                "month": target_month,
+                "is_current_month": (target_year == today.year and target_month == 9),
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "columns": list(raw_data[0].keys()),
+                "rows": raw_data,
+                "members": sorted(list(members_set)),
+                "posts": [tab_name]
             }
 
         # 智能從試算表頂部 Header 偵測實際民國/西元年份與月份 (如 115年9月份)
@@ -414,19 +481,39 @@ class SheetsService:
                 members_set.add(name_pure)
 
                 # 智慧掃描當月所有天數出勤代碼 (A, B, 機, 支, 代, 1, 2)
+                # 🌟 自動全型半型正規化偵測 (自動識別 Ａ/A, Ｂ/B, １/1, ２/2 等)
+                import unicodedata
+                row_prefix = " ".join(str(c).strip() for c in row[:min(5, len(row))])
+                is_substitute_guard = any(k in row_prefix for k in ['機動', '支援', '代班', '替補', '臨時', '日機', '夜機', '早機', '晚機', '機', '支', '代', '替'])
+
                 for col_idx, (day_num, _) in day_cols.items():
                     if col_idx < len(row):
-                        shift_val = str(row[col_idx]).strip().upper()
-                        if not shift_val or shift_val in ['休', 'OFF', '-', '—', 'X', '0']:
+                        raw_shift_val = str(row[col_idx])
+                        norm_shift_val = unicodedata.normalize('NFKC', raw_shift_val).strip().upper()
+                        if not norm_shift_val or norm_shift_val in ['休', 'OFF', '-', '—', 'X', '0', 'NONE', '']:
                             continue
 
-                        # 判斷早班 (A) 或 晚班 (B)
-                        if shift_val in ['A', '早', '日'] or (current_shift_type == '日班' and shift_val in ['機', '支', '代', 'V', '1']):
-                            if display_name not in daily_schedule[day_num]['day']:
-                                daily_schedule[day_num]['day'].append(display_name)
-                        elif shift_val in ['B', '晚', '夜'] or (current_shift_type == '夜班' and shift_val in ['機', '支', '代', 'V', '1']):
-                            if display_name not in daily_schedule[day_num]['night']:
-                                daily_schedule[day_num]['night'].append(display_name)
+                        # 判斷早班 (A) 或 晚班 (B) 或 G班 (6小時1000元)
+                        is_g_shift = norm_shift_val in ['G', 'G班', '6H', '6小時', 'Ｇ']
+                        is_day_shift = norm_shift_val in ['A', '早', '日', '1', 'A班'] or (current_shift_type == '日班' and norm_shift_val in ['機', '支', '代', '替', '換', 'V']) or (is_g_shift and current_shift_type == '日班')
+                        is_night_shift = norm_shift_val in ['B', '晚', '夜', '2', 'B班'] or (current_shift_type == '夜班' and norm_shift_val in ['機', '支', '代', '替', '換', 'V']) or (is_g_shift and current_shift_type == '夜班')
+
+                        if is_g_shift and not is_day_shift and not is_night_shift:
+                            is_day_shift = True
+
+                        is_cell_substitute = norm_shift_val in ['機', '支', '代', '替', '換'] or is_substitute_guard
+                        target_display_name = f"{display_name} (G班 6h)" if is_g_shift else display_name
+
+                        if is_day_shift:
+                            if target_display_name not in daily_schedule[day_num]['day']:
+                                daily_schedule[day_num]['day'].append(target_display_name)
+                            if is_cell_substitute:
+                                daily_schedule[day_num].setdefault('substitutes', set()).add(f"day_{target_display_name}")
+                        elif is_night_shift:
+                            if target_display_name not in daily_schedule[day_num]['night']:
+                                daily_schedule[day_num]['night'].append(target_display_name)
+                            if is_cell_substitute:
+                                daily_schedule[day_num].setdefault('substitutes', set()).add(f"night_{target_display_name}")
 
             standard_columns = ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"]
             standard_rows = []
@@ -434,13 +521,17 @@ class SheetsService:
             for day_num in sorted(daily_schedule.keys()):
                 info = daily_schedule[day_num]
                 d_str = f"{target_year}/{target_month:02d}/{day_num:02d}"
-                standard_rows.append({
+                subs = sorted(list(info.get('substitutes', set())))
+                row_dict = {
                     "日期": d_str,
                     "星期": info.get('weekday', ''),
                     "哨點/崗位": tab_name.strip(),
                     "早班 (07-19)": "、".join(info['day']) if info['day'] else "—",
                     "晚班 (19-07)": "、".join(info['night']) if info['night'] else "—"
-                })
+                }
+                if subs:
+                    row_dict["substitutes"] = subs
+                standard_rows.append(row_dict)
 
             return {
                 "tab_name": tab_name,

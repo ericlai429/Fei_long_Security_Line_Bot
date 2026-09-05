@@ -5,6 +5,9 @@
   "tuotuo": 118943,
   "t5_green_dates": "3,6,13,17,22,24,29,31",
   "mobile_support_dates": "1,7,12,19,21",
+  "g_dates": "",
+  "g_count": 0,
+  "g_rate": 1000,
   "salary_audit_hours": 450,
   "updated_at": "2026-08-31T06:12:00.000Z"
 }

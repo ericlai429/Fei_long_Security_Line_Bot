@@ -54,9 +54,18 @@
     },
     "115.09": {
       "name": "115.09 (2026年9月 - 當月)",
-      "spreadsheet_id": "",
+      "spreadsheet_id": "18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU",
+      "gid_eng": "1125126855",
+      "gid_icu": "1558314081",
+      "tabs": {
+        "4.三總工務所": "1125126855",
+        "5.三總重症大樓": "1558314081"
+      },
+      "url_eng": "https://docs.google.com/spreadsheets/d/18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU/edit?gid=1125126855#gid=1125126855",
+      "url_icu": "https://docs.google.com/spreadsheets/d/18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU/edit?gid=1558314081#gid=1558314081",
       "year": 2026,
-      "month": 9
+      "month": 9,
+      "url": "https://docs.google.com/spreadsheets/d/18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU/edit?gid=1558314081#gid=1558314081"
     },
     "115.10": {
       "name": "115.10 (2026年10月)",
