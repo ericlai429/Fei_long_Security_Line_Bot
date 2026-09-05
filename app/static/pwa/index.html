@@ -265,17 +265,7 @@
           <span>登入後台選單</span>
         </button>
 
-        <div class="pt-2 border-t border-slate-800 space-y-2">
-          <!-- 🌈 開啟管理者存錢桶 -->
-          <button 
-            type="button" 
-            onclick="closeAdminAuthModal(); openAdminVaultModal();" 
-            class="rainbow-glow-btn w-full h-11 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-xl active:scale-98 cursor-pointer"
-          >
-            <i class="fa-solid fa-crown text-yellow-300 animate-pulse text-sm"></i>
-            <span>存錢桶</span>
-          </button>
-        </div>
+
 
         <div class="flex items-center justify-center text-[11px] text-slate-500 pt-1">
           <button type="button" onclick="showChangePinView()" class="text-slate-400 hover:text-amber-300 transition underline">
@@ -769,10 +759,11 @@
           <span id="activeOverrideCountBadge" style="display: none;" class="px-1.5 py-0.2 bg-amber-500 text-slate-950 text-[9px] font-black rounded-full leading-none ml-0.5">0</span>
         </button>
 
-        <!-- 🏦 個人金庫按鈕 (切換至個人班表系統) -->
+        <!-- 🏦 個人金庫按鈕 (切換至個人班表系統 ｜ 訪客預設隱藏) -->
         <button 
           type="button" 
           id="personalVaultBtn"
+          style="display: none;"
           onclick="openPersonalVaultModal()" 
           title="🏦 個人金庫 ｜ 切換至個人專屬班表系統"
           class="h-8 px-2 sm:px-2.5 bg-slate-950 hover:bg-slate-900 border border-sky-500/80 hover:border-sky-400 text-sky-300 text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center gap-1 shrink-0 cursor-pointer"
@@ -793,10 +784,11 @@
           <span>登入</span>
         </button>
 
-        <!-- 🌈 管理者金庫按鈕 (皇冠呼吸燈 ＋ 原地 3D 旋轉金幣 ＋ 七色彩虹炫光圈) -->
+        <!-- 🌈 管理者金庫按鈕 (皇冠呼吸燈 ＋ 原地 3D 旋轉金幣 ＋ 七色彩虹炫光圈 ｜ 訪客預設隱藏) -->
         <button 
           type="button" 
           id="adminVaultBtn"
+          style="display: none;"
           onclick="openAdminVaultModal()" 
           title="👑 管理者金庫 ｜ 個人當月獨立收入與排班資產統計"
           class="rainbow-glow-btn h-8 px-2 bg-slate-950 text-white text-xs font-black rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-1 shrink-0 cursor-pointer relative overflow-hidden"
@@ -1510,6 +1502,11 @@
     }
 
     function openPersonalVaultModal() {
+      if (!isUnlocked) {
+        showToast('🔒「金庫」為內部同仁專屬功能，請先登入主管權限！', 'warning');
+        openAdminAuthModal();
+        return;
+      }
       const modal = document.getElementById('personalVaultModal');
       const select = document.getElementById('vaultGuardSelect');
       
@@ -4248,10 +4245,18 @@
           keyBtn.innerHTML = '<i class="fa-solid fa-key text-xs text-amber-400"></i><span>登入</span>';
         }
       }
-      // 🌟 一般訪客權限看不到「改班」UI按鈕，僅主管解鎖後才顯示
+      // 🌟 一般訪客權限看不到「改班」與「金庫」UI按鈕，僅主管解鎖後才顯示
       const shiftBtn = document.getElementById('shiftOverrideBtn');
       if (shiftBtn) {
         shiftBtn.style.display = unlocked ? 'flex' : 'none';
+      }
+      const personalVaultBtn = document.getElementById('personalVaultBtn');
+      if (personalVaultBtn) {
+        personalVaultBtn.style.display = unlocked ? 'flex' : 'none';
+      }
+      const adminVaultBtn = document.getElementById('adminVaultBtn');
+      if (adminVaultBtn) {
+        adminVaultBtn.style.display = unlocked ? 'flex' : 'none';
       }
     }
 
@@ -4328,6 +4333,8 @@
       localStorage.removeItem('feilong_admin_unlocked');
       isUnlocked = false;
       sessionMasterPin = null;
+      closePersonalVaultModal();
+      closeAdminVaultModal();
       updateAdminKeyUi(false);
       closeAdminAuthModal();
       fetchFullSchedule(true);
