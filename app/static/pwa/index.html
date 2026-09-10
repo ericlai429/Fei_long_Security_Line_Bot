@@ -218,6 +218,55 @@
       animation: bombSpawnPoof 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
+    /* 🐰 烏薩奇（Usagi）生氣紅通通臉彈出與劇烈震怒動畫 */
+    @keyframes usagiAngryPopIn {
+      0% {
+        transform: translate(-50%, -50%) scale(0) rotate(-15deg);
+        opacity: 0;
+      }
+      18% {
+        transform: translate(-50%, -50%) scale(1.25) rotate(6deg);
+        opacity: 1;
+      }
+      30% {
+        transform: translate(-50%, -50%) scale(0.95) rotate(-4deg);
+        opacity: 1;
+      }
+      45% {
+        transform: translate(-50%, -50%) scale(1.08) rotate(3deg);
+        opacity: 1;
+      }
+      60% {
+        transform: translate(-50%, -50%) scale(1.0) rotate(0deg);
+        opacity: 1;
+      }
+      82% {
+        transform: translate(-50%, -50%) scale(1.0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -85%) scale(0.75);
+        opacity: 0;
+      }
+    }
+    @keyframes usagiTrembleShake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      20% { transform: translate(-3px, -1px) rotate(-4deg); }
+      40% { transform: translate(3px, 1px) rotate(4deg); }
+      60% { transform: translate(-2px, 2px) rotate(-3deg); }
+      80% { transform: translate(2px, -2px) rotate(3deg); }
+    }
+    .usagi-angry-popup {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      animation: usagiAngryPopIn 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .usagi-angry-popup svg {
+      animation: usagiTrembleShake 0.12s infinite linear;
+    }
+
     /* 🪙 金幣 3D 原地旋轉動畫 */
     @keyframes coinSpin3D {
       0% { transform: rotateY(0deg); }
@@ -6069,49 +6118,135 @@
         });
       };
 
-      // 💥 高空綻放：日本傳統割物菊・芯入錦冠柳花火玉 (維持 6 秒，七彩變幻，粒子特效＋超炫光暈＋爆心充盈＋畫面震動2秒)
-      function detonateJapaneseHanabi(apexX, apexY, onLandingComplete) {
-        // 🌋 1. 爆炸瞬間畫面極度誇張劇烈震動 2 秒！
-        triggerExaggeratedScreenShake(2000, 32);
+      // 🐰 烏薩奇（Usagi）生氣紅通通臉浮現效果 (爆炸瞬間生於上方)
+      function showUsagiAngryFace(apexX, apexY) {
+        const oldUsagi = document.getElementById('usagiAngryFaceEl');
+        if (oldUsagi) oldUsagi.remove();
 
-        // 🌟 2. 爆心常駐高能熾熱光球與旋轉耀斑 (徹底消除中心空洞感，持續 2 秒)
+        const usagiEl = document.createElement('div');
+        usagiEl.id = 'usagiAngryFaceEl';
+        usagiEl.className = 'usagi-angry-popup flex flex-col items-center select-none';
+
+        // 浮現於煙花爆炸點正上方 (apexY 上方約 90px，並確保不超出螢幕頂端)
+        const posX = Math.max(70, Math.min(window.innerWidth - 70, apexX));
+        const posY = Math.max(65, apexY - 95);
+        usagiEl.style.left = `${posX}px`;
+        usagiEl.style.top = `${posY}px`;
+
+        usagiEl.innerHTML = `
+          <div class="relative flex flex-col items-center">
+            <!-- 烏薩奇生氣紅通通向量圖 -->
+            <svg width="120" height="120" viewBox="0 0 120 120" style="filter: drop-shadow(0 4px 14px rgba(239, 68, 68, 0.65));">
+              <defs>
+                <!-- 烏薩奇氣到漲紅的漸層色 (紅通通) -->
+                <radialGradient id="usagiAngryFlushGrad" cx="50%" cy="65%" r="60%">
+                  <stop offset="0%" stop-color="#fff59d" />
+                  <stop offset="35%" stop-color="#fca5a5" />
+                  <stop offset="70%" stop-color="#ef4444" />
+                  <stop offset="100%" stop-color="#b91c1c" />
+                </radialGradient>
+              </defs>
+              <!-- 雙側氣憤冒煙 (Angry Steam Puffs) -->
+              <g opacity="0.85">
+                <path d="M14 42 Q6 32 16 22 Q22 32 14 42 Z" fill="#ffffff" />
+                <circle cx="10" cy="22" r="3" fill="#ffffff" />
+                <path d="M106 42 Q114 32 104 22 Q98 32 106 42 Z" fill="#ffffff" />
+                <circle cx="110" cy="22" r="3" fill="#ffffff" />
+              </g>
+              <!-- 左長兔耳 -->
+              <path d="M40 50 C34 6, 48 -4, 54 42 Z" fill="#fff59d" stroke="#d97706" stroke-width="2.5" />
+              <path d="M43 40 C40 14, 48 6, 52 36 Z" fill="#fda4af" />
+              <!-- 右長兔耳 (暴怒微後傾) -->
+              <path d="M66 42 C72 -4, 86 6, 80 50 Z" fill="#fff59d" stroke="#d97706" stroke-width="2.5" />
+              <path d="M68 36 C72 6, 80 14, 77 40 Z" fill="#fda4af" />
+              <!-- 圓潤頭部與氣到漲紅的大臉 (紅通通) -->
+              <ellipse cx="60" cy="72" rx="37" ry="31" fill="url(#usagiAngryFlushGrad)" stroke="#b91c1c" stroke-width="2.5" />
+              <!-- 兩側極度生氣的紅通通大腮紅 -->
+              <ellipse cx="35" cy="76" rx="8.5" ry="6" fill="#991b1b" opacity="0.85" />
+              <ellipse cx="85" cy="76" rx="8.5" ry="6" fill="#991b1b" opacity="0.85" />
+              <!-- 怒目豎眉 (\  /) -->
+              <path d="M37 57 L52 64" stroke="#450a0a" stroke-width="3.5" stroke-linecap="round" />
+              <path d="M83 57 L68 64" stroke="#450a0a" stroke-width="3.5" stroke-linecap="round" />
+              <!-- 瞪大黑眼球帶怒火反光 -->
+              <ellipse cx="45" cy="68" rx="4.5" ry="6" fill="#09090b" />
+              <circle cx="43.5" cy="66" r="1.8" fill="#ffffff" />
+              <ellipse cx="75" cy="68" rx="4.5" ry="6" fill="#09090b" />
+              <circle cx="73.5" cy="66" r="1.8" fill="#ffffff" />
+              <!-- 小鼻子 -->
+              <polygon points="60,72 58,74.5 62,74.5" fill="#78350f" />
+              <!-- 經典生氣怒吼張口 (YAHA / 怒吼齒) -->
+              <path d="M52 76 Q60 73 68 76 Q60 89 52 76 Z" fill="#7f1d1d" stroke="#450a0a" stroke-width="2" />
+              <!-- 招牌粉嫩舌頭 -->
+              <ellipse cx="60" cy="83" rx="4.5" ry="3.5" fill="#fb7185" />
+              <!-- 單顆小兔牙 -->
+              <rect x="58" y="75" width="4" height="3" fill="#ffffff" rx="1" />
+              <!-- 額頭爆出紅色十字青筋 (💢) -->
+              <g transform="translate(86, 28) scale(0.95)">
+                <path d="M2 7 L16 7 M9 0 L9 14 M4 3 L14 11 M14 3 L4 11" stroke="#dc2626" stroke-width="3" stroke-linecap="round" />
+              </g>
+            </svg>
+            <!-- 氣噗噗對話框 -->
+            <div class="px-2.5 py-0.5 mt-0.5 rounded-full bg-red-600 text-white font-black text-[11px] shadow-lg border border-red-300 tracking-wider whitespace-nowrap">
+              💢 烏薩奇：ウララララッ！！
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(usagiEl);
+
+        setTimeout(() => {
+          if (usagiEl && usagiEl.parentNode) {
+            usagiEl.remove();
+          }
+        }, 4300);
+      }
+
+      // 💥 高空綻放：日本傳統割物菊・芯入錦冠柳花火玉 (維持 6 秒，七彩變幻，適度光暈零延遲＋爆心充盈＋震動2秒＋烏薩奇生氣臉)
+      function detonateJapaneseHanabi(apexX, apexY, onLandingComplete) {
+        // 🐰 1. 上方浮現生氣紅通通烏薩奇（Usagi）
+        showUsagiAngryFace(apexX, apexY);
+
+        // 🌋 2. 爆炸瞬間畫面震動 2 秒
+        triggerExaggeratedScreenShake(2000, 24);
+
+        // 🌟 3. 爆心熾熱光球 (適度光暈，無中心空洞)
         triggerCorePlasma(apexX, apexY);
 
-        // 🌟 3. 天際瞬態震撼大光暈 (Ambient Bloom Flash)
-        triggerAmbientBloom(apexX, apexY, Math.min(width, height) * 0.85);
+        // 🌟 4. 天際瞬態適度光暈 (降低一半，避免 lag)
+        triggerAmbientBloom(apexX, apexY, Math.min(width, height) * 0.42);
 
-        // 🌟 4. 雙重高空光環衝擊波
+        // 🌟 5. 雙重高空光環衝擊波 (降低一半尺寸與開銷)
         shockwaves.push({
           x: apexX,
           y: apexY,
-          radius: 12,
-          maxRadius: 300,
+          radius: 10,
+          maxRadius: 160,
           color: '#fef08a',
-          alpha: 1,
-          lineWidth: 8
+          alpha: 0.65,
+          lineWidth: 5
         });
         shockwaves.push({
           x: apexX,
           y: apexY,
           radius: 6,
-          maxRadius: 420,
+          maxRadius: 220,
           color: '#ec4899',
-          alpha: 0.85,
-          lineWidth: 5
+          alpha: 0.55,
+          lineWidth: 3
         });
 
-        // 🌟 5. 日本傳統多重芯實心全覆蓋大型煙花玉 (380 顆真圓分層星子，中心飽滿)
-        const totalStars = 380;
+        // 🌟 6. 總星子數調降一半至 180 顆 (順暢 60 FPS，且中心維持充盈)
+        const totalStars = 180;
         let activeStarsCount = totalStars;
 
         for (let i = 0; i < totalStars; i++) {
           let tier = 'outer';
-          if (i < 85) tier = 'core';              // 爆心金蕊星雲 (低速密集滯留，充盈中心)
-          else if (i < 195) tier = 'middle';     // 中層牡丹花瓣
+          if (i < 45) tier = 'core';              // 爆心金蕊星雲 (低速密集滯留，充盈中心)
+          else if (i < 120) tier = 'middle';     // 中層牡丹花瓣
           else if (i % 6 === 0) tier = 'glitter'; // 千輪銀蜂閃光星
           else tier = 'outer';                   // 外層錦冠菊花瓣
 
-          // 3D 斐波那契球面投射分佈 (真圓球體立體爆裂)
+          // 3D 斐波那契球面投射分佈
           const phi = Math.acos(1 - 2 * (i + 0.5) / totalStars);
           const theta = Math.PI * (1 + Math.sqrt(5)) * i;
           const angle = Math.atan2(Math.sin(phi) * Math.sin(theta), Math.cos(phi)) + (Math.random() * 0.08 - 0.04);
@@ -6120,27 +6255,26 @@
           let baseSpeed;
           let friction = 0.978;
           let gravity = 0.038;
-          let trailMax = 12;
+          let trailMax = 10;
 
           if (tier === 'core') {
-            // 爆心極低速舒展：0.2 ~ 2.0，長時間密布於爆炸中心！
-            baseSpeed = (Math.random() * 1.6 + 0.25) * rSpread;
-            trailMax = 8;
+            baseSpeed = (Math.random() * 1.5 + 0.25) * rSpread;
+            trailMax = 6;
             friction = 0.958;
             gravity = 0.016;
           } else if (tier === 'middle') {
-            baseSpeed = (Math.random() * 2.6 + 2.5) * rSpread;
-            trailMax = 10;
+            baseSpeed = (Math.random() * 2.2 + 2.2) * rSpread;
+            trailMax = 8;
             friction = 0.971;
             gravity = 0.030;
           } else if (tier === 'glitter') {
-            baseSpeed = (Math.random() * 3.8 + 3.8) * rSpread;
-            trailMax = 8;
+            baseSpeed = (Math.random() * 3.2 + 3.2) * rSpread;
+            trailMax = 6;
             friction = 0.974;
             gravity = 0.038;
           } else {
-            baseSpeed = (Math.random() * 4.6 + 6.2) * rSpread;
-            trailMax = 15;
+            baseSpeed = (Math.random() * 3.8 + 5.2) * rSpread;
+            trailMax = 11;
             friction = 0.980;
             gravity = 0.042;
           }
@@ -6157,7 +6291,7 @@
             colorOffset: Math.floor(Math.random() * 7),
             tier: tier,
             life: 0,
-            maxLife: 360, // 6.0 秒 (60 FPS * 6s = 360 幀)
+            maxLife: 360, // 6.0 秒
             alpha: 1,
             onStarDeath() {
               activeStarsCount--;
@@ -6172,24 +6306,23 @@
       function loop(time) {
         ctx.clearRect(0, 0, width, height);
 
-        // 🌟 切換為光學加色混合模式 (Additive Blending) - 營造絢麗高飽和霓虹光暈 (Bloom Effect)
+        // 🌟 切換為光學加色混合模式 (Additive Blending) - 零 shadowBlur 負擔，天然霓虹微發光
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
 
-        // --- 0. 繪製並更新天際瞬態大光暈 (Ambient Bloom & Flash) ---
+        // --- 0. 繪製並更新天際瞬態適度光暈 (降低一半) ---
         for (let i = ambientFlashes.length - 1; i >= 0; i--) {
           const fl = ambientFlashes[i];
-          fl.radius += (fl.maxRadius - fl.radius) * 0.16 + 4;
+          fl.radius += (fl.maxRadius - fl.radius) * 0.16 + 3;
           fl.alpha *= 0.88;
           if (fl.alpha <= 0.01 || fl.radius >= fl.maxRadius) {
             ambientFlashes.splice(i, 1);
             continue;
           }
           const grad = ctx.createRadialGradient(fl.x, fl.y, 0, fl.x, fl.y, fl.radius);
-          grad.addColorStop(0, `rgba(255, 255, 255, ${0.95 * fl.alpha})`);
-          grad.addColorStop(0.2, `rgba(254, 240, 138, ${0.8 * fl.alpha})`);
-          grad.addColorStop(0.5, `rgba(244, 63, 94, ${0.45 * fl.alpha})`);
-          grad.addColorStop(0.8, `rgba(168, 85, 247, ${0.2 * fl.alpha})`);
+          grad.addColorStop(0, `rgba(255, 255, 255, ${0.45 * fl.alpha})`);
+          grad.addColorStop(0.3, `rgba(254, 240, 138, ${0.35 * fl.alpha})`);
+          grad.addColorStop(0.6, `rgba(244, 63, 94, ${0.18 * fl.alpha})`);
           grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = grad;
           ctx.beginPath();
@@ -6197,7 +6330,7 @@
           ctx.fill();
         }
 
-        // --- 0.1 繪製並更新爆心高能熾熱光球與旋轉星芒 (徹底消除中心空洞感) ---
+        // --- 0.1 繪製並更新爆心光球 (降低一半尺寸，消除中心空洞且不 lag) ---
         for (let i = corePlasmaOrbs.length - 1; i >= 0; i--) {
           const cp = corePlasmaOrbs[i];
           cp.life++;
@@ -6212,47 +6345,41 @@
 
           const curRadius = cp.radius + (cp.maxRadius - cp.radius) * Math.sin(prog * Math.PI * 0.6);
 
-          // 核心光球漸層 (白色星核 -> 琥珀金光暈 -> 霓虹紫粉邊緣)
           const coreGrad = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, curRadius);
-          coreGrad.addColorStop(0, `rgba(255, 255, 255, ${0.98 * alpha})`);
-          coreGrad.addColorStop(0.3, `rgba(254, 240, 138, ${0.85 * alpha})`);
-          coreGrad.addColorStop(0.65, `rgba(245, 158, 11, ${0.5 * alpha})`);
-          coreGrad.addColorStop(0.9, `rgba(236, 72, 153, ${0.25 * alpha})`);
+          coreGrad.addColorStop(0, `rgba(255, 255, 255, ${0.75 * alpha})`);
+          coreGrad.addColorStop(0.4, `rgba(254, 240, 138, ${0.55 * alpha})`);
+          coreGrad.addColorStop(0.8, `rgba(245, 158, 11, ${0.3 * alpha})`);
           coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-          ctx.save();
           ctx.fillStyle = coreGrad;
           ctx.beginPath();
           ctx.arc(cp.x, cp.y, curRadius, 0, Math.PI * 2);
           ctx.fill();
 
-          // 繪製中心多道十字耀斑星芒光柱 (Sunburst Flares)
-          const rayLen = curRadius * 1.6 * (1 + Math.sin(cp.life * 0.35) * 0.18);
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * alpha})`;
-          ctx.shadowColor = '#fef08a';
-          ctx.shadowBlur = 18;
-          ctx.lineWidth = Math.max(1, 3.5 * alpha);
+          // 中心 4 道十字耀斑星芒光柱 (輕量化)
+          const rayLen = curRadius * 1.4;
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.6 * alpha})`;
+          ctx.lineWidth = Math.max(1, 2.0 * alpha);
 
-          for (let r = 0; r < cp.raysCount; r++) {
-            const rAngle = cp.angle + (Math.PI * 2 * r) / cp.raysCount;
+          for (let r = 0; r < 4; r++) {
+            const rAngle = cp.angle + (Math.PI * 0.5 * r);
             ctx.beginPath();
-            ctx.moveTo(cp.x - Math.cos(rAngle) * (rayLen * 0.15), cp.y - Math.sin(rAngle) * (rayLen * 0.15));
+            ctx.moveTo(cp.x - Math.cos(rAngle) * (rayLen * 0.2), cp.y - Math.sin(rAngle) * (rayLen * 0.2));
             ctx.lineTo(cp.x + Math.cos(rAngle) * rayLen, cp.y + Math.sin(rAngle) * rayLen);
             ctx.stroke();
           }
-          ctx.restore();
 
-          // 在爆心周圍隨機生成劈啪微閃星 (千輪爆花)
-          if (Math.random() < 0.65 && centerCrackles.length < 90) {
-            const dist = Math.random() * curRadius * 0.85;
+          // 核心周圍少量劈啪微閃星 (上限 12)
+          if (Math.random() < 0.35 && centerCrackles.length < 12) {
+            const dist = Math.random() * curRadius * 0.8;
             const ang = Math.random() * Math.PI * 2;
             centerCrackles.push({
               x: cp.x + Math.cos(ang) * dist,
               y: cp.y + Math.sin(ang) * dist,
-              size: Math.random() * 3.5 + 2.0,
-              color: Math.random() < 0.55 ? '#ffffff' : '#fde047',
+              size: Math.random() * 2.5 + 1.5,
+              color: Math.random() < 0.5 ? '#ffffff' : '#fde047',
               life: 0,
-              maxLife: Math.floor(Math.random() * 12 + 6)
+              maxLife: Math.floor(Math.random() * 10 + 5)
             });
           }
         }
@@ -6262,41 +6389,26 @@
           const ck = centerCrackles[i];
           ck.life++;
           const ckProg = ck.life / ck.maxLife;
-          const a = 1 - ckProg;
+          const a = (1 - ckProg) * 0.7;
           if (ck.life >= ck.maxLife) {
             centerCrackles.splice(i, 1);
             continue;
           }
-          drawStar(ctx, ck.x, ck.y, 4, ck.size * (1 + ckProg * 0.5), ck.size * 0.25, ck.color, a);
+          drawStar(ctx, ck.x, ck.y, 4, ck.size * (1 + ckProg * 0.4), ck.size * 0.25, ck.color, a);
         }
 
-        // --- 1. 繪製並更新衝擊波光環 (Shockwave Halos) ---
+        // --- 1. 繪製並更新衝擊波光環 (零 shadowBlur，超順暢) ---
         for (let i = shockwaves.length - 1; i >= 0; i--) {
           const sw = shockwaves[i];
-          sw.radius += (sw.maxRadius - sw.radius) * 0.16 + 2.5;
+          sw.radius += (sw.maxRadius - sw.radius) * 0.16 + 2;
           sw.alpha *= 0.89;
 
-          // 外光環
           ctx.beginPath();
           ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
           ctx.strokeStyle = sw.color;
           ctx.lineWidth = sw.lineWidth * sw.alpha;
-          ctx.shadowColor = sw.color;
-          ctx.shadowBlur = 24;
-          ctx.globalAlpha = sw.alpha;
+          ctx.globalAlpha = sw.alpha * 0.6;
           ctx.stroke();
-
-          // 內光環
-          if (sw.radius > 20) {
-            ctx.beginPath();
-            ctx.arc(sw.x, sw.y, sw.radius * 0.85, 0, Math.PI * 2);
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = Math.max(1, sw.lineWidth * 0.5 * sw.alpha);
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = '#ffffff';
-            ctx.globalAlpha = sw.alpha * 0.8;
-            ctx.stroke();
-          }
 
           if (sw.alpha <= 0.02 || sw.radius >= sw.maxRadius) {
             shockwaves.splice(i, 1);
@@ -6312,35 +6424,24 @@
           const curY = rk.startY + (rk.targetY - rk.startY) * eased;
 
           rk.trail.push({ x: rk.x, y: curY, alpha: 1 });
-          if (rk.trail.length > 15) rk.trail.shift();
+          if (rk.trail.length > 10) rk.trail.shift();
 
-          // 金色噴射粒子尾跡
-          ctx.shadowBlur = 18;
-          ctx.shadowColor = '#f59e0b';
+          // 金色噴射粒子尾跡 (輕量繪製)
           for (let t = 0; t < rk.trail.length; t++) {
             const pt = rk.trail[t];
-            const a = (t + 1) / rk.trail.length;
+            const a = (t + 1) / rk.trail.length * 0.6;
             ctx.beginPath();
-            ctx.arc(pt.x + (Math.random() * 6 - 3), pt.y + (Math.random() * 4), Math.random() * 2.5 + 1.5, 0, Math.PI * 2);
+            ctx.arc(pt.x + (Math.random() * 4 - 2), pt.y + (Math.random() * 3), Math.random() * 2 + 1.2, 0, Math.PI * 2);
             ctx.fillStyle = '#fde047';
             ctx.globalAlpha = a;
             ctx.fill();
           }
 
-          // 熾白核心光暈彈頭
+          // 彈頭核心
           ctx.beginPath();
-          ctx.arc(rk.x, curY, 6.5, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(254, 240, 138, 0.4)';
-          ctx.shadowBlur = 24;
-          ctx.shadowColor = '#fde047';
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.arc(rk.x, curY, 4.2, 0, Math.PI * 2);
+          ctx.arc(rk.x, curY, 3.8, 0, Math.PI * 2);
           ctx.fillStyle = '#ffffff';
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = '#ffffff';
-          ctx.globalAlpha = 1;
+          ctx.globalAlpha = 0.9;
           ctx.fill();
 
           if (rk.progress >= 1) {
@@ -6349,34 +6450,31 @@
           }
         }
 
-        // --- 3. 繪製並更新星子拖曳微型火花流粒子 (hanabiEmbers 微塵粒子特效) ---
+        // --- 3. 繪製並更新星子拖曳微型火花流粒子 (hanabiEmbers 輕量上限 25) ---
         for (let i = hanabiEmbers.length - 1; i >= 0; i--) {
           const eb = hanabiEmbers[i];
           eb.life++;
           eb.vx *= eb.drag;
           eb.vy = eb.vy * eb.drag + eb.gravity;
-          eb.x += eb.vx + (Math.random() - 0.5) * 0.4;
+          eb.x += eb.vx;
           eb.y += eb.vy;
 
           const prog = eb.life / eb.maxLife;
-          const a = (1 - prog) * eb.baseAlpha;
+          const a = (1 - prog) * eb.baseAlpha * 0.6;
 
           if (eb.life >= eb.maxLife || a <= 0 || eb.y >= height + 10) {
             hanabiEmbers.splice(i, 1);
             continue;
           }
 
-          // 微火花閃爍光暈
           ctx.beginPath();
-          ctx.arc(eb.x, eb.y, eb.size * (1 - prog * 0.4), 0, Math.PI * 2);
+          ctx.arc(eb.x, eb.y, eb.size * (1 - prog * 0.3), 0, Math.PI * 2);
           ctx.fillStyle = eb.color;
-          ctx.shadowColor = eb.glow;
-          ctx.shadowBlur = 10;
           ctx.globalAlpha = a;
           ctx.fill();
         }
 
-        // --- 4. 繪製並更新日本大型煙花玉星子 (七彩變幻 6 秒 錦冠菊柳 粒子與光暈) ---
+        // --- 4. 繪製並更新日本大型煙花玉星子 (七彩變幻 6 秒 錦冠菊柳，極速無延遲) ---
         for (let i = hanabiStars.length - 1; i >= 0; i--) {
           const s = hanabiStars[i];
           s.life++;
@@ -6395,21 +6493,20 @@
           const colorCycle = Math.floor((p * 7 + s.colorOffset) % 7);
           const [curCol, glowCol] = rainbowColorPhases[colorCycle];
 
-          // 產生微型散落火花流 (粒子特效)
-          if (p < 0.85 && Math.random() < 0.26 && hanabiEmbers.length < 450) {
+          // 產生微型散落火花流 (輕量控制，上限 25)
+          if (p < 0.75 && Math.random() < 0.12 && hanabiEmbers.length < 25) {
             hanabiEmbers.push({
               x: s.x,
               y: s.y,
-              vx: s.vx * 0.18 + (Math.random() - 0.5) * 0.6,
-              vy: s.vy * 0.18 + (Math.random() - 0.5) * 0.6,
-              gravity: 0.024,
+              vx: s.vx * 0.15,
+              vy: s.vy * 0.15,
+              gravity: 0.022,
               drag: 0.965,
               color: curCol,
-              glow: glowCol,
-              size: Math.random() * 2.2 + 0.8,
-              baseAlpha: s.alpha * 0.85,
+              size: Math.random() * 1.8 + 0.6,
+              baseAlpha: s.alpha * 0.7,
               life: 0,
-              maxLife: Math.floor(Math.random() * 28 + 14)
+              maxLife: Math.floor(Math.random() * 20 + 10)
             });
           }
 
@@ -6427,12 +6524,10 @@
             continue;
           }
 
-          // 繪製光暈流星拖尾 (錦冠柳流蘇)
-          ctx.globalAlpha = s.alpha;
+          // 繪製流星拖尾 (錦冠柳流蘇，直接 stroke 無 Gaussian blur)
+          ctx.globalAlpha = s.alpha * 0.75;
           ctx.strokeStyle = curCol;
-          ctx.shadowColor = glowCol;
-          ctx.shadowBlur = 18;
-          ctx.lineWidth = (s.tier === 'core' ? 2.0 : (s.tier === 'outer' ? 3.4 : 2.6)) * Math.max(0.4, 1 - p * 0.5);
+          ctx.lineWidth = (s.tier === 'core' ? 1.6 : (s.tier === 'outer' ? 2.4 : 1.9)) * Math.max(0.4, 1 - p * 0.5);
           ctx.beginPath();
           if (s.trail.length > 1) {
             ctx.moveTo(s.trail[0].x, s.trail[0].y);
@@ -6442,28 +6537,24 @@
           }
           ctx.stroke();
 
-          // 繪製星子多重光暈 (外圈柔和光暈 + 內圈高亮星核)
-          let starRadius = s.tier === 'core' ? 1.8 : (s.tier === 'outer' ? 2.8 : 2.2);
+          // 星子多層光暈 (使用兩層圓型繪製，天然加色混合，零 GPU 壓力)
+          let starRadius = s.tier === 'core' ? 1.6 : (s.tier === 'outer' ? 2.4 : 1.9);
           if (s.tier === 'glitter') {
-            starRadius = (Math.sin(s.life * 0.55) > 0.15) ? 3.8 : 0.9;
+            starRadius = (Math.sin(s.life * 0.55) > 0.15) ? 3.0 : 0.8;
           }
 
-          // 光暈層
+          // 外層柔和光圈 (降低一半強度)
           ctx.beginPath();
-          ctx.arc(s.x, s.y, starRadius * 2.4, 0, Math.PI * 2);
+          ctx.arc(s.x, s.y, starRadius * 1.7, 0, Math.PI * 2);
           ctx.fillStyle = glowCol;
-          ctx.shadowColor = glowCol;
-          ctx.shadowBlur = 24;
-          ctx.globalAlpha = s.alpha * 0.45;
+          ctx.globalAlpha = s.alpha * 0.25;
           ctx.fill();
 
-          // 高亮核心星核
+          // 內層發光星核
           ctx.beginPath();
           ctx.arc(s.x, s.y, starRadius, 0, Math.PI * 2);
           ctx.fillStyle = (s.tier === 'glitter' || Math.sin(s.life * 0.4) > 0.3) ? '#ffffff' : curCol;
-          ctx.shadowColor = '#ffffff';
-          ctx.shadowBlur = 12;
-          ctx.globalAlpha = s.alpha;
+          ctx.globalAlpha = s.alpha * 0.85;
           ctx.fill();
         }
 
