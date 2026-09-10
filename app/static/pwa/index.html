@@ -123,6 +123,33 @@
       font-weight: 900 !important;
       letter-spacing: 0.05em;
     }
+
+    /* 📌 凍結表頭 / 矩陣標題列鎖定 (Freeze Header Matrix Display) - 100% 純色實底絕不透光 */
+    .sticky-table-head th {
+      position: sticky !important;
+      z-index: 30 !important;
+      box-sizing: border-box !important;
+    }
+    .sticky-table-head tr:first-child th {
+      top: 0 !important;
+      height: 32px !important;
+      line-height: 32px !important;
+    }
+    .sticky-table-head tr:nth-child(2) th {
+      top: 32px !important;
+      height: 28px !important;
+      line-height: 28px !important;
+    }
+    /* 表頭各區塊 100% 純不透明實底色，杜絕滾動時下方資料透光穿出 */
+    .th-solid-date {
+      background-color: #020617 !important; /* 純黑石板底 */
+    }
+    .th-solid-eng {
+      background-color: #1a1506 !important; /* 工務所 100% 純琥珀深底 (無透明度) */
+    }
+    .th-solid-icu {
+      background-color: #08162b !important; /* 重症大樓 100% 純湛藍深底 (無透明度) */
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
@@ -723,9 +750,12 @@
 
 
 
+  <!-- 📱 iPhone 13 框架容器：限制NB筆電端為手機寬度 (420px) 置中展示，徹底消除多餘空白 -->
+  <div id="appContainer" class="w-full max-w-[420px] min-h-screen flex flex-col border-x border-slate-800/90 shadow-[0_0_60px_rgba(0,0,0,0.85)] bg-slate-950 mx-auto relative">
+
   <!-- Main Pure View (Ultra-Clean, Zero-Overflow Responsive Top Navbar) -->
-  <header class="no-print w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 sm:px-4 sticky top-0 z-20 backdrop-blur-md box-border overflow-hidden">
-    <div class="max-w-4xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
+  <header class="no-print w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 sticky top-0 z-20 backdrop-blur-md box-border overflow-hidden">
+    <div class="w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-2">
       <!-- 🟢 左側：雲端試算表對齊按鈕 ＆ 版本核對燈號 (取代舊連線網格，統一 h-8 高度) -->
       <div class="flex items-center shrink-0">
         <!-- 🔄 雲端試算表 9月對齊按鈕 ＆ 版本核對燈號 -->
@@ -810,28 +840,26 @@
     </div>
   </header>
 
-  <main class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-5 space-y-4">
+  <main class="flex-1 w-full mx-auto p-2 sm:p-2.5 space-y-2.5">
     
-    <!-- 🏢 Unified Detachment Selector (工務所 ｜ 重症大樓 單一網址隨選即看) -->
-    <div class="no-print flex items-center gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
-      <button 
-        type="button" 
-        id="tabBtnEng"
-        onclick="switchDetachment('4.三總工務所', 'tsgh_eng_dept')" 
-        class="flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-gradient-to-r from-purple-600 to-sky-600 text-white shadow-md"
-      >
-        <i class="fa-solid fa-building-shield text-sm"></i>
-        <span>4. 三總工務所</span>
-      </button>
-      <button 
-        type="button" 
-        id="tabBtnIcu"
-        onclick="switchDetachment('5.三總重症大樓', 'tsgh_icu_bldg')" 
-        class="flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-      >
-        <i class="fa-solid fa-hospital text-sm"></i>
-        <span>5. 三總重症大樓</span>
-      </button>
+    <!-- 🏢 Unified Detachment Header (4.三總工務所 ＆ 5.三總重症大樓 雙哨合一全月對照) -->
+    <div class="no-print flex items-center justify-center gap-2 p-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg text-center">
+      <div class="flex items-center gap-2 text-xs sm:text-sm font-black tracking-wide text-white">
+        <span class="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-xs">
+          <i class="fa-solid fa-building-shield text-xs"></i>
+          <span>前 (4.工務所/停車)</span>
+        </span>
+        <span class="text-slate-500 font-black">＆</span>
+        <span class="px-2.5 py-1 rounded-xl bg-sky-500/15 text-sky-300 border border-sky-500/30 flex items-center gap-1.5 shadow-xs">
+          <i class="fa-solid fa-hospital text-xs"></i>
+          <span>後 (5.重症大樓)</span>
+        </span>
+      </div>
+      <!-- 保持隱藏DOM元素維護相容性，防止未修改的歷史腳本報錯 -->
+      <div class="hidden">
+        <button type="button" id="tabBtnEng" onclick="switchDetachment('4.三總工務所', 'tsgh_eng_dept')"></button>
+        <button type="button" id="tabBtnIcu" onclick="switchDetachment('5.三總重症大樓', 'tsgh_icu_bldg')"></button>
+      </div>
     </div>
 
     <!-- 📅 Month Navigator (自動對齊本月 ｜ 左右切換上/下月份) -->
@@ -840,31 +868,31 @@
         type="button" 
         id="prevMonthBtn"
         onclick="changeMonth(-1)" 
-        class="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5"
+        class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1"
       >
         <i class="fa-solid fa-chevron-left text-[10px]"></i>
-        <span>上個月</span>
+        <span>上月</span>
       </button>
 
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-calendar-days text-purple-400 text-sm"></i>
-        <span id="currentMonthDisplay" class="font-extrabold text-sm sm:text-base text-white font-mono tracking-wide golden-glow-pulse">2026 年 9 月</span>
-        <span id="monthTag" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-800 shadow-sm">本月即時 (9月)</span>
+      <div class="flex items-center gap-1.5">
+        <i class="fa-solid fa-calendar-days text-purple-400 text-xs"></i>
+        <span id="currentMonthDisplay" class="font-extrabold text-sm text-white font-mono tracking-wide golden-glow-pulse">2026 年 9 月</span>
+        <span id="monthTag" class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-950 text-purple-300 border border-purple-800 shadow-sm">本月即時</span>
       </div>
 
       <button 
         type="button" 
         id="nextMonthBtn"
         onclick="changeMonth(1)" 
-        class="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5"
+        class="h-8 px-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1"
       >
-        <span>下個月</span>
+        <span>下月</span>
         <i class="fa-solid fa-chevron-right text-[10px]"></i>
       </button>
     </div>
 
     <!-- 📄 Full Detachment Personnel Schedule Table -->
-    <div id="scheduleContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+    <div id="scheduleContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-2 sm:p-2.5 shadow-xl space-y-3">
       <div class="text-center py-16 text-slate-400 space-y-3">
         <div class="w-10 h-10 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
         <p class="text-sm font-bold">載入全哨排班資料中...</p>
@@ -873,13 +901,15 @@
 
   </main>
 
-  <footer class="no-print text-center py-4 text-xs text-slate-600 border-t border-slate-900 mt-auto">
+  <footer class="no-print w-full text-center py-4 text-xs text-slate-600 border-t border-slate-900 mt-auto">
     飛龍保全 ｜ 三軍總醫院保全勤務
   </footer>
 
+  </div><!-- /#appContainer iPhone 13 框架結束 -->
+
   <script>
         // 📦 即時排班預先載入快照 (9月當月本月 ＆ 8月上月歷史)
-    const EMBEDDED_SCHEDULE_DATA_9 = {"4.三總工務所": {"tab_name": "4.三總工務所", "year": 2026, "month": 9, "is_current_month": true, "updated_at": "2026-09-05 11:05", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/09/01", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/02", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/03", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/04", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/05", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/06", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/07", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/08", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/09", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/10", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/11", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/12", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/13", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/14", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/15", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/16", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/17", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/18", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/19", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/20", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/21", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/22", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/23", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/24", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/25", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/26", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/27", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/28", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/29", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/30", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}], "members": ["賴鯤仲", "黃仁忠", "黃證書"], "posts": ["4.三總工務所"], "version_hash": "97f09d6b7dfeae4065710f1528e53097"}, "5.三總重症大樓": {"tab_name": "5.三總重症大樓", "year": 2026, "month": 9, "is_current_month": true, "updated_at": "2026-09-05 11:05", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/09/01", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "盧建村 (0955-521-871)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/02", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/03", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/04", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "施俊宏 (0955-371-298)", "substitutes": ["day_賴鯤仲"]}, {"日期": "2026/09/05", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "葉榮東 (0926-348-665)", "晚班 (19-07)": "施俊宏 (0955-371-298)", "substitutes": ["day_葉榮東"]}, {"日期": "2026/09/06", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/07", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/08", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/09", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/10", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/11", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/12", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/13", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "邱顯升 (0928-882-119)"}, {"日期": "2026/09/14", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/15", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/16", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/17", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/18", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/19", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/20", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/21", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/22", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/23", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/24", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/25", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/26", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/27", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/28", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/29", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/30", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}], "members": ["施俊宏", "林又妗", "盧建村", "葉榮東", "賴鯤仲", "邱顯升"], "posts": ["5.三總重症大樓"], "version_hash": "6a063cd0b4daa987c69d27ecd3924509"}};
+    const EMBEDDED_SCHEDULE_DATA_9 = {"4.三總工務所": {"tab_name": "4.三總工務所", "year": 2026, "month": 9, "is_current_month": true, "updated_at": "2026-09-10 21:57", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/09/01", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/02", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/03", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/04", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/05", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/06", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/07", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/08", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/09", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/10", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/11", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/12", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/13", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/14", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/15", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/16", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/17", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/18", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/19", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/20", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/21", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/22", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/23", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/24", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/25", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/26", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/27", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/28", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/29", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/09/30", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}], "members": ["賴鯤仲", "黃仁忠", "黃證書"], "posts": ["4.三總工務所"], "version_hash": "97f09d6b7dfeae4065710f1528e53097"}, "5.三總重症大樓": {"tab_name": "5.三總重症大樓", "year": 2026, "month": 9, "is_current_month": true, "updated_at": "2026-09-10 21:57", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/09/01", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "盧建村 (0955-521-871)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/02", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/03", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/04", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "施俊宏 (0955-371-298)", "substitutes": ["day_賴鯤仲"]}, {"日期": "2026/09/05", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "葉榮東", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/06", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/07", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/08", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/09", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/10", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/11", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/12", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/13", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "—"}, {"日期": "2026/09/14", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/15", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/16", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/17", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/18", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/19", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/20", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/21", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/22", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/23", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/24", "星期": "四", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/25", "星期": "五", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/26", "星期": "六", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/27", "星期": "日", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/09/28", "星期": "一", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/29", "星期": "二", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}, {"日期": "2026/09/30", "星期": "三", "哨點/崗位": "5.三總重症大樓", "早班 (07-19)": "林又妗 (0908-010-300)", "晚班 (19-07)": "施俊宏 (0955-371-298)"}], "members": ["施俊宏", "林又妗", "盧建村", "賴鯤仲", "邱顯升"], "posts": ["5.三總重症大樓"], "version_hash": "ea081136c64a67521680174c35995fcb"}};
     // 8月上月
     const EMBEDDED_SCHEDULE_DATA_8 = {
       "4.三總工務所": {"tab_name": "4.三總工務所", "year": 2026, "month": 8, "is_current_month": true, "updated_at": "2026-08-20 00:43", "columns": ["日期", "星期", "哨點/崗位", "早班 (07-19)", "晚班 (19-07)"], "rows": [{"日期": "2026/08/01", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "盧建村 (0955-521-871)", "晚班 (19-07)": "周有輝"}, {"日期": "2026/08/02", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/03", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "蘇秦漢 (0971-212-165)"}, {"日期": "2026/08/04", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/05", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/06", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/07", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/08", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/09", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/10", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/11", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/12", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/13", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/14", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/15", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/16", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "李宏熙 (0965-373-331)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/17", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/18", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/19", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/20", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "葉榮東 (0926-348-665)"}, {"日期": "2026/08/21", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/22", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/23", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/24", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/25", "星期": "二", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "賴鯤仲 (0965-591-375)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/26", "星期": "三", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/27", "星期": "四", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/28", "星期": "五", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "賴鯤仲 (0965-591-375)"}, {"日期": "2026/08/29", "星期": "六", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/30", "星期": "日", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}, {"日期": "2026/08/31", "星期": "一", "哨點/崗位": "4.三總工務所", "早班 (07-19)": "黃證書 (0985-108-809)", "晚班 (19-07)": "黃仁忠 (0975-009-622)"}], "members": ["周有輝", "李宏熙", "盧建村", "葉榮東", "蘇秦漢", "賴鯤仲", "黃仁忠", "黃證書"], "posts": ["4.三總工務所"]},
@@ -895,8 +925,8 @@
     const REAL_CURRENT_MONTH = 9;
 
     // 🏷️ 系統軟體版本與 GitHub 該次版本 push 日期 (固定對齊發布版本，不隨查詢歷史月份漂移)
-    const APP_SYSTEM_VERSION = '1.095';
-    const APP_SYSTEM_RELEASE_DATE = '9/5日';
+    const APP_SYSTEM_VERSION = '1.096';
+    const APP_SYSTEM_RELEASE_DATE = '9/10日';
 
     let rawScheduleData = null;
     let isUnlocked = false;
@@ -4964,154 +4994,127 @@
     }
 
     // 🔤 人員名稱格式化：100% 水平垂直居中、固定寬高與均勻字距，徹底杜絕歪斜
-    // 🔒 資安防護：前天及更早之排班，電話不浮窗顯示 (Admin 登入解鎖者無此限制)
-    // 🟢 替補人員 (未執班前)：淡綠色呼吸燈外框 High-Light 顯示
-    // 🥈 手動暫代班 (次優先)：琥珀色外框 High-Light 顯示
-    function formatName(nameStr, isHistorical = false, hidePhone = false, isUpcomingSubstitute = false, isManualOverride = false, targetDate = '', targetShift = '', targetTab = '') {
-      if (!nameStr || nameStr === '-' || nameStr === '—') return '<span class="inline-block text-slate-600 font-bold text-sm">—</span>';
+    // 🎨 人員縮字色塊字典規範 (依指示精準對應)：
+    // 賴鯤仲(仲): 淺綠色, 黃仁忠/仁宗(仁): 鵝黃色, 黃證書(書): 淡紅色, 盧建村(盧): 淡紫色, 邱顯升(邱): 天藍色, 林又妗(妗): 粉色, 施俊宏(施): 淡藍色
+    const PERSON_BADGE_MAP = {
+      '賴鯤仲': { char: '仲', bg: '#86efac', text: '#064e3b', border: '#4ade80' },
+      '黃仁忠': { char: '仁', bg: '#fef08a', text: '#713f12', border: '#facc15' },
+      '黃仁宗': { char: '仁', bg: '#fef08a', text: '#713f12', border: '#facc15' },
+      '黃證書': { char: '書', bg: '#fca5a5', text: '#881337', border: '#f87171' },
+      '盧建村': { char: '盧', bg: '#d8b4fe', text: '#581c87', border: '#c084fc' },
+      '邱顯升': { char: '邱', bg: '#7dd3fc', text: '#0c4a6e', border: '#38bdf8' },
+      '林又妗': { char: '妗', bg: '#fbcfe8', text: '#831843', border: '#f472b6' },
+      '施俊宏': { char: '施', bg: '#c7d2fe', text: '#1e1b4b', border: '#818cf8' },
+      '葉榮東': { char: '東', bg: '#99f6e4', text: '#134e4a', border: '#2dd4bf' }
+    };
+
+    function getPersonBadgeInfo(cleanName) {
+      if (!cleanName) return null;
+      for (const [key, val] of Object.entries(PERSON_BADGE_MAP)) {
+        if (cleanName.includes(key) || key.includes(cleanName)) {
+          return val;
+        }
+      }
+      const shortChar = cleanName.trim().slice(-1) || cleanName.slice(0, 1);
+      return { char: shortChar, bg: '#cbd5e1', text: '#0f172a', border: '#94a3b8' };
+    }
+
+    // 🔤 人員名稱格式化：畫面緊湊縮字色塊 (全月份結構100%一致，消除垂直折線對齊偏差)
+    function formatName(nameStr, isHistorical = false, hidePhone = false, isUpcomingSubstitute = false, isManualOverride = false, targetDate = '', targetShift = '', targetTab = '', isLastCol = false) {
+      if (!nameStr || nameStr === '-' || nameStr === '—' || nameStr.trim() === '') {
+        return '<span class="inline-block text-slate-600 font-bold text-xs">—</span>';
+      }
       
       const items = nameStr.split(/[、,]+/).filter(Boolean);
       return items.map(item => {
         item = item.trim();
         const phoneMatch = item.match(/09\d{2}[-\s]?\d{3}[-\s]?\d{3}|\d{9,10}/);
         const phone = phoneMatch ? phoneMatch[0] : '';
-        const isGShift = item.includes('G班') || item.includes('G 6h') || item.includes('6h') || item.includes('6小時') || /\bG\b/i.test(item);
         const cleanName = item
           .replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?[0-9]{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?/g, '')
           .replace(/[\(（]?(?:G班\s*6h|G班|G\s*6h|6h|6小時|G)[\)）]?/gi, '')
           .trim();
         
-        if (!cleanName) return item;
+        if (!cleanName) return '<span class="inline-block text-slate-600 font-bold text-xs">—</span>';
 
-        const gTagHtml = isGShift 
-          ? `<span class="ml-1 px-1 py-0.5 rounded text-[9px] font-black bg-cyan-400 text-slate-950 leading-none shrink-0 shadow-sm" title="⚡ G 班 ｜ 6小時1000元">G 6h</span>` 
-          : '';
+        const badgeInfo = getPersonBadgeInfo(cleanName);
+        const shortChar = badgeInfo ? badgeInfo.char : (cleanName.slice(-1) || cleanName);
+        const bgColor = badgeInfo ? badgeInfo.bg : '#cbd5e1';
+        const textColor = badgeInfo ? badgeInfo.text : '#0f172a';
+        const borderColor = badgeInfo ? badgeInfo.border : '#94a3b8';
 
-        // 🌟 0. 前端手動改班之暫代人員 (次優先權)：琥珀金呼吸光 High-Light
+        let badgeEffect = '';
         if (isManualOverride) {
-          const telHref = phone ? `tel:${phone.replace(/[-\s]/g, '')}` : '#';
-          if (isUnlocked) {
-            return `
-              <div class="relative group inline-flex items-center justify-center whitespace-nowrap">
-                <button 
-                  type="button" 
-                  onclick="event.stopPropagation(); openShiftOverrideModal('${targetDate}', '${targetShift}', '${targetTab}')"
-                  title="🥈 前端手動暫代（次優先）｜ 點擊修改或還原為雲端正本"
-                  class="substitute-manual-badge inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-1.5 sm:pl-2 pr-1 rounded-lg bg-amber-950/70 border border-amber-400 text-amber-200 text-[13px] sm:text-[14px] font-black tracking-wider text-left transition shadow-[0_0_10px_rgba(245,158,11,0.3)] active:scale-95 whitespace-nowrap cursor-pointer"
-                >
-                  <span class="text-left truncate max-w-[46px] sm:max-w-[54px]">${cleanName}</span>
-                  ${gTagHtml}
-                  <span class="ml-auto px-1 py-0.5 rounded text-[9px] font-black bg-amber-400 text-slate-950 leading-none shrink-0 shadow-sm">暫代</span>
-                  <i class="fa-solid fa-pen text-[8px] text-amber-300 opacity-90 ml-0.5 pointer-events-none"></i>
-                </button>
-                <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-amber-400 text-amber-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
-                  <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px]">前端暫代</span>
-                  ${phone ? `<a href="${telHref}" class="font-bold underline hover:text-white">${phone}</a>` : ''}
-                  <span class="text-[10px] text-amber-400/80 bg-slate-900 px-1.5 py-0.5 rounded">(點擊修改/還原)</span>
-                </div>
-              </div>
-            `;
-          } else {
-            // 訪客模式：無法點擊開啟改班窗，僅撥號或純展示
-            if (phone) {
-              return `
-                <div class="relative group inline-flex items-center justify-center whitespace-nowrap">
-                  <button 
-                    type="button" 
-                    title="🥈 前端暫代人員"
-                    class="substitute-manual-badge inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-1.5 sm:pl-2 pr-1 rounded-lg bg-amber-950/70 border border-amber-400 text-amber-200 text-[13px] sm:text-[14px] font-black tracking-wider text-left transition shadow-[0_0_10px_rgba(245,158,11,0.3)] active:scale-95 whitespace-nowrap cursor-pointer"
-                  >
-                    <span class="text-left truncate max-w-[46px] sm:max-w-[54px]">${cleanName}</span>
-                    ${gTagHtml}
-                    <span class="ml-auto px-1 py-0.5 rounded text-[9px] font-black bg-amber-400 text-slate-950 leading-none shrink-0 shadow-sm">暫代</span>
-                    <i class="fa-solid fa-phone text-[8px] text-amber-300 opacity-90 ml-0.5 pointer-events-none"></i>
-                  </button>
-                  <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-amber-400 text-amber-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
-                    <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px]">值勤暫代</span>
-                    <a href="${telHref}" class="font-bold underline hover:text-white">${phone}</a>
-                    <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">(撥打)</span>
-                  </div>
-                </div>
-              `;
-            }
-            return `
-              <div 
-                title="🥈 前端暫代人員"
-                class="substitute-manual-badge inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-1.5 sm:pl-2 pr-1 rounded-lg bg-amber-950/70 border border-amber-400 text-amber-200 text-[13px] sm:text-[14px] font-black tracking-wider text-left whitespace-nowrap shadow-[0_0_10px_rgba(245,158,11,0.3)]"
+          badgeEffect = 'ring-2 ring-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.7)] animate-pulse';
+        }
+
+        const telHref = phone ? `tel:${phone.replace(/[-\s]/g, '')}` : '';
+
+        // 浮動視窗位置：最右側欄位靠右對齊向左延伸 (徹底防範跑出螢幕視野)，其餘欄位置中
+        const tooltipPositionClass = isLastCol 
+          ? 'right-0 left-auto translate-x-0' 
+          : 'left-1/2 -translate-x-1/2';
+
+        // 🌟 0. 管理員登入模式：點擊色塊開啟手動改班視窗
+        if (isUnlocked) {
+          return `
+            <div class="relative group inline-flex items-center justify-center">
+              <button 
+                type="button" 
+                onclick="event.stopPropagation(); openShiftOverrideModal('${targetDate}', '${targetShift}', '${targetTab}')"
+                title="${cleanName} ${phone} ｜ 點擊改班/暫代"
+                style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition transform active:scale-90 cursor-pointer ${badgeEffect}"
               >
-                <span class="text-left truncate max-w-[50px] sm:max-w-[60px]">${cleanName}</span>
-                ${gTagHtml}
-                <span class="ml-auto px-1 py-0.5 rounded text-[9px] font-black bg-amber-400 text-slate-950 leading-none shrink-0 shadow-sm">暫代</span>
-              </div>
-            `;
-          }
-        }
-
-        // 🌟 1. 請假替補人員（在還沒執班前）：淡綠色呼吸燈外框 High-Light
-        if (isUpcomingSubstitute) {
-          if (phone && (!hidePhone || isUnlocked)) {
-            const telHref = `tel:${phone.replace(/[-\s]/g, '')}`;
-            return `
-              <div class="relative group inline-flex items-center justify-center whitespace-nowrap">
-                <button 
-                  type="button" 
-                  title="🟢 請假替補人員 ｜ 尚未執班"
-                  class="substitute-upcoming-badge inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-1.5 sm:pl-2 pr-1 rounded-lg text-emerald-200 text-[13px] sm:text-[14px] font-black tracking-wider text-left transition shadow-md active:scale-95 whitespace-nowrap cursor-pointer"
-                >
-                  <span class="text-left truncate max-w-[46px] sm:max-w-[54px]">${cleanName}</span>
-                  ${gTagHtml}
-                  <span class="ml-auto px-1 py-0.5 rounded text-[9px] font-black bg-emerald-400 text-slate-950 leading-none shrink-0 shadow-sm">替</span>
-                  <i class="fa-solid fa-phone text-[8px] text-emerald-300 opacity-90 ml-0.5 pointer-events-none"></i>
-                </button>
-                <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-emerald-500 text-emerald-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
-                  <span class="px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 font-black text-[10px]">請假替補</span>
-                  <a href="${telHref}" class="font-bold underline hover:text-white">${phone}</a>
-                  <span class="text-[10px] text-emerald-400/80 bg-slate-900 px-1.5 py-0.5 rounded">(撥打)</span>
-                </div>
-              </div>
-            `;
-          }
-          return `
-            <div 
-              title="🟢 請假替補人員 ｜ 尚未執班"
-              class="substitute-upcoming-badge inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-1.5 sm:pl-2 pr-1 rounded-lg text-emerald-200 text-[13px] sm:text-[14px] font-black tracking-wider text-left whitespace-nowrap shadow-md"
-            >
-              <span class="text-left truncate max-w-[50px] sm:max-w-[60px]">${cleanName}</span>
-              ${gTagHtml}
-              <span class="ml-auto px-1 py-0.5 rounded text-[9px] font-black bg-emerald-400 text-slate-950 leading-none shrink-0 shadow-sm">替</span>
-            </div>
-          `;
-        }
-
-        // 🌟 2. 歷史排班或受隱藏保護排班
-        if (isHistorical || (hidePhone && !isUnlocked)) {
-          return `<div class="inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-2 sm:pl-3 pr-1.5 rounded-lg bg-slate-800/50 text-slate-200 text-[14px] sm:text-[15px] font-black tracking-wider text-left whitespace-nowrap shadow-sm"><span class="text-left truncate">${cleanName}</span>${gTagHtml}</div>`;
-        }
-
-        // 🌟 3. 一般常規值班 (含撥打電話)
-        if (phone) {
-          const telHref = `tel:${phone.replace(/[-\s]/g, '')}`;
-          return `
-            <div class="relative group inline-flex items-center justify-center whitespace-nowrap">
-              <button type="button" class="inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-2 sm:pl-3 pr-2 rounded-lg bg-slate-800/95 border border-slate-700 hover:border-amber-400 hover:bg-slate-700 text-white text-[14px] sm:text-[15px] font-black tracking-wider text-left transition shadow-sm active:scale-95 whitespace-nowrap">
-                <span class="text-left truncate max-w-[54px] sm:max-w-[64px]">${cleanName}</span>
-                ${gTagHtml}
-                <i class="fa-solid fa-phone text-[8px] text-amber-400 opacity-90 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                ${shortChar}
               </button>
-              <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 px-3 py-1.5 bg-slate-950 border border-amber-500 text-amber-300 text-xs font-mono rounded-xl shadow-2xl whitespace-nowrap flex items-center gap-2 pointer-events-auto">
-                <i class="fa-solid fa-phone-volume text-emerald-400 animate-pulse"></i>
-                <a href="${telHref}" class="font-bold underline hover:text-white">${phone}</a>
-                <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">(撥打)</span>
+              <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full ${tooltipPositionClass} mb-1.5 z-50 px-2.5 py-1 bg-slate-950 border border-slate-700 text-white text-[11px] font-mono rounded-lg shadow-2xl whitespace-nowrap flex items-center gap-1.5 pointer-events-auto">
+                <span class="font-bold">${cleanName}</span>
+                ${phone ? `<a href="${telHref}" class="text-amber-400 font-bold underline">${phone}</a>` : ''}
               </div>
             </div>
           `;
         }
 
-        return `<div class="inline-flex relative items-center justify-start w-[96px] sm:w-[108px] h-7 sm:h-8 pl-2 sm:pl-3 pr-2 rounded-lg bg-slate-800/80 text-white text-[14px] sm:text-[15px] font-black tracking-wider text-left whitespace-nowrap shadow-sm"><span class="text-left truncate">${cleanName}</span>${gTagHtml}</div>`;
+        // 🌟 1. 訪客模式 (具備電話號碼)：點擊色塊即可直接撥打
+        if (phone) {
+          return `
+            <div class="relative group inline-flex items-center justify-center">
+              <a 
+                href="${telHref}"
+                title="${cleanName} ｜ 點擊撥打 ${phone}"
+                style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition transform hover:scale-105 active:scale-90 cursor-pointer ${badgeEffect}"
+              >
+                ${shortChar}
+              </a>
+              <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute bottom-full ${tooltipPositionClass} mb-1.5 z-50 px-2.5 py-1 bg-slate-950 border border-slate-700 text-white text-[11px] font-mono rounded-lg shadow-2xl whitespace-nowrap flex items-center gap-1.5 pointer-events-none">
+                <span class="font-bold">${cleanName}</span>
+                <span class="text-amber-400 font-bold">${phone}</span>
+              </div>
+            </div>
+          `;
+        }
+
+        // 🌟 2. 純色塊無電話
+        return `
+          <div class="relative group inline-flex items-center justify-center">
+            <span 
+              title="${cleanName}"
+              style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};"
+              class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs ${badgeEffect}"
+            >
+              ${shortChar}
+            </span>
+            <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute bottom-full ${tooltipPositionClass} mb-1.5 z-50 px-2.5 py-1 bg-slate-950 border border-slate-700 text-white text-[11px] font-mono rounded-lg shadow-2xl whitespace-nowrap flex items-center gap-1.5 pointer-events-none">
+              <span class="font-bold">${cleanName}</span>
+            </div>
+          </div>
+        `;
       }).join(' ');
     }
 
-    // ⚡ 即時秒開排班抓取引擎
+    // ⚡ 即時秒開排班抓取引擎 (4.三總工務所 ＆ 5.三總重症大樓 雙哨合一)
     async function fetchFullSchedule(isManualQuery = false) {
       const qBtn = document.getElementById('queryScheduleBtn');
       if (qBtn && isManualQuery) {
@@ -5120,25 +5123,25 @@
       }
       const container = document.getElementById('scheduleContainer');
 
-      // 🌟 1. 預設當月即時排班 (8月)：優先以內嵌快照 0.001 秒秒開！
-      const isEng = (currentTabName.includes('4.') || currentTabName.includes('工務所'));
-      const currentTabKey = isEng ? '4.三總工務所' : '5.三總重症大樓';
-
-      // 🌟 1. 9月當月本月即時排班
+      // 🌟 1. 9月當月本月即時排班 (雙哨合一秒開)
       if (selectedYear === REAL_CURRENT_YEAR && selectedMonth === 9) {
-        if (!isManualQuery && typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined' && EMBEDDED_SCHEDULE_DATA_9[currentTabKey]) {
-          rawScheduleData = EMBEDDED_SCHEDULE_DATA_9[currentTabKey];
-          currentDataVersionHash = computeRowsHash(rawScheduleData.rows);
-          setConnectionStatus('connected', '連線');
-          setCloudSyncStatus('synced', '對齊', '已成功載入 9 月排班 (即時同步快照)');
-          renderFullScheduleTable(rawScheduleData);
-          if (qBtn) {
-            qBtn.innerHTML = '<i class="fa-solid fa-rotate text-xs"></i><span>查詢</span>';
-            qBtn.disabled = false;
+        if (!isManualQuery && typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined') {
+          const engData = EMBEDDED_SCHEDULE_DATA_9['4.三總工務所'];
+          const icuData = EMBEDDED_SCHEDULE_DATA_9['5.三總重症大樓'];
+          if (engData || icuData) {
+            rawScheduleData = engData || icuData;
+            currentDataVersionHash = computeRowsHash((engData?.rows || []).concat(icuData?.rows || []));
+            setConnectionStatus('connected', '連線');
+            setCloudSyncStatus('synced', '對齊', '已成功載入 9 月雙哨排班 (即時同步快照)');
+            renderFullScheduleTable(engData, icuData);
+            if (qBtn) {
+              qBtn.innerHTML = '<i class="fa-solid fa-rotate text-xs"></i><span>查詢</span>';
+              qBtn.disabled = false;
+            }
+            return;
           }
-          return;
         } else if (isManualQuery) {
-          // 若為手動查詢，強制透過對齊引擎進行雲端即時直連 (嚴格零手機暫存)
+          // 手動直連查詢
           const ok = await triggerCloudDataAlign(false);
           if (ok) {
             if (qBtn) {
@@ -5150,12 +5153,14 @@
         }
       }
 
-      // 🌟 2. 8月上月歷史排班
+      // 🌟 2. 8月上月歷史排班 (雙哨合一)
       if (selectedYear === REAL_CURRENT_YEAR && selectedMonth === 8) {
-        if (EMBEDDED_SCHEDULE_DATA_8[currentTabKey]) {
-          rawScheduleData = EMBEDDED_SCHEDULE_DATA_8[currentTabKey];
+        if (typeof EMBEDDED_SCHEDULE_DATA_8 !== 'undefined') {
+          const engData = EMBEDDED_SCHEDULE_DATA_8['4.三總工務所'];
+          const icuData = EMBEDDED_SCHEDULE_DATA_8['5.三總重症大樓'];
+          rawScheduleData = engData || icuData;
           setConnectionStatus('connected', '連線');
-          renderFullScheduleTable(rawScheduleData);
+          renderFullScheduleTable(engData, icuData);
           if (qBtn) {
             qBtn.innerHTML = '<i class="fa-solid fa-rotate text-xs"></i><span>查詢</span>';
             qBtn.disabled = false;
@@ -5190,7 +5195,6 @@
       // 🌟 4. 7月歷史排班
       if (selectedYear === REAL_CURRENT_YEAR && selectedMonth === 7) {
         setConnectionStatus('connecting', '讀取7月真實雲端表單...');
-        // 若尚未於後台綁定 115.07 試算表 ID，直接顯示真實待綁定卡片
         container.innerHTML = `
           <div class="text-center py-12 space-y-4">
             <div class="w-14 h-14 rounded-2xl bg-sky-950/80 border border-sky-800 text-sky-400 flex items-center justify-center mx-auto text-2xl shadow-lg">
@@ -5214,61 +5218,29 @@
 
       setConnectionStatus('connecting', '雲端握手中...');
 
-      // 🌟 2. 本地開發環境 (localhost / 127.0.0.1) 直連本地後端
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1200);
-          const apiRes = await fetch(`/api/schedule/live?group_id=${encodeURIComponent(currentGroupId)}&tab=${encodeURIComponent(currentTabName)}&year=${selectedYear}&month=${selectedMonth}&t=${new Date().getTime()}`, {
-            signal: controller.signal,
-            cache: 'no-store'
-          });
-          clearTimeout(timeoutId);
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (apiData.rows && apiData.rows.length > 0) {
-              rawScheduleData = apiData;
-              setConnectionStatus('connected', '連線');
-              renderFullScheduleTable(rawScheduleData);
-              if (qBtn) {
-                qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
-                qBtn.disabled = false;
-              }
-              return;
-            }
+      // 🌟 5. 備用快照直連通道 (雙哨同時抓取)
+      try {
+        const engUrl = './data/schedule_4_tsgh_eng.json';
+        const icuUrl = './data/schedule_5_tsgh_icu.json';
+        const [engRes, icuRes] = await Promise.allSettled([
+          fetch(`${engUrl}?t=${Date.now()}`),
+          fetch(`${icuUrl}?t=${Date.now()}`)
+        ]);
+        const engData = engRes.status === 'fulfilled' && engRes.value.ok ? await engRes.value.json() : null;
+        const icuData = icuRes.status === 'fulfilled' && icuRes.value.ok ? await icuRes.value.json() : null;
+        if (engData || icuData) {
+          rawScheduleData = engData || icuData;
+          setConnectionStatus('connected', '連線');
+          renderFullScheduleTable(engData, icuData);
+          if (qBtn) {
+            qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
+            qBtn.disabled = false;
           }
-        } catch(err) {}
-      }
+          return;
+        }
+      } catch(e) {}
 
-      // 🌟 3. 備用快照直連通道
-      const snapUrls = [
-        isEng ? './data/schedule_4_tsgh_eng.json' : './data/schedule_5_tsgh_icu.json',
-        isEng ? 'https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/data/schedule_4_tsgh_eng.json' : 'https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/data/schedule_5_tsgh_icu.json'
-      ];
-
-      for (const url of snapUrls) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1500);
-          const snapRes = await fetch(`${url}?t=${new Date().getTime()}`, { signal: controller.signal, cache: 'no-store' });
-          clearTimeout(timeoutId);
-          if (snapRes.ok) {
-            const snapData = await snapRes.json();
-            if (snapData.rows && snapData.rows.length > 0) {
-              rawScheduleData = snapData;
-              setConnectionStatus('connected', '連線');
-              renderFullScheduleTable(rawScheduleData);
-              if (qBtn) {
-                qBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>查詢</span>';
-                qBtn.disabled = false;
-              }
-              return;
-            }
-          }
-        } catch(e) {}
-      }
-
-      // 4. 雲端資料讀取失敗
+      // 6. 雲端資料讀取失敗
       setConnectionStatus('failed', '雲端資料讀取失敗');
       container.innerHTML = `
         <div class="text-center py-12 space-y-4">
@@ -5278,7 +5250,7 @@
           <div class="space-y-1.5">
             <h3 class="text-base font-bold text-rose-400">雲端資料讀取失敗</h3>
             <p class="text-xs text-slate-400 max-w-md mx-auto">
-              未能與 Google 雲端 / 後端伺服器完成「${currentTabName}」即時握手連線。
+              未能與 Google 雲端 / 後端伺服器完成雙哨即時握手連線。
             </p>
           </div>
           <button onclick="fetchFullSchedule(true)" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-2 mx-auto shadow-md">
@@ -5293,9 +5265,26 @@
       }
     }
 
-    function renderFullScheduleTable(data) {
+    // 📄 雙哨合一全月人員班表渲染引擎 (前·工務所/停車 ｜ 後·重症大樓 對照排版)
+    function renderFullScheduleTable(engData, icuData) {
       const container = document.getElementById('scheduleContainer');
-      if (!data || !data.rows || data.rows.length === 0) {
+
+      // 相容性保護：若呼叫時僅帶入單一物件，自動從內嵌資料補齊另一哨
+      if (!icuData) {
+        if (selectedMonth === 9 && typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined') {
+          engData = EMBEDDED_SCHEDULE_DATA_9['4.三總工務所'] || engData;
+          icuData = EMBEDDED_SCHEDULE_DATA_9['5.三總重症大樓'];
+        } else if (selectedMonth === 8 && typeof EMBEDDED_SCHEDULE_DATA_8 !== 'undefined') {
+          engData = EMBEDDED_SCHEDULE_DATA_8['4.三總工務所'] || engData;
+          icuData = EMBEDDED_SCHEDULE_DATA_8['5.三總重症大樓'];
+        }
+      }
+
+      const engRows = engData?.rows || [];
+      const icuRows = icuData?.rows || [];
+      const daysCount = Math.max(engRows.length, icuRows.length);
+
+      if (daysCount === 0) {
         if (selectedMonth === 9 || (selectedYear === 2026 && selectedMonth > 8)) {
           container.innerHTML = `
             <div class="text-center py-12 space-y-4">
@@ -5316,16 +5305,9 @@
         return;
       }
 
-      const isEng = (currentTabName.includes('4.') || currentTabName.includes('工務所'));
-      const currentTabKey = isEng ? '4.三總工務所' : '5.三總重症大樓';
       const manualOverrides = getManualShiftOverrides();
-      let activeOverrideCount = 0;
+      const activeOverrideCount = Object.keys(manualOverrides).length;
 
-      Object.keys(manualOverrides).forEach(k => {
-        if (k.startsWith(currentTabKey)) activeOverrideCount++;
-      });
-
-      // 🌟 系統資訊版本與最後更新日：永遠對齊 GitHub 該次版本 push 發布日期 (不受切換月份歷史資料影響)
       const systemVersionStr = APP_SYSTEM_VERSION;
       const systemReleaseDateStr = APP_SYSTEM_RELEASE_DATE;
 
@@ -5338,7 +5320,7 @@
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
               </span>
-              <span>目前生效 <strong class="text-amber-300 font-extrabold text-sm">${activeOverrideCount}</strong> 筆前端手動暫代班 (次優先) ｜ 隨時可一鍵還原為雲端正本</span>
+              <span>目前生效 <strong class="text-amber-300 font-extrabold text-sm">${activeOverrideCount}</strong> 筆前端手動暫代班 ｜ 隨時可一鍵還原為雲端正本</span>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-auto">
               <button type="button" onclick="openShiftOverrideModal()" class="px-2.5 py-1 rounded-xl bg-amber-500/25 hover:bg-amber-500/40 border border-amber-500 text-amber-200 font-bold transition text-xs flex items-center gap-1 shadow-sm cursor-pointer">
@@ -5353,13 +5335,13 @@
           </div>
         `;
       }
-      
+
       let html = `
         ${overrideBannerHtml}
         <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-table-list text-emerald-400"></i>
-            <span class="text-sm font-bold text-white">人員班表(即時雲端) <span class="text-xs text-emerald-400 font-bold">(${selectedMonth === REAL_CURRENT_MONTH ? "本月" : selectedMonth + "月"}${data.rows.length}天)</span></span>
+            <span class="text-sm font-bold text-white">全哨人員班表(即時雲端) <span class="text-xs text-emerald-400 font-bold">(${selectedMonth === REAL_CURRENT_MONTH ? "本月" : selectedMonth + "月"}${daysCount}天)</span></span>
           </div>
           <div id="scheduleVersionBadgeContainer" class="flex items-center gap-2 text-xs font-mono transition-[margin] duration-150">
             <span id="scheduleVersionBadge" class="px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-700 text-amber-300 font-bold shadow-sm flex items-center gap-1.5 whitespace-nowrap">
@@ -5369,25 +5351,42 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto w-full">
-          <table class="w-full text-left text-xs border-collapse table-fixed">
-            <thead>
-              <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-bold">
-                <th class="w-[17%] py-2 px-1 whitespace-nowrap text-center text-xs">日期</th>
-                <th class="w-[11%] py-2 px-0.5 whitespace-nowrap text-center text-xs">週</th>
-                <th class="w-[36%] py-2 px-1 whitespace-nowrap text-center text-amber-400 font-extrabold text-[13px]">☀️ 早班</th>
-                <th class="w-[36%] py-2 px-1 whitespace-nowrap text-center text-sky-300 font-extrabold text-[13px]">🌆 晚班</th>
+        <div id="scheduleTableScrollWrapper" class="overflow-y-auto overflow-x-hidden max-h-[62vh] sm:max-h-[68vh] w-full rounded-xl border border-slate-800 bg-slate-950 overscroll-contain shadow-inner">
+          <table class="w-full text-left text-xs table-fixed border-separate border-spacing-0">
+            <colgroup>
+              <col style="width: 14%;">
+              <col style="width: 10%;">
+              <col style="width: 19%;">
+              <col style="width: 19%;">
+              <col style="width: 19%;">
+              <col style="width: 19%;">
+            </colgroup>
+            <thead class="sticky-table-head shadow-md">
+              <tr class="text-slate-300 font-bold border-b border-slate-800">
+                <th rowspan="2" class="w-[14%] py-0 px-0.5 whitespace-nowrap text-center text-xs th-solid-date border-b-2 border-slate-700">日期</th>
+                <th rowspan="2" class="w-[10%] py-0 px-0.5 whitespace-nowrap text-center text-xs th-solid-date border-b-2 border-slate-700">週</th>
+                <th colspan="2" class="w-[38%] py-0 px-0.5 whitespace-nowrap text-center text-amber-300 font-black text-[12px] sm:text-xs border-r-2 border-slate-700/80 th-solid-eng border-b border-slate-800">前 (停車/工務)</th>
+                <th colspan="2" class="w-[38%] py-0 px-0.5 whitespace-nowrap text-center text-sky-300 font-black text-[12px] sm:text-xs th-solid-icu border-b border-slate-800">後 (重症大樓)</th>
+              </tr>
+              <tr class="text-slate-300 font-bold text-[12px]">
+                <th class="py-0 px-0.5 text-center text-amber-400 font-extrabold th-solid-eng border-b-2 border-slate-700" title="工務所 早班 07:00-19:00">☀️</th>
+                <th class="py-0 px-0.5 text-center text-sky-300 font-extrabold border-r-2 border-slate-700/80 th-solid-eng border-b-2 border-slate-700" title="工務所 晚班 19:00-07:00">🌙</th>
+                <th class="py-0 px-0.5 text-center text-amber-400 font-extrabold th-solid-icu border-b-2 border-slate-700" title="重症大樓 早班 07:00-19:00">☀️</th>
+                <th class="py-0 px-0.5 text-center text-sky-300 font-extrabold th-solid-icu border-b-2 border-slate-700" title="重症大樓 晚班 19:00-07:00">🌙</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/90">
+            <tbody class="divide-y divide-slate-800/80">
       `;
 
       const now = new Date();
       const todayShort = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
       const todayFull = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
 
-      data.rows.forEach(r => {
-        let rawDate = (r['日期'] || '-').trim();
+      for (let i = 0; i < daysCount; i++) {
+        const rEng = engRows[i] || {};
+        const rIcu = icuRows[i] || {};
+
+        let rawDate = (rEng['日期'] || rIcu['日期'] || '-').trim();
         let dateStr = rawDate;
         let fullDateStr = rawDate;
         if (dateStr.length > 5 && dateStr.includes('/')) {
@@ -5397,95 +5396,90 @@
           fullDateStr = `${selectedYear}/${rawDate}`;
         }
 
-        const weekStr = (r['星期'] || '').trim();
-        let early = r['早班 (07-19)'] || r['早班'] || '-';
-        let late = r['晚班 (19-07)'] || r['晚班'] || '-';
+        const weekStr = (rEng['星期'] || rIcu['星期'] || '').trim();
 
-        // 🌟 次優先：檢查是否有前端手動暫代
-        const keyDay = `${currentTabKey}_${fullDateStr}_早班`;
-        const keyNight = `${currentTabKey}_${fullDateStr}_晚班`;
-        let isDayManualOverride = false;
-        let isNightManualOverride = false;
+        // 提取工務所早晚班與重症早晚班
+        let engEarly = rEng['早班 (07-19)'] || rEng['早班'] || '-';
+        let engLate = rEng['晚班 (19-07)'] || rEng['晚班'] || '-';
+        let icuEarly = rIcu['早班 (07-19)'] || rIcu['早班'] || '-';
+        let icuLate = rIcu['晚班 (19-07)'] || rIcu['晚班'] || '-';
 
-        if (manualOverrides[keyDay] && manualOverrides[keyDay].person) {
-          early = manualOverrides[keyDay].person;
-          isDayManualOverride = true;
-        }
-        if (manualOverrides[keyNight] && manualOverrides[keyNight].person) {
-          late = manualOverrides[keyNight].person;
-          isNightManualOverride = true;
-        }
+        // 手動暫代檢查
+        const kEngDay = `4.三總工務所_${fullDateStr}_早班`;
+        const kEngNight = `4.三總工務所_${fullDateStr}_晚班`;
+        const kIcuDay = `5.三總重症大樓_${fullDateStr}_早班`;
+        const kIcuNight = `5.三總重症大樓_${fullDateStr}_晚班`;
 
-        // 🟢 替補人員 (在還沒執班前) 自動偵測
-        const isDayUpcoming = isShiftUpcoming(rawDate, '早班');
-        const isNightUpcoming = isShiftUpcoming(rawDate, '晚班');
+        let isEngDayManual = false;
+        let isEngNightManual = false;
+        let isIcuDayManual = false;
+        let isIcuNightManual = false;
 
-        const cleanEarly = early.replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?[0-9]{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?/g, '').trim();
-        const cleanLate = late.replace(/[\(（]?09\d{2}[-\s]?\d{3}[-\s]?[0-9]{3}[\)）]?|\d{8,10}|[\(（]\d+[\)]?/g, '').trim();
+        if (manualOverrides[kEngDay]?.person) { engEarly = manualOverrides[kEngDay].person; isEngDayManual = true; }
+        if (manualOverrides[kEngNight]?.person) { engLate = manualOverrides[kEngNight].person; isEngNightManual = true; }
+        if (manualOverrides[kIcuDay]?.person) { icuEarly = manualOverrides[kIcuDay].person; isIcuDayManual = true; }
+        if (manualOverrides[kIcuNight]?.person) { icuLate = manualOverrides[kIcuNight].person; isIcuNightManual = true; }
 
-        const subsList = Array.isArray(r['substitutes']) ? r['substitutes'] : [];
-        const isExplicitDaySub = subsList.some(s => typeof s === 'string' && (s.includes('day') || s.includes('早')));
-        const isExplicitNightSub = subsList.some(s => typeof s === 'string' && (s.includes('night') || s.includes('晚')));
+        // 替補檢查
+        const engSubs = Array.isArray(rEng['substitutes']) ? rEng['substitutes'] : [];
+        const icuSubs = Array.isArray(rIcu['substitutes']) ? rIcu['substitutes'] : [];
 
-        const isDaySub = isDayManualOverride || isExplicitDaySub || early.includes('(代)') || early.includes('(替)') || early.includes('(支)') || early.includes('(換)') || early.includes('【代】') || early.includes('【替】') || early.includes('代班') || early.includes('替補') || early.includes('機動') || early.includes('支援');
-        const isNightSub = isNightManualOverride || isExplicitNightSub || late.includes('(代)') || late.includes('(替)') || late.includes('(支)') || late.includes('(換)') || late.includes('【代】') || late.includes('【替】') || late.includes('代班') || late.includes('替補') || late.includes('機動') || late.includes('支援');
+        const isEngDaySub = isEngDayManual || engSubs.some(s => typeof s === 'string' && (s.includes('day') || s.includes('早')));
+        const isEngNightSub = isEngNightManual || engSubs.some(s => typeof s === 'string' && (s.includes('night') || s.includes('晚')));
+        const isIcuDaySub = isIcuDayManual || icuSubs.some(s => typeof s === 'string' && (s.includes('day') || s.includes('早')));
+        const isIcuNightSub = isIcuNightManual || icuSubs.some(s => typeof s === 'string' && (s.includes('night') || s.includes('晚')));
 
-        const isDayUpcomingSubstitute = (isDayUpcoming || isExplicitDaySub) && isDaySub;
-        const isNightUpcomingSubstitute = (isNightUpcoming || isExplicitNightSub) && isNightSub;
-
-        // 🌟 判斷是否為「今天」
         const isToday = (selectedYear === now.getFullYear() && selectedMonth === (now.getMonth() + 1)) &&
                         (dateStr === todayShort || rawDate === todayFull || rawDate.includes(todayShort));
 
-        // 🎨 星期六/日 ＆ 今日暖色系醒目配色
         let weekBadgeClass = 'bg-slate-800/90 text-slate-300 border-slate-700';
         let rowClass = 'hover:bg-slate-800/40 border-b border-slate-800/80';
-        let dateDisplayHtml = `<span class="font-mono font-extrabold text-slate-100">${dateStr}</span>`;
-        let weekDisplayHtml = `<span class="px-1.5 py-0.5 rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
+        let dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center font-mono font-extrabold text-slate-200">${dateStr}</span>`;
+        let weekDisplayHtml = `<span class="inline-block w-5 sm:w-6 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
 
         if (isToday) {
-          rowClass = 'bg-gradient-to-r from-amber-500/25 via-amber-500/35 to-amber-500/25 border-y-2 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] ring-1 ring-amber-400/60 font-black';
-          dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center py-0.5 rounded-md bg-amber-500 text-slate-950 font-black text-xs sm:text-sm font-mono shadow-md">${dateStr}</span>`;
-          weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded-md bg-amber-500 text-slate-950 font-black text-[11px] shadow-md">${weekStr}</span>`;
-        } else if (weekStr === '六' || weekStr === 'Sat' || weekStr.includes('六')) {
-          weekBadgeClass = 'bg-teal-950 text-teal-300 border-teal-500 font-black shadow-sm';
-          rowClass = 'bg-teal-950/25 hover:bg-teal-900/40 border-b border-slate-800/80';
-          dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center font-mono font-extrabold text-teal-200">${dateStr}</span>`;
-          weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
-        } else if (weekStr === '日' || weekStr === 'Sun' || weekStr.includes('日')) {
-          weekBadgeClass = 'bg-rose-950 text-rose-300 border-rose-500 font-black shadow-sm';
-          rowClass = 'bg-rose-950/25 hover:bg-rose-900/40 border-b border-slate-800/80';
-          dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center font-mono font-extrabold text-rose-200">${dateStr}</span>`;
-          weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
-        } else {
-          dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center font-mono font-extrabold text-slate-100">${dateStr}</span>`;
-          weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
+          // 🌟 當日班：改套用「亮黃色」呼吸光光暈效果 (Bright Yellow Glow Pulse)
+          rowClass = 'bg-amber-500/30 border-y-2 border-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.5)] ring-1 ring-amber-400/70 font-black animate-pulse';
+          dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-xs font-mono shadow-md">${dateStr}</span>`;
+          weekDisplayHtml = `<span class="inline-block w-5 sm:w-6 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded-md bg-amber-400 text-slate-950 font-black text-[11px] shadow-md">${weekStr}</span>`;
+        } else if (weekStr === '六' || weekStr.includes('六')) {
+          weekBadgeClass = 'bg-teal-900 text-teal-200 border-teal-400 font-black shadow-sm';
+          rowClass = 'bg-teal-950/50 hover:bg-teal-900/60 border-b border-slate-800/80';
+          dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center font-mono font-extrabold text-teal-300">${dateStr}</span>`;
+          weekDisplayHtml = `<span class="inline-block w-5 sm:w-6 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
+        } else if (weekStr === '日' || weekStr.includes('日')) {
+          weekBadgeClass = 'bg-rose-900 text-rose-200 border-rose-400 font-black shadow-sm';
+          rowClass = 'bg-rose-950/50 hover:bg-rose-900/60 border-b border-slate-800/80';
+          dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center font-mono font-extrabold text-rose-300">${dateStr}</span>`;
+          weekDisplayHtml = `<span class="inline-block w-5 sm:w-6 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
         }
 
         const isHistorical = !(selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH);
 
-        let rowDayNum = 0;
-        if (dateStr.includes('/')) {
-          const parts = dateStr.split('/');
-          rowDayNum = parseInt(parts[parts.length - 1], 10) || 0;
-        }
-        const isBeforeYesterday = (selectedYear === now.getFullYear() && selectedMonth === (now.getMonth() + 1)) && (rowDayNum > 0 && rowDayNum <= (now.getDate() - 2));
+        const dayCellAttr = isUnlocked ? `onclick="openShiftOverrideModal('${fullDateStr}', '早班', '4.三總工務所')"` : '';
+        const weekCellAttr = isUnlocked ? `onclick="openShiftOverrideModal('${fullDateStr}', '早班', '4.三總工務所')"` : '';
 
-        // 🔒 一般訪客無法點擊欄位改班，僅管理員登入後賦予點擊行為
-        const dayCellAttr = isUnlocked ? `onclick="openShiftOverrideModal('${fullDateStr}', '早班', '${currentTabKey}')" class="w-[17%] py-2.5 px-1 whitespace-nowrap text-center text-xs sm:text-sm cursor-pointer" title="點擊手動改班"` : `class="w-[17%] py-2.5 px-1 whitespace-nowrap text-center text-xs sm:text-sm"`;
-        const weekCellAttr = isUnlocked ? `onclick="openShiftOverrideModal('${fullDateStr}', '早班', '${currentTabKey}')" class="w-[11%] py-2.5 px-0.5 whitespace-nowrap text-center cursor-pointer" title="點擊手動改班"` : `class="w-[11%] py-2.5 px-0.5 whitespace-nowrap text-center"`;
-        const earlyCellAttr = isUnlocked ? `onclick="openShiftOverrideModal('${fullDateStr}', '早班', '${currentTabKey}')" class="w-[36%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium cursor-pointer" title="點擊手動改班/暫代"` : `class="w-[36%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium"`;
-        const lateCellAttr = isUnlocked ? `onclick="openShiftOverrideModal('${fullDateStr}', '晚班', '${currentTabKey}')" class="w-[36%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium cursor-pointer" title="點擊手動改班/暫代"` : `class="w-[36%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium"`;
+        const todayRowId = isToday ? 'id="todayScheduleRow"' : '';
 
         html += `
-          <tr class="${rowClass} transition">
-            <td ${dayCellAttr}>${dateDisplayHtml}</td>
-            <td ${weekCellAttr}>${weekDisplayHtml}</td>
-            <td ${earlyCellAttr}>${formatName(early, isHistorical, isBeforeYesterday, isDayUpcomingSubstitute, isDayManualOverride, fullDateStr, '早班', currentTabKey)}</td>
-            <td ${lateCellAttr}>${formatName(late, isHistorical, isBeforeYesterday, isNightUpcomingSubstitute, isNightManualOverride, fullDateStr, '晚班', currentTabKey)}</td>
+          <tr ${todayRowId} class="${rowClass} transition text-center align-middle">
+            <td ${dayCellAttr} class="w-[14%] py-2 px-0.5 whitespace-nowrap text-center align-middle text-xs sm:text-sm font-mono">${dateDisplayHtml}</td>
+            <td ${weekCellAttr} class="w-[10%] py-2 px-0.5 whitespace-nowrap text-center align-middle">${weekDisplayHtml}</td>
+            <td class="w-[19%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium">
+              ${formatName(engEarly, isHistorical, false, isEngDaySub, isEngDayManual, fullDateStr, '早班', '4.三總工務所', false)}
+            </td>
+            <td class="w-[19%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium border-r-2 border-slate-700/80">
+              ${formatName(engLate, isHistorical, false, isEngNightSub, isEngNightManual, fullDateStr, '晚班', '4.三總工務所', false)}
+            </td>
+            <td class="w-[19%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium">
+              ${formatName(icuEarly, isHistorical, false, isIcuDaySub, isIcuDayManual, fullDateStr, '早班', '5.三總重症大樓', false)}
+            </td>
+            <td class="w-[19%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium">
+              ${formatName(icuLate, isHistorical, false, isIcuNightSub, isIcuNightManual, fullDateStr, '晚班', '5.三總重症大樓', true)}
+            </td>
           </tr>
         `;
-      });
+      }
 
       html += `
             </tbody>
@@ -5495,22 +5489,52 @@
 
       container.innerHTML = html;
       
-      // 📐 自動計算並對齊：紅框版本資訊最右邊，精準對齊晚班人名最右緣
+      scrollToTodayRow();
+      requestAnimationFrame(scrollToTodayRow);
+      setTimeout(scrollToTodayRow, 60);
+      setTimeout(scrollToTodayRow, 180);
+
       alignScheduleVersionBadge();
       requestAnimationFrame(alignScheduleVersionBadge);
       setTimeout(alignScheduleVersionBadge, 60);
     }
 
-    // 📐 自動計算紅框版本資訊最右邊，對齊晚班人名最右緣
+    // 🎯 今日列預設滾動置中顯示 (中段位置，使畫面上清晰可見昨日/今日/明日/後天/大後天)
+    function scrollToTodayRow() {
+      const wrapper = document.getElementById('scheduleTableScrollWrapper');
+      const todayRow = document.getElementById('todayScheduleRow');
+      if (!wrapper || !todayRow) return;
+
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const rowRect = todayRow.getBoundingClientRect();
+      
+      // 表頭凍結高度 60px (第1層 32px + 第2層 28px)
+      const headerHeight = 60;
+      const viewHeight = wrapper.clientHeight - headerHeight;
+      if (viewHeight <= 0) return;
+      
+      // row 當前相對於 wrapper 可視頂部的距離
+      const currentRelativeTop = rowRect.top - wrapperRect.top;
+      
+      // 目標相對位置：位於表頭下方到容器底部的正中央 (中段)
+      const targetRelativeTop = headerHeight + (viewHeight / 2) - (rowRect.height / 2);
+      
+      // 應調整的滾動位移
+      const diff = currentRelativeTop - targetRelativeTop;
+      
+      wrapper.scrollTop = Math.max(0, wrapper.scrollTop + diff);
+    }
+
+    // 📐 自動計算紅框版本資訊最右邊，對齊最後一欄人名最右緣
     function alignScheduleVersionBadge() {
       const versionBadge = document.getElementById('scheduleVersionBadge');
       const container = document.getElementById('scheduleVersionBadgeContainer');
       if (!versionBadge || !container) return;
 
-      const lateCell = document.querySelector('#scheduleContainer table tbody tr td:nth-child(4)');
+      const lateCell = document.querySelector('#scheduleContainer table tbody tr td:last-child');
       if (!lateCell) return;
 
-      const lateBadge = lateCell.querySelector('button, .substitute-upcoming-badge, .substitute-manual-badge, div > button, div');
+      const lateBadge = lateCell.querySelector('button, a, div, span');
       if (!lateBadge) return;
 
       container.style.marginRight = '0px';
@@ -5518,7 +5542,6 @@
       const badgeRect = lateBadge.getBoundingClientRect();
       const versionRect = versionBadge.getBoundingClientRect();
 
-      // 計算紅框版本資訊最右邊，對齊晚班人名的最右緣之水平差距
       const diff = Math.round(versionRect.right - badgeRect.right);
       if (diff > 0) {
         container.style.marginRight = `${diff}px`;
