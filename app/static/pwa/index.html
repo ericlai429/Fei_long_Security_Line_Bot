@@ -103,6 +103,69 @@
       font-weight: 900 !important;
     }
 
+    /* 💣 點著引信的黑色圓型炸彈：乎左乎右歡樂跳動 (Bomb Wobble & Bounce Animation) */
+    @keyframes bombWobbleBounce {
+      0% {
+        transform: translateY(0) rotate(0deg) scale(1);
+      }
+      18% {
+        transform: translateY(-7px) rotate(-16deg) translateX(-3px) scale(1.08, 0.94);
+      }
+      32% {
+        transform: translateY(0) rotate(0deg) scale(0.95, 1.05);
+      }
+      50% {
+        transform: translateY(-8px) rotate(16deg) translateX(3px) scale(1.08, 0.94);
+      }
+      65% {
+        transform: translateY(0) rotate(0deg) scale(0.96, 1.04);
+      }
+      78% {
+        transform: translateY(-3.5px) rotate(-8deg) translateX(-1.5px) scale(1.03);
+      }
+      88% {
+        transform: translateY(-1px) rotate(5deg) translateX(1px) scale(1);
+      }
+      100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+      }
+    }
+
+    .bomb-wobble-bounce {
+      display: inline-block;
+      transform-origin: 50% 90%;
+      animation: bombWobbleBounce 1.15s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+    }
+
+    /* 🔥 炸彈引信燃燒火花微頻閃 (Fuse Spark Flame Flicker) */
+    @keyframes fuseSparkFlicker {
+      0% {
+        transform: translate(24px, 4px) scale(0.85) rotate(0deg);
+        filter: drop-shadow(0 0 3px #f59e0b) drop-shadow(0 0 6px #ef4444);
+      }
+      25% {
+        transform: translate(24px, 4px) scale(1.4) rotate(25deg);
+        filter: drop-shadow(0 0 6px #fbbf24) drop-shadow(0 0 12px #ea580c);
+      }
+      50% {
+        transform: translate(24px, 4px) scale(0.8) rotate(-15deg);
+        filter: drop-shadow(0 0 3px #f59e0b);
+      }
+      75% {
+        transform: translate(24px, 4px) scale(1.5) rotate(35deg);
+        filter: drop-shadow(0 0 7px #fef08a) drop-shadow(0 0 14px #ef4444);
+      }
+      100% {
+        transform: translate(24px, 4px) scale(0.85) rotate(0deg);
+        filter: drop-shadow(0 0 3px #f59e0b) drop-shadow(0 0 6px #ef4444);
+      }
+    }
+
+    .bomb-fuse-spark-flame {
+      transform-origin: 0 0;
+      animation: fuseSparkFlicker 0.14s ease-in-out infinite alternate;
+    }
+
     /* 🪙 金幣 3D 原地旋轉動畫 */
     @keyframes coinSpin3D {
       0% { transform: rotateY(0deg); }
@@ -5084,7 +5147,37 @@
 
         let crownHtml = '';
         if (isLegendary) {
-          crownHtml = '<span class="absolute -top-2.5 -right-2 text-xs filter drop-shadow-[0_0_5px_rgba(251,191,36,1)] animate-bounce select-none pointer-events-none z-30" title="👑 臨危受命 尊絕不凡">👑</span>';
+          crownHtml = `
+            <span class="bomb-badge-wrapper absolute -top-4.5 -right-3.5 z-30 select-none pointer-events-none" title="💣 臨危受命 尊絕不凡">
+              <span class="bomb-wobble-bounce inline-block">
+                <svg class="w-6 h-6 overflow-visible filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" viewBox="0 0 36 36">
+                  <defs>
+                    <radialGradient id="bombBody3D" cx="35%" cy="30%" r="65%">
+                      <stop offset="0%" stop-color="#94a3b8"/>
+                      <stop offset="30%" stop-color="#334155"/>
+                      <stop offset="70%" stop-color="#0f172a"/>
+                      <stop offset="100%" stop-color="#000000"/>
+                    </radialGradient>
+                    <linearGradient id="bombFuseGrad" x1="0" y1="1" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#78350f"/>
+                      <stop offset="60%" stop-color="#d97706"/>
+                      <stop offset="100%" stop-color="#f59e0b"/>
+                    </linearGradient>
+                  </defs>
+                  <rect x="14.5" y="11" width="7" height="3" rx="1" fill="#64748b" stroke="#0f172a" stroke-width="0.8"/>
+                  <path d="M 18 11 Q 20 5 24 4" fill="none" stroke="url(#bombFuseGrad)" stroke-width="2.2" stroke-linecap="round"/>
+                  <circle cx="18" cy="23" r="11" fill="url(#bombBody3D)" stroke="#020617" stroke-width="1.2"/>
+                  <ellipse cx="14" cy="18" rx="3.5" ry="1.8" fill="#ffffff" opacity="0.55" transform="rotate(-35 14 18)"/>
+                  <g class="bomb-fuse-spark-flame" transform="translate(24, 4)">
+                    <circle cx="0" cy="0" r="4.5" fill="#ea580c" opacity="0.85"/>
+                    <circle cx="0" cy="0" r="2.8" fill="#facc15"/>
+                    <circle cx="0" cy="0" r="1.3" fill="#ffffff"/>
+                    <path d="M 0 -4 L 0 4 M -4 0 L 4 0 M -2.5 -2.5 L 2.5 2.5 M -2.5 2.5 L 2.5 -2.5" stroke="#fff" stroke-width="0.8" opacity="0.95"/>
+                  </g>
+                </svg>
+              </span>
+            </span>
+          `;
           badgeEffect += (badgeEffect ? ' ' : '') + 'legendary-hero-badge';
         } else if (isTomorrow) {
           badgeEffect += (badgeEffect ? ' ' : '') + 'rainbow-glow-badge';
@@ -5099,7 +5192,7 @@
           ? 'right-0 left-auto translate-x-0' 
           : 'left-1/2 -translate-x-1/2';
 
-        const heroTag = isLegendary ? '<span class="text-amber-300 font-extrabold flex items-center gap-1">👑 臨危受命 (尊絕不凡)</span>' : '';
+        const heroTag = isLegendary ? '<span class="text-amber-300 font-extrabold flex items-center gap-1">💣 臨危受命 (尊絕不凡)</span>' : '';
 
         // 🌟 0. 管理員登入模式：點擊色塊開啟手動改班視窗
         if (isUnlocked) {
@@ -5619,12 +5712,174 @@
 
 
 
+    // 💣 炸彈引信星光星火飄落粒子引擎 (Sparks & Starlight Falling to Footer)
+    function initBombSparksEngine() {
+      let canvas = document.getElementById('bombSparksCanvas');
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'bombSparksCanvas';
+        canvas.className = 'fixed inset-0 pointer-events-none z-[9998] w-full h-full';
+        document.body.appendChild(canvas);
+      }
+
+      const ctx = canvas.getContext('2d');
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+
+      window.addEventListener('resize', () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+      });
+
+      const particles = [];
+      const maxParticles = 65;
+      let lastSpawn = 0;
+
+      // 繪製 4 芒星光
+      function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, color, alpha) {
+        let rot = (Math.PI / 2) * 3;
+        let x = cx;
+        let y = cy;
+        const step = Math.PI / spikes;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+          x = cx + Math.cos(rot) * outerRadius;
+          y = cy + Math.sin(rot) * outerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function createParticle(spawnX, spawnY) {
+        const types = ['star', 'ember', 'spark'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const colors = ['#fef08a', '#facc15', '#fbbf24', '#f59e0b', '#ea580c', '#ffffff'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+
+        return {
+          type: type,
+          x: spawnX + (Math.random() * 8 - 4),
+          y: spawnY + (Math.random() * 6 - 3),
+          vx: (Math.random() - 0.5) * 1.8,
+          vy: -(Math.random() * 1.5 + 0.4),
+          gravity: 0.075 + Math.random() * 0.045,
+          drag: 0.993,
+          size: type === 'star' ? (Math.random() * 3.5 + 2.5) : (Math.random() * 2.5 + 1.2),
+          wobbleSpeed: Math.random() * 0.08 + 0.03,
+          wobbleAmp: Math.random() * 1.6 + 0.5,
+          wobbleOffset: Math.random() * Math.PI * 2,
+          alpha: 1,
+          color: color,
+          life: 0
+        };
+      }
+
+      function loop(time) {
+        ctx.clearRect(0, 0, width, height);
+
+        // 偵測 9/10 炸彈引信燃燒點之動態螢幕座標
+        const sparkElem = document.querySelector('.bomb-fuse-spark-flame') || document.querySelector('.bomb-badge-wrapper');
+        let isVisible = false;
+        let spawnX = 0;
+        let spawnY = 0;
+
+        if (sparkElem) {
+          const rect = sparkElem.getBoundingClientRect();
+          if (rect.width > 0 && rect.bottom > 0 && rect.top < height) {
+            isVisible = true;
+            spawnX = rect.left + rect.width * 0.6;
+            spawnY = rect.top + rect.height * 0.3;
+          }
+        }
+
+        // 定時噴發星光星火粒子
+        if (isVisible && time - lastSpawn > 70 && particles.length < maxParticles) {
+          lastSpawn = time;
+          const count = Math.random() < 0.45 ? 2 : 1;
+          for (let i = 0; i < count; i++) {
+            particles.push(createParticle(spawnX, spawnY));
+          }
+        }
+
+        // 更新與渲染飄落粒子，一路墜落至頁尾 (螢幕底端)
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.life++;
+          p.vy += p.gravity;
+          p.vx *= p.drag;
+          p.x += p.vx + Math.sin(p.life * p.wobbleSpeed + p.wobbleOffset) * p.wobbleAmp;
+          p.y += p.vy;
+
+          // 接近頁尾 (螢幕下方) 時漸漸消散
+          const distToBottom = height - p.y;
+          if (distToBottom < 90) {
+            p.alpha = Math.max(0, distToBottom / 90);
+          }
+
+          // 超出頁尾底端或透明度耗盡則回收
+          if (p.y >= height + 10 || p.alpha <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+
+          if (p.type === 'star') {
+            drawStar(ctx, p.x, p.y, 4, p.size * 2, p.size * 0.5, p.color, p.alpha);
+          } else if (p.type === 'ember') {
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 6;
+            ctx.fill();
+            ctx.restore();
+          } else {
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 0.7, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#fde047';
+            ctx.shadowBlur = 4;
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       restoreAdminSession();
       updateMonthDisplay();
       updateOverrideNavbarBadge();
       fetchFullSchedule();
       startCloudVersionHandshake();
+      initBombSparksEngine();
 
       // 監聽視窗縮放與表格容器尺寸變化，確保版本資訊最右側始終對齊晚班人名最右緣
       window.addEventListener('resize', alignScheduleVersionBadge);
