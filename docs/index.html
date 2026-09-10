@@ -166,6 +166,58 @@
       animation: fuseSparkFlicker 0.14s ease-in-out infinite alternate;
     }
 
+    /* 💣 炸彈倒數 5 秒緊急劇烈震顫 (Urgent Countdown Shake) */
+    @keyframes bombUrgentShake {
+      0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+      15% { transform: translate(-3px, -2px) rotate(-14deg) scale(1.12); }
+      30% { transform: translate(3px, 1px) rotate(14deg) scale(1.15); }
+      45% { transform: translate(-3px, 2px) rotate(-10deg) scale(1.18); }
+      60% { transform: translate(3px, -2px) rotate(10deg) scale(1.2); }
+      75% { transform: translate(-2px, 1px) rotate(-6deg) scale(1.22); }
+      90% { transform: translate(2px, -1px) rotate(6deg) scale(1.25); }
+      100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    }
+    .bomb-urgent-shake {
+      animation: bombUrgentShake 0.15s linear infinite !important;
+      filter: drop-shadow(0 0 8px #ef4444) drop-shadow(0 0 16px #f59e0b) !important;
+    }
+
+    /* ⏱️ 炸彈頭頂倒數數字微型胸章 (Countdown Badge) */
+    .bomb-countdown-badge {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, #ef4444 0%, #7f1d1d 100%);
+      color: #ffffff;
+      font-weight: 900;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1;
+      padding: 3px 6px;
+      border-radius: 9999px;
+      border: 1.5px solid #fef08a;
+      box-shadow: 0 0 10px #ef4444, 0 0 20px #f59e0b;
+      animation: countdownPulse 0.9s ease-in-out infinite;
+      z-index: 50;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    @keyframes countdownPulse {
+      0%, 100% { transform: translateX(-50%) scale(1.2); }
+      50% { transform: translateX(-50%) scale(0.9); }
+    }
+
+    /* 💨 炸彈重生煙霧動畫 */
+    @keyframes bombSpawnPoof {
+      0% { transform: scale(0); opacity: 0; filter: blur(4px); }
+      60% { transform: scale(1.3); opacity: 1; filter: blur(0px); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .bomb-spawn-poof {
+      animation: bombSpawnPoof 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
     /* 🪙 金幣 3D 原地旋轉動畫 */
     @keyframes coinSpin3D {
       0% { transform: rotateY(0deg); }
@@ -5144,9 +5196,19 @@
 
         let crownHtml = '';
         if (isLegendary) {
+          const isBombHidden = window.bombController && (window.bombController.state === 'exploding' || window.bombController.state === 'waiting_respawn');
+          const isUrgent = window.bombController && window.bombController.state === 'countdown';
+          const urgentClass = isUrgent ? ' bomb-urgent-shake' : '';
+          const countdownDisplay = (isUrgent && window.bombController.countdownSeconds) ? `<div class="bomb-countdown-badge">${window.bombController.countdownSeconds}</div>` : '';
+          
           crownHtml = `
-            <span class="bomb-badge-wrapper absolute -top-4.5 -right-3.5 z-30 select-none pointer-events-none" title="💣 不要挖坑給我跳..">
-              <span class="bomb-wobble-bounce inline-block">
+            <span class="bomb-badge-wrapper absolute -top-4.5 -right-3.5 z-30 select-none pointer-events-auto cursor-pointer" 
+                  style="${isBombHidden ? 'display: none;' : ''}"
+                  title="💣 不要挖坑給我跳.. (觸摸引爆)"
+                  onclick="event.stopPropagation(); window.bombController && window.bombController.handleTouch(event);"
+                  ontouchstart="event.stopPropagation(); window.bombController && window.bombController.handleTouch(event);">
+              ${countdownDisplay}
+              <span class="bomb-wobble-bounce inline-block${urgentClass}">
                 <svg class="w-6 h-6 overflow-visible filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" viewBox="0 0 36 36">
                   <defs>
                     <radialGradient id="bombBody3D" cx="35%" cy="30%" r="65%">
@@ -5201,7 +5263,7 @@
                 onclick="event.stopPropagation(); openShiftOverrideModal('${targetDate}', '${targetShift}', '${targetTab}')"
                 title="${cleanName} ${phone} ｜ 點擊改班/暫代"
                 style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition transform active:scale-90 cursor-pointer ${badgeEffect}"
+                class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center font-black text-sm sm:text-base shadow-sm transition transform active:scale-90 cursor-pointer ${badgeEffect}"
               >
                 ${shortChar}
               </button>
@@ -5223,7 +5285,7 @@
                 href="${telHref}"
                 title="${cleanName} ｜ 點擊撥打 ${phone}"
                 style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition transform hover:scale-105 active:scale-90 cursor-pointer ${badgeEffect}"
+                class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center font-black text-sm sm:text-base shadow-sm transition transform hover:scale-105 active:scale-90 cursor-pointer ${badgeEffect}"
               >
                 ${shortChar}
               </a>
@@ -5243,7 +5305,7 @@
             <span 
               title="${cleanName}"
               style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
-              class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs ${badgeEffect}"
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center font-black text-sm sm:text-base shadow-sm ${badgeEffect}"
             >
               ${shortChar}
             </span>
@@ -5591,24 +5653,24 @@
 
         let weekBadgeClass = 'bg-slate-800/90 text-slate-300 border-slate-700';
         let rowClass = 'hover:bg-slate-800/40 border-b border-slate-800/80';
-        let dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center font-mono font-extrabold text-slate-200">${dateStr}</span>`;
-        let weekDisplayHtml = `<span class="inline-block w-5 sm:w-6 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
+        let dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center font-mono font-extrabold text-xs sm:text-sm text-slate-200">${dateStr}</span>`;
+        let weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-6 sm:h-7 leading-6 sm:leading-7 text-center rounded-lg text-xs sm:text-[13px] font-black border ${weekBadgeClass}">${weekStr}</span>`;
 
         if (isToday) {
           // 🌟 當日班：改套用「亮黃色」呼吸光光暈效果 (Bright Yellow Glow Pulse)
           rowClass = 'bg-amber-500/30 border-y-2 border-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.5)] ring-1 ring-amber-400/70 font-black animate-pulse';
-          dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-xs font-mono shadow-md">${dateStr}</span>`;
-          weekDisplayHtml = `<span class="inline-block w-5 sm:w-6 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded-md bg-amber-400 text-slate-950 font-black text-[11px] shadow-md">${weekStr}</span>`;
+          dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-xs sm:text-sm font-mono shadow-md">${dateStr}</span>`;
+          weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-6 sm:h-7 leading-6 sm:leading-7 text-center rounded-lg bg-amber-400 text-slate-950 font-black text-xs sm:text-[13px] shadow-md">${weekStr}</span>`;
         } else if (weekStr === '六' || weekStr.includes('六')) {
           weekBadgeClass = 'bg-teal-900 text-teal-200 border-teal-400 font-black shadow-sm';
           rowClass = 'bg-teal-950/50 hover:bg-teal-900/60 border-b border-slate-800/80';
-          dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center font-mono font-extrabold text-teal-300">${dateStr}</span>`;
-          weekDisplayHtml = `<span class="inline-block w-5 sm:w-6 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
+          dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center font-mono font-extrabold text-xs sm:text-sm text-teal-300">${dateStr}</span>`;
+          weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-6 sm:h-7 leading-6 sm:leading-7 text-center rounded-lg text-xs sm:text-[13px] font-black border ${weekBadgeClass}">${weekStr}</span>`;
         } else if (weekStr === '日' || weekStr.includes('日')) {
           weekBadgeClass = 'bg-rose-900 text-rose-200 border-rose-400 font-black shadow-sm';
           rowClass = 'bg-rose-950/50 hover:bg-rose-900/60 border-b border-slate-800/80';
-          dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center font-mono font-extrabold text-rose-300">${dateStr}</span>`;
-          weekDisplayHtml = `<span class="inline-block w-5 sm:w-6 h-5 sm:h-6 leading-5 sm:leading-6 text-center rounded text-[11px] font-bold border ${weekBadgeClass}">${weekStr}</span>`;
+          dateDisplayHtml = `<span class="inline-block w-12 sm:w-14 text-center font-mono font-extrabold text-xs sm:text-sm text-rose-300">${dateStr}</span>`;
+          weekDisplayHtml = `<span class="inline-block w-6 sm:w-7 h-6 sm:h-7 leading-6 sm:leading-7 text-center rounded-lg text-xs sm:text-[13px] font-black border ${weekBadgeClass}">${weekStr}</span>`;
         }
 
         const isHistorical = !(selectedYear === REAL_CURRENT_YEAR && selectedMonth === REAL_CURRENT_MONTH);
@@ -5709,7 +5771,7 @@
 
 
 
-    // 💣 炸彈引信星光星火飄落粒子引擎 (Sparks & Starlight Falling to Footer)
+    // 💣 炸彈引信星光飄落粒子 ＆ 🎆 日本大型煙花玉(七彩變幻6秒) ＆ 倒數重生引擎
     function initBombSparksEngine() {
       let canvas = document.getElementById('bombSparksCanvas');
       if (!canvas) {
@@ -5732,9 +5794,120 @@
         canvas.height = height;
       });
 
-      const particles = [];
-      const maxParticles = 65;
-      let lastSpawn = 0;
+      // 💥 炸彈生命週期控制器 (未爆炸彈同一時間只會出現一個)
+      window.bombController = {
+        state: 'idle', // 'idle' | 'countdown' | 'exploding' | 'waiting_respawn'
+        countdownSeconds: 5,
+        countdownTimer: null,
+
+        handleTouch(e) {
+          if (e) {
+            e.stopPropagation();
+            if (e.cancelable) e.preventDefault();
+          }
+          // 嚴格保證：未爆的炸彈同一時間只會存在/觸發一個，倒數或爆炸期間不重複觸發
+          if (this.state !== 'idle') return;
+          this.startCountdown();
+        },
+
+        startCountdown() {
+          this.state = 'countdown';
+          this.countdownSeconds = 5;
+
+          const wrapper = document.querySelector('.bomb-badge-wrapper');
+          if (wrapper) {
+            const wobbleEl = wrapper.querySelector('.bomb-wobble-bounce');
+            if (wobbleEl) wobbleEl.classList.add('bomb-urgent-shake');
+
+            let badge = wrapper.querySelector('.bomb-countdown-badge');
+            if (!badge) {
+              badge = document.createElement('div');
+              badge.className = 'bomb-countdown-badge';
+              wrapper.appendChild(badge);
+            }
+            badge.textContent = '5';
+            badge.style.display = 'block';
+          }
+
+          if (this.countdownTimer) clearInterval(this.countdownTimer);
+
+          this.countdownTimer = setInterval(() => {
+            this.countdownSeconds--;
+            const curWrapper = document.querySelector('.bomb-badge-wrapper');
+            const badge = curWrapper ? curWrapper.querySelector('.bomb-countdown-badge') : null;
+
+            if (this.countdownSeconds > 0) {
+              if (badge) badge.textContent = String(this.countdownSeconds);
+            } else {
+              clearInterval(this.countdownTimer);
+              this.countdownTimer = null;
+              this.explode();
+            }
+          }, 1000);
+        },
+
+        explode() {
+          this.state = 'exploding';
+          const wrapper = document.querySelector('.bomb-badge-wrapper');
+          let originX = width / 2;
+          let originY = height / 2;
+
+          if (wrapper) {
+            const rect = wrapper.getBoundingClientRect();
+            originX = rect.left + rect.width / 2;
+            originY = rect.top + rect.height / 2;
+            wrapper.style.display = 'none'; // 炸彈本體消失
+          }
+
+          // 🎆 向上發射並引爆「日本大型煙花玉 (七彩變幻6秒)」
+          window.launchJapaneseHanabi(originX, originY, () => {
+            // 煙花落地後 (6秒效果結束)
+            this.state = 'waiting_respawn';
+            // 煙花落地後 6 秒重新出現炸彈
+            setTimeout(() => {
+              this.respawn();
+            }, 6000);
+          });
+        },
+
+        respawn() {
+          const wrapper = document.querySelector('.bomb-badge-wrapper');
+          if (wrapper) {
+            const wobbleEl = wrapper.querySelector('.bomb-wobble-bounce');
+            if (wobbleEl) wobbleEl.classList.remove('bomb-urgent-shake');
+            const badge = wrapper.querySelector('.bomb-countdown-badge');
+            if (badge) badge.remove();
+
+            wrapper.style.display = '';
+            wrapper.classList.add('bomb-spawn-poof');
+            setTimeout(() => {
+              wrapper.classList.remove('bomb-spawn-poof');
+            }, 700);
+          }
+          this.state = 'idle';
+        }
+      };
+
+      // 🌠 普通待機時引信星火飄落粒子
+      const sparkParticles = [];
+      const maxSparks = 65;
+      let lastSparkSpawn = 0;
+
+      // 🎆 日本大型煙花玉發射火箭與花火星子隊列
+      const hanabiRockets = [];
+      const hanabiStars = [];
+      const shockwaves = [];
+
+      // 日本花火七彩星色盤 (白金 -> 琥珀金 -> 艷紅 -> 桃紫 -> 寶藍 -> 湖青 -> 翡翠綠)
+      const rainbowColorPhases = [
+        ['#ffffff', '#fef08a'], // 0. 皓白初光
+        ['#fde047', '#f59e0b'], // 1. 錦冠黃金
+        ['#ef4444', '#f43f5e'], // 2. 紅蓮真紅
+        ['#ec4899', '#d946ef'], // 3. 櫻花洋紅
+        ['#8b5cf6', '#6366f1'], // 4. 桔梗紫羅蘭
+        ['#06b6d4', '#0ea5e9'], // 5. 露草天藍
+        ['#10b981', '#34d399']  // 6. 若竹翡翠綠
+      ];
 
       // 繪製 4 芒星光
       function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, color, alpha) {
@@ -5767,12 +5940,10 @@
         ctx.restore();
       }
 
-      function createParticle(spawnX, spawnY) {
+      function createIdleSpark(spawnX, spawnY) {
         const types = ['star', 'ember', 'spark'];
         const type = types[Math.floor(Math.random() * types.length)];
         const colors = ['#fef08a', '#facc15', '#fbbf24', '#f59e0b', '#ea580c', '#ffffff'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-
         return {
           type: type,
           x: spawnX + (Math.random() * 8 - 4),
@@ -5786,21 +5957,230 @@
           wobbleAmp: Math.random() * 1.6 + 0.5,
           wobbleOffset: Math.random() * Math.PI * 2,
           alpha: 1,
-          color: color,
+          color: colors[Math.floor(Math.random() * colors.length)],
           life: 0
         };
+      }
+
+      // 🎆 觸發日本大型煙花玉：向上射出花火玉並於高空炸開
+      window.launchJapaneseHanabi = function(originX, originY, onLandingComplete) {
+        // 向上發射高度：畫面高空 18% ~ 26% 處
+        const targetApexY = Math.max(90, Math.min(originY - 280, height * 0.22));
+
+        // 地面衝擊波
+        shockwaves.push({
+          x: originX,
+          y: originY,
+          radius: 8,
+          maxRadius: 65,
+          color: '#f59e0b',
+          alpha: 1,
+          lineWidth: 4
+        });
+
+        hanabiRockets.push({
+          x: originX,
+          y: originY,
+          startX: originX,
+          startY: originY,
+          targetY: targetApexY,
+          progress: 0,
+          speed: 0.032, // 約 0.5 秒抵達高空頂點
+          trail: [],
+          onLandingComplete: onLandingComplete
+        });
+      };
+
+      // 💥 高空綻放：日本傳統割物菊・芯入錦冠柳花火玉 (維持 6 秒，七彩變幻)
+      function detonateJapaneseHanabi(apexX, apexY, onLandingComplete) {
+        // 高空大光環衝擊波
+        shockwaves.push({
+          x: apexX,
+          y: apexY,
+          radius: 10,
+          maxRadius: 180,
+          color: '#fef08a',
+          alpha: 1,
+          lineWidth: 6
+        });
+
+        // 煙花玉總星數：約 240 顆 (外層親星 + 內層芯星 + 銀蜂點滅閃星)
+        const totalStars = 240;
+        let activeStarsCount = totalStars;
+
+        for (let i = 0; i < totalStars; i++) {
+          const isPistil = (i % 4 === 0); // 內層芯星
+          const isGlitter = (i % 6 === 0); // 閃爍點滅星
+
+          // 完美真圓球型 360 度散射角
+          const angle = (Math.PI * 2 * i) / totalStars + (Math.random() * 0.12 - 0.06);
+          // 速度分層：外層菊花瓣速度高，內層芯花速度適中
+          const baseSpeed = isPistil ? (Math.random() * 2.2 + 2.8) : (Math.random() * 3.6 + 5.6);
+
+          hanabiStars.push({
+            x: apexX,
+            y: apexY,
+            vx: Math.cos(angle) * baseSpeed,
+            vy: Math.sin(angle) * baseSpeed,
+            friction: 0.976, // 緩慢減速擴散
+            gravity: 0.038,  // 錦冠柳重力下墜感
+            trail: [],
+            trailMax: isPistil ? 5 : 8,
+            colorOffset: Math.floor(Math.random() * 7),
+            isPistil: isPistil,
+            isGlitter: isGlitter,
+            life: 0,
+            maxLife: 360, // 6.0 秒 (60 FPS * 6s = 360 幀)
+            alpha: 1,
+            onStarDeath() {
+              activeStarsCount--;
+              if (activeStarsCount <= 0 && typeof onLandingComplete === 'function') {
+                onLandingComplete();
+              }
+            }
+          });
+        }
       }
 
       function loop(time) {
         ctx.clearRect(0, 0, width, height);
 
-        // 偵測 9/10 炸彈引信燃燒點之動態螢幕座標
+        // --- 1. 繪製並更新衝擊波 ---
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const sw = shockwaves[i];
+          sw.radius += (sw.maxRadius - sw.radius) * 0.16 + 2;
+          sw.alpha *= 0.88;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = sw.color;
+          ctx.lineWidth = sw.lineWidth * sw.alpha;
+          ctx.shadowColor = sw.color;
+          ctx.shadowBlur = 15;
+          ctx.globalAlpha = sw.alpha;
+          ctx.stroke();
+          ctx.restore();
+
+          if (sw.alpha <= 0.02 || sw.radius >= sw.maxRadius) {
+            shockwaves.splice(i, 1);
+          }
+        }
+
+        // --- 2. 繪製並更新發射火箭 (昇曲導花火玉) ---
+        for (let i = hanabiRockets.length - 1; i >= 0; i--) {
+          const rk = hanabiRockets[i];
+          rk.progress += rk.speed;
+
+          // 緩動向上衝刺
+          const eased = 1 - Math.pow(1 - Math.min(1, rk.progress), 2.2);
+          const curY = rk.startY + (rk.targetY - rk.startY) * eased;
+
+          // 記錄尾跡
+          rk.trail.push({ x: rk.x, y: curY, alpha: 1 });
+          if (rk.trail.length > 12) rk.trail.shift();
+
+          // 繪製昇天金色金粉尾跡
+          ctx.save();
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = '#f59e0b';
+          for (let t = 0; t < rk.trail.length; t++) {
+            const pt = rk.trail[t];
+            const a = (t + 1) / rk.trail.length;
+            ctx.beginPath();
+            ctx.arc(pt.x + (Math.random() * 4 - 2), pt.y, Math.random() * 2 + 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#fde047';
+            ctx.globalAlpha = a;
+            ctx.fill();
+          }
+
+          // 火箭彈頭
+          ctx.beginPath();
+          ctx.arc(rk.x, curY, 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.globalAlpha = 1;
+          ctx.fill();
+          ctx.restore();
+
+          // 抵達高空頂點 -> 轟然爆炸！
+          if (rk.progress >= 1) {
+            detonateJapaneseHanabi(rk.x, rk.targetY, rk.onLandingComplete);
+            hanabiRockets.splice(i, 1);
+          }
+        }
+
+        // --- 3. 繪製並更新日本大型煙花玉星子 (七彩變幻 6 秒 錦冠菊柳) ---
+        for (let i = hanabiStars.length - 1; i >= 0; i--) {
+          const s = hanabiStars[i];
+          s.life++;
+
+          // 記錄拖尾軌跡
+          s.trail.push({ x: s.x, y: s.y });
+          if (s.trail.length > s.trailMax) s.trail.shift();
+
+          // 速度減速與重力自然垂落 (形成錦冠柳華麗流蘇)
+          s.vx *= s.friction;
+          s.vy = s.vy * s.friction + s.gravity;
+          s.x += s.vx;
+          s.y += s.vy;
+
+          // 進度 (0.0 ~ 1.0)
+          const p = s.life / s.maxLife;
+
+          // 🌈 七彩光芒變幻演算法：隨時間推進平滑過渡七段色系
+          const colorCycle = Math.floor((p * 7 + s.colorOffset) % 7);
+          const [curCol, glowCol] = rainbowColorPhases[colorCycle];
+
+          // 落地衰減 (接近 6 秒時或接近螢幕底端時羽化消散)
+          if (p > 0.75) {
+            s.alpha = Math.max(0, (1 - p) / 0.25);
+          }
+          if (height - s.y < 70) {
+            s.alpha = Math.min(s.alpha, Math.max(0, (height - s.y) / 70));
+          }
+
+          if (s.life >= s.maxLife || s.alpha <= 0 || s.y >= height + 15) {
+            s.onStarDeath();
+            hanabiStars.splice(i, 1);
+            continue;
+          }
+
+          // 繪製七彩變幻流星錦冠拖尾
+          ctx.save();
+          ctx.globalAlpha = s.alpha;
+          ctx.strokeStyle = curCol;
+          ctx.shadowColor = glowCol;
+          ctx.shadowBlur = 9;
+          ctx.lineWidth = (s.isPistil ? 1.8 : 2.6) * Math.max(0.4, 1 - p * 0.5);
+          ctx.beginPath();
+          if (s.trail.length > 1) {
+            ctx.moveTo(s.trail[0].x, s.trail[0].y);
+            for (let t = 1; t < s.trail.length; t++) {
+              ctx.lineTo(s.trail[t].x, s.trail[t].y);
+            }
+          }
+          ctx.stroke();
+
+          // 繪製彈頭星子 (若為閃光星則帶有高頻點滅銀光)
+          let starRadius = s.isPistil ? 1.6 : 2.4;
+          if (s.isGlitter) {
+            starRadius = (Math.sin(s.life * 0.5) > 0.2) ? 3.4 : 0.8;
+          }
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, starRadius, 0, Math.PI * 2);
+          ctx.fillStyle = s.isGlitter ? '#ffffff' : curCol;
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // --- 4. 繪製待機時常態引信微星火飄落 ---
         const sparkElem = document.querySelector('.bomb-fuse-spark-flame') || document.querySelector('.bomb-badge-wrapper');
         let isVisible = false;
         let spawnX = 0;
         let spawnY = 0;
 
-        if (sparkElem) {
+        // 僅在炸彈正常顯示 (未爆炸) 時產生引信掉落微星光
+        if (sparkElem && window.bombController && window.bombController.state !== 'exploding' && window.bombController.state !== 'waiting_respawn') {
           const rect = sparkElem.getBoundingClientRect();
           if (rect.width > 0 && rect.bottom > 0 && rect.top < height) {
             isVisible = true;
@@ -5809,33 +6189,33 @@
           }
         }
 
-        // 定時噴發星光星火粒子
-        if (isVisible && time - lastSpawn > 70 && particles.length < maxParticles) {
-          lastSpawn = time;
-          const count = Math.random() < 0.45 ? 2 : 1;
+        // 倒數時星火噴發加速
+        const isUrgentCountdown = window.bombController && window.bombController.state === 'countdown';
+        const spawnInterval = isUrgentCountdown ? 30 : 70;
+
+        if (isVisible && time - lastSparkSpawn > spawnInterval && sparkParticles.length < maxSparks) {
+          lastSparkSpawn = time;
+          const count = isUrgentCountdown ? 3 : (Math.random() < 0.45 ? 2 : 1);
           for (let i = 0; i < count; i++) {
-            particles.push(createParticle(spawnX, spawnY));
+            sparkParticles.push(createIdleSpark(spawnX, spawnY));
           }
         }
 
-        // 更新與渲染飄落粒子，一路墜落至頁尾 (螢幕底端)
-        for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i];
+        for (let i = sparkParticles.length - 1; i >= 0; i--) {
+          const p = sparkParticles[i];
           p.life++;
           p.vy += p.gravity;
           p.vx *= p.drag;
           p.x += p.vx + Math.sin(p.life * p.wobbleSpeed + p.wobbleOffset) * p.wobbleAmp;
           p.y += p.vy;
 
-          // 接近頁尾 (螢幕下方) 時漸漸消散
           const distToBottom = height - p.y;
           if (distToBottom < 90) {
             p.alpha = Math.max(0, distToBottom / 90);
           }
 
-          // 超出頁尾底端或透明度耗盡則回收
           if (p.y >= height + 10 || p.alpha <= 0) {
-            particles.splice(i, 1);
+            sparkParticles.splice(i, 1);
             continue;
           }
 
@@ -5866,6 +6246,9 @@
 
         requestAnimationFrame(loop);
       }
+
+      requestAnimationFrame(loop);
+    }
 
       requestAnimationFrame(loop);
     }
