@@ -1349,10 +1349,11 @@
       };
 
       const handshakeUrls = [];
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '8000' || window.location.port === '')) {
         handshakeUrls.push(`/api/schedule/handshake?tab=${encodeURIComponent(currentTabName)}&year=${selectedYear}&month=${selectedMonth}&${antiCache}`);
       }
       handshakeUrls.push(`./data/schedule_version.json?${antiCache}`);
+      handshakeUrls.push(`./docs/data/schedule_version.json?${antiCache}`);
       handshakeUrls.push(`https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/data/schedule_version.json?${antiCache}`);
 
       for (const url of handshakeUrls) {
@@ -1432,7 +1433,7 @@
       };
 
       const candidates = [];
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '8000' || window.location.port === '')) {
         candidates.push({
           url: `/api/schedule/live?group_id=${encodeURIComponent(currentGroupId)}&tab=${encodeURIComponent(currentTabName)}&year=${selectedYear}&month=${selectedMonth}&${antiCache}`,
           desc: '本地後端 API'
@@ -1441,6 +1442,10 @@
       candidates.push({
         url: `./data/${targetFileName}?${antiCache}`,
         desc: `靜態資料通道 (${targetFileName})`
+      });
+      candidates.push({
+        url: `./docs/data/${targetFileName}?${antiCache}`,
+        desc: `文檔資料通道 (${targetFileName})`
       });
       candidates.push({
         url: `https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/data/${targetFileName}?${antiCache}`,
@@ -5347,12 +5352,20 @@
         } else if (isManualQuery) {
           // 手動直連查詢
           const ok = await triggerCloudDataAlign(false);
+          if (qBtn) {
+            qBtn.innerHTML = '<i class="fa-solid fa-rotate text-xs"></i><span>查詢</span>';
+            qBtn.disabled = false;
+          }
           if (ok) {
-            if (qBtn) {
-              qBtn.innerHTML = '<i class="fa-solid fa-rotate text-xs"></i><span>查詢</span>';
-              qBtn.disabled = false;
-            }
             return;
+          }
+          // 若網路對齊未回傳，以內嵌同步快照渲染保底，絕不留白
+          if (typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined') {
+            const engData = EMBEDDED_SCHEDULE_DATA_9['4.三總工務所'];
+            const icuData = EMBEDDED_SCHEDULE_DATA_9['5.三總重症大樓'];
+            if (engData || icuData) {
+              renderFullScheduleTable(engData, icuData);
+            }
           }
         }
       }
@@ -5893,21 +5906,34 @@
       const maxSparks = 65;
       let lastSparkSpawn = 0;
 
-      // 🎆 日本大型煙花玉發射火箭與花火星子隊列
+      // 🎆 日本大型煙花玉發射火箭、星子、瞬態光暈與粒子隊列
       const hanabiRockets = [];
       const hanabiStars = [];
       const shockwaves = [];
+      const ambientFlashes = [];
+      const hanabiEmbers = [];
 
-      // 日本花火七彩星色盤 (白金 -> 琥珀金 -> 艷紅 -> 桃紫 -> 寶藍 -> 湖青 -> 翡翠綠)
+      // 日本花火七彩星色盤 (白金 -> 錦冠金 -> 烈焰真紅 -> 櫻花洋紅 -> 桔梗紫羅蘭 -> 電光天藍 -> 若竹翡翠綠)
       const rainbowColorPhases = [
         ['#ffffff', '#fef08a'], // 0. 皓白初光
         ['#fde047', '#f59e0b'], // 1. 錦冠黃金
-        ['#ef4444', '#f43f5e'], // 2. 紅蓮真紅
-        ['#ec4899', '#d946ef'], // 3. 櫻花洋紅
-        ['#8b5cf6', '#6366f1'], // 4. 桔梗紫羅蘭
-        ['#06b6d4', '#0ea5e9'], // 5. 露草天藍
+        ['#ff2a5f', '#f43f5e'], // 2. 烈焰真紅
+        ['#f43f5e', '#d946ef'], // 3. 櫻花洋紅
+        ['#a855f7', '#6366f1'], // 4. 桔梗紫羅蘭
+        ['#00f2fe', '#0ea5e9'], // 5. 電光天藍
         ['#10b981', '#34d399']  // 6. 若竹翡翠綠
       ];
+
+      // 觸發天際瞬態大光暈 (Ambient Bloom Flash)
+      function triggerAmbientBloom(x, y, maxRadius) {
+        ambientFlashes.push({
+          x: x,
+          y: y,
+          radius: 15,
+          maxRadius: maxRadius || 520,
+          alpha: 1.0
+        });
+      }
 
       // 繪製 4 芒星光
       function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, color, alpha) {
@@ -5965,17 +5991,18 @@
       // 🎆 觸發日本大型煙花玉：向上射出花火玉並於高空炸開
       window.launchJapaneseHanabi = function(originX, originY, onLandingComplete) {
         // 向上發射高度：畫面高空 18% ~ 26% 處
-        const targetApexY = Math.max(90, Math.min(originY - 280, height * 0.22));
+        const targetApexY = Math.max(80, Math.min(originY - 300, height * 0.22));
 
-        // 地面衝擊波
+        // 地面衝擊波與發射瞬態光暈
+        triggerAmbientBloom(originX, originY, 130);
         shockwaves.push({
           x: originX,
           y: originY,
           radius: 8,
-          maxRadius: 65,
+          maxRadius: 75,
           color: '#f59e0b',
           alpha: 1,
-          lineWidth: 4
+          lineWidth: 5
         });
 
         hanabiRockets.push({
@@ -5985,50 +6012,92 @@
           startY: originY,
           targetY: targetApexY,
           progress: 0,
-          speed: 0.032, // 約 0.5 秒抵達高空頂點
+          speed: 0.034, // 約 0.48 秒抵達高空頂點
           trail: [],
           onLandingComplete: onLandingComplete
         });
       };
 
-      // 💥 高空綻放：日本傳統割物菊・芯入錦冠柳花火玉 (維持 6 秒，七彩變幻)
+      // 💥 高空綻放：日本傳統割物菊・芯入錦冠柳花火玉 (維持 6 秒，七彩變幻，粒子特效＋超炫光暈)
       function detonateJapaneseHanabi(apexX, apexY, onLandingComplete) {
-        // 高空大光環衝擊波
+        // 🌟 1. 天際瞬態震撼大光暈 (Ambient Bloom Flash)
+        triggerAmbientBloom(apexX, apexY, Math.min(width, height) * 0.78);
+
+        // 🌟 2. 雙重高空光環衝擊波
         shockwaves.push({
           x: apexX,
           y: apexY,
-          radius: 10,
-          maxRadius: 180,
+          radius: 12,
+          maxRadius: 280,
           color: '#fef08a',
           alpha: 1,
-          lineWidth: 6
+          lineWidth: 8
+        });
+        shockwaves.push({
+          x: apexX,
+          y: apexY,
+          radius: 6,
+          maxRadius: 380,
+          color: '#ec4899',
+          alpha: 0.85,
+          lineWidth: 5
         });
 
-        // 煙花玉總星數：約 240 顆 (外層親星 + 內層芯星 + 銀蜂點滅閃星)
-        const totalStars = 240;
+        // 🌟 3. 日本傳統多重芯割物大型煙花玉 (320 顆真圓分層星子)
+        const totalStars = 320;
         let activeStarsCount = totalStars;
 
         for (let i = 0; i < totalStars; i++) {
-          const isPistil = (i % 4 === 0); // 內層芯星
-          const isGlitter = (i % 6 === 0); // 閃爍點滅星
+          let tier = 'outer';
+          if (i < 50) tier = 'core';              // 內芯金蕊
+          else if (i < 130) tier = 'middle';      // 中層牡丹
+          else if (i % 5 === 0) tier = 'glitter'; // 千輪銀蜂閃光星
+          else tier = 'outer';                   // 外層錦冠菊花瓣
 
-          // 完美真圓球型 360 度散射角
-          const angle = (Math.PI * 2 * i) / totalStars + (Math.random() * 0.12 - 0.06);
-          // 速度分層：外層菊花瓣速度高，內層芯花速度適中
-          const baseSpeed = isPistil ? (Math.random() * 2.2 + 2.8) : (Math.random() * 3.6 + 5.6);
+          // 3D 斐波那契球面投射分佈 (真圓球體爆裂)
+          const phi = Math.acos(1 - 2 * (i + 0.5) / totalStars);
+          const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+          const angle = Math.atan2(Math.sin(phi) * Math.sin(theta), Math.cos(phi)) + (Math.random() * 0.08 - 0.04);
+          const rSpread = Math.sin(phi) * 0.35 + 0.65;
+
+          let baseSpeed;
+          let friction = 0.978;
+          let gravity = 0.038;
+          let trailMax = 12;
+
+          if (tier === 'core') {
+            baseSpeed = (Math.random() * 2.2 + 2.4) * rSpread;
+            trailMax = 6;
+            friction = 0.965;
+            gravity = 0.026;
+          } else if (tier === 'middle') {
+            baseSpeed = (Math.random() * 3.2 + 4.4) * rSpread;
+            trailMax = 9;
+            friction = 0.972;
+            gravity = 0.033;
+          } else if (tier === 'glitter') {
+            baseSpeed = (Math.random() * 4.2 + 5.6) * rSpread;
+            trailMax = 7;
+            friction = 0.974;
+            gravity = 0.040;
+          } else {
+            baseSpeed = (Math.random() * 4.8 + 7.2) * rSpread;
+            trailMax = 14;
+            friction = 0.980;
+            gravity = 0.042;
+          }
 
           hanabiStars.push({
             x: apexX,
             y: apexY,
             vx: Math.cos(angle) * baseSpeed,
             vy: Math.sin(angle) * baseSpeed,
-            friction: 0.976, // 緩慢減速擴散
-            gravity: 0.038,  // 錦冠柳重力下墜感
+            friction: friction,
+            gravity: gravity,
             trail: [],
-            trailMax: isPistil ? 5 : 8,
+            trailMax: trailMax,
             colorOffset: Math.floor(Math.random() * 7),
-            isPistil: isPistil,
-            isGlitter: isGlitter,
+            tier: tier,
             life: 0,
             maxLife: 360, // 6.0 秒 (60 FPS * 6s = 360 幀)
             alpha: 1,
@@ -6045,22 +6114,58 @@
       function loop(time) {
         ctx.clearRect(0, 0, width, height);
 
-        // --- 1. 繪製並更新衝擊波 ---
+        // 🌟 切換為光學加色混合模式 (Additive Blending) - 營造絢麗高飽和霓虹光暈 (Bloom Effect)
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        // --- 0. 繪製並更新天際瞬態大光暈 (Ambient Bloom & Flash) ---
+        for (let i = ambientFlashes.length - 1; i >= 0; i--) {
+          const fl = ambientFlashes[i];
+          fl.radius += (fl.maxRadius - fl.radius) * 0.16 + 4;
+          fl.alpha *= 0.88;
+          if (fl.alpha <= 0.01 || fl.radius >= fl.maxRadius) {
+            ambientFlashes.splice(i, 1);
+            continue;
+          }
+          const grad = ctx.createRadialGradient(fl.x, fl.y, 0, fl.x, fl.y, fl.radius);
+          grad.addColorStop(0, `rgba(255, 255, 255, ${0.95 * fl.alpha})`);
+          grad.addColorStop(0.2, `rgba(254, 240, 138, ${0.8 * fl.alpha})`);
+          grad.addColorStop(0.5, `rgba(244, 63, 94, ${0.45 * fl.alpha})`);
+          grad.addColorStop(0.8, `rgba(168, 85, 247, ${0.2 * fl.alpha})`);
+          grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(fl.x, fl.y, fl.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // --- 1. 繪製並更新衝擊波光環 (Shockwave Halos) ---
         for (let i = shockwaves.length - 1; i >= 0; i--) {
           const sw = shockwaves[i];
-          sw.radius += (sw.maxRadius - sw.radius) * 0.16 + 2;
-          sw.alpha *= 0.88;
+          sw.radius += (sw.maxRadius - sw.radius) * 0.16 + 2.5;
+          sw.alpha *= 0.89;
 
-          ctx.save();
+          // 外光環
           ctx.beginPath();
           ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
           ctx.strokeStyle = sw.color;
           ctx.lineWidth = sw.lineWidth * sw.alpha;
           ctx.shadowColor = sw.color;
-          ctx.shadowBlur = 15;
+          ctx.shadowBlur = 24;
           ctx.globalAlpha = sw.alpha;
           ctx.stroke();
-          ctx.restore();
+
+          // 內光環
+          if (sw.radius > 20) {
+            ctx.beginPath();
+            ctx.arc(sw.x, sw.y, sw.radius * 0.85, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(1, sw.lineWidth * 0.5 * sw.alpha);
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#ffffff';
+            ctx.globalAlpha = sw.alpha * 0.8;
+            ctx.stroke();
+          }
 
           if (sw.alpha <= 0.02 || sw.radius >= sw.maxRadius) {
             shockwaves.splice(i, 1);
@@ -6072,66 +6177,112 @@
           const rk = hanabiRockets[i];
           rk.progress += rk.speed;
 
-          // 緩動向上衝刺
           const eased = 1 - Math.pow(1 - Math.min(1, rk.progress), 2.2);
           const curY = rk.startY + (rk.targetY - rk.startY) * eased;
 
-          // 記錄尾跡
           rk.trail.push({ x: rk.x, y: curY, alpha: 1 });
-          if (rk.trail.length > 12) rk.trail.shift();
+          if (rk.trail.length > 15) rk.trail.shift();
 
-          // 繪製昇天金色金粉尾跡
-          ctx.save();
-          ctx.shadowBlur = 12;
+          // 金色噴射粒子尾跡
+          ctx.shadowBlur = 18;
           ctx.shadowColor = '#f59e0b';
           for (let t = 0; t < rk.trail.length; t++) {
             const pt = rk.trail[t];
             const a = (t + 1) / rk.trail.length;
             ctx.beginPath();
-            ctx.arc(pt.x + (Math.random() * 4 - 2), pt.y, Math.random() * 2 + 1.5, 0, Math.PI * 2);
+            ctx.arc(pt.x + (Math.random() * 6 - 3), pt.y + (Math.random() * 4), Math.random() * 2.5 + 1.5, 0, Math.PI * 2);
             ctx.fillStyle = '#fde047';
             ctx.globalAlpha = a;
             ctx.fill();
           }
 
-          // 火箭彈頭
+          // 熾白核心光暈彈頭
           ctx.beginPath();
-          ctx.arc(rk.x, curY, 4.5, 0, Math.PI * 2);
+          ctx.arc(rk.x, curY, 6.5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(254, 240, 138, 0.4)';
+          ctx.shadowBlur = 24;
+          ctx.shadowColor = '#fde047';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(rk.x, curY, 4.2, 0, Math.PI * 2);
           ctx.fillStyle = '#ffffff';
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = '#ffffff';
           ctx.globalAlpha = 1;
           ctx.fill();
-          ctx.restore();
 
-          // 抵達高空頂點 -> 轟然爆炸！
           if (rk.progress >= 1) {
             detonateJapaneseHanabi(rk.x, rk.targetY, rk.onLandingComplete);
             hanabiRockets.splice(i, 1);
           }
         }
 
-        // --- 3. 繪製並更新日本大型煙花玉星子 (七彩變幻 6 秒 錦冠菊柳) ---
+        // --- 3. 繪製並更新星子拖曳微型火花流粒子 (hanabiEmbers 微塵粒子特效) ---
+        for (let i = hanabiEmbers.length - 1; i >= 0; i--) {
+          const eb = hanabiEmbers[i];
+          eb.life++;
+          eb.vx *= eb.drag;
+          eb.vy = eb.vy * eb.drag + eb.gravity;
+          eb.x += eb.vx + (Math.random() - 0.5) * 0.4;
+          eb.y += eb.vy;
+
+          const prog = eb.life / eb.maxLife;
+          const a = (1 - prog) * eb.baseAlpha;
+
+          if (eb.life >= eb.maxLife || a <= 0 || eb.y >= height + 10) {
+            hanabiEmbers.splice(i, 1);
+            continue;
+          }
+
+          // 微火花閃爍光暈
+          ctx.beginPath();
+          ctx.arc(eb.x, eb.y, eb.size * (1 - prog * 0.4), 0, Math.PI * 2);
+          ctx.fillStyle = eb.color;
+          ctx.shadowColor = eb.glow;
+          ctx.shadowBlur = 10;
+          ctx.globalAlpha = a;
+          ctx.fill();
+        }
+
+        // --- 4. 繪製並更新日本大型煙花玉星子 (七彩變幻 6 秒 錦冠菊柳 粒子與光暈) ---
         for (let i = hanabiStars.length - 1; i >= 0; i--) {
           const s = hanabiStars[i];
           s.life++;
 
-          // 記錄拖尾軌跡
           s.trail.push({ x: s.x, y: s.y });
           if (s.trail.length > s.trailMax) s.trail.shift();
 
-          // 速度減速與重力自然垂落 (形成錦冠柳華麗流蘇)
           s.vx *= s.friction;
           s.vy = s.vy * s.friction + s.gravity;
           s.x += s.vx;
           s.y += s.vy;
 
-          // 進度 (0.0 ~ 1.0)
           const p = s.life / s.maxLife;
 
-          // 🌈 七彩光芒變幻演算法：隨時間推進平滑過渡七段色系
+          // 🌈 七彩光芒變幻演算法
           const colorCycle = Math.floor((p * 7 + s.colorOffset) % 7);
           const [curCol, glowCol] = rainbowColorPhases[colorCycle];
 
-          // 落地衰減 (接近 6 秒時或接近螢幕底端時羽化消散)
+          // 產生微型散落火花流 (粒子特效)
+          if (p < 0.85 && Math.random() < 0.26 && hanabiEmbers.length < 450) {
+            hanabiEmbers.push({
+              x: s.x,
+              y: s.y,
+              vx: s.vx * 0.18 + (Math.random() - 0.5) * 0.6,
+              vy: s.vy * 0.18 + (Math.random() - 0.5) * 0.6,
+              gravity: 0.024,
+              drag: 0.965,
+              color: curCol,
+              glow: glowCol,
+              size: Math.random() * 2.2 + 0.8,
+              baseAlpha: s.alpha * 0.85,
+              life: 0,
+              maxLife: Math.floor(Math.random() * 28 + 14)
+            });
+          }
+
+          // 落地羽化消散
           if (p > 0.75) {
             s.alpha = Math.max(0, (1 - p) / 0.25);
           }
@@ -6145,13 +6296,12 @@
             continue;
           }
 
-          // 繪製七彩變幻流星錦冠拖尾
-          ctx.save();
+          // 繪製光暈流星拖尾 (錦冠柳流蘇)
           ctx.globalAlpha = s.alpha;
           ctx.strokeStyle = curCol;
           ctx.shadowColor = glowCol;
-          ctx.shadowBlur = 9;
-          ctx.lineWidth = (s.isPistil ? 1.8 : 2.6) * Math.max(0.4, 1 - p * 0.5);
+          ctx.shadowBlur = 18;
+          ctx.lineWidth = (s.tier === 'core' ? 2.0 : (s.tier === 'outer' ? 3.4 : 2.6)) * Math.max(0.4, 1 - p * 0.5);
           ctx.beginPath();
           if (s.trail.length > 1) {
             ctx.moveTo(s.trail[0].x, s.trail[0].y);
@@ -6161,17 +6311,32 @@
           }
           ctx.stroke();
 
-          // 繪製彈頭星子 (若為閃光星則帶有高頻點滅銀光)
-          let starRadius = s.isPistil ? 1.6 : 2.4;
-          if (s.isGlitter) {
-            starRadius = (Math.sin(s.life * 0.5) > 0.2) ? 3.4 : 0.8;
+          // 繪製星子多重光暈 (外圈柔和光暈 + 內圈高亮星核)
+          let starRadius = s.tier === 'core' ? 1.8 : (s.tier === 'outer' ? 2.8 : 2.2);
+          if (s.tier === 'glitter') {
+            starRadius = (Math.sin(s.life * 0.55) > 0.15) ? 3.8 : 0.9;
           }
+
+          // 光暈層
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, starRadius * 2.4, 0, Math.PI * 2);
+          ctx.fillStyle = glowCol;
+          ctx.shadowColor = glowCol;
+          ctx.shadowBlur = 24;
+          ctx.globalAlpha = s.alpha * 0.45;
+          ctx.fill();
+
+          // 高亮核心星核
           ctx.beginPath();
           ctx.arc(s.x, s.y, starRadius, 0, Math.PI * 2);
-          ctx.fillStyle = s.isGlitter ? '#ffffff' : curCol;
+          ctx.fillStyle = (s.tier === 'glitter' || Math.sin(s.life * 0.4) > 0.3) ? '#ffffff' : curCol;
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 12;
+          ctx.globalAlpha = s.alpha;
           ctx.fill();
-          ctx.restore();
         }
+
+        ctx.restore(); // 恢復標準圖層模式
 
         // --- 4. 繪製待機時常態引信微星火飄落 ---
         const sparkElem = document.querySelector('.bomb-fuse-spark-flame') || document.querySelector('.bomb-badge-wrapper');
@@ -6246,9 +6411,6 @@
 
         requestAnimationFrame(loop);
       }
-
-      requestAnimationFrame(loop);
-    }
 
       requestAnimationFrame(loop);
     }
