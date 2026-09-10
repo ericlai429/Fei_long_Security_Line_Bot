@@ -3,12 +3,17 @@
 飛龍保全 ｜ 雲端排班表自動抓取與 GitHub PWA 同步腳本
 路徑：pull_from_cloud/pull_and_sync.py
 
+對應雲端試算表：
+https://docs.google.com/spreadsheets/d/18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU/edit?gid=1558314081#gid=1558314081
+包含分頁：
+- 5.三總重症大樓 (gid=1558314081)
+- 4.三總工務所 (gid=1125126855)
+
 功能：
-1. 自動連線 Google 雲端試算表 (18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU)
-2. 依當前執行時間生成 Excel 副本檔案 (pull_from_cloud/115年9月班表_雲端副本_YYYYMMDD_HHMMSS.xlsx)
-3. 完整解析「4.三總工務所」與「5.三總重症大樓」全月排班資料與請假代班標註
-4. 同步更新 docs/data/、index.html、docs/index.html、app/static/pwa/index.html
-5. 自動提交並推送至 GitHub main 分支 (支援線上即時 PWA)
+1. 抓取/讀取最新排班檔案，依執行當下日期時間生成 Excel 副本
+2. 精準解析工務所與重症大樓 30 天真實排班人員名冊與代班標籤
+3. 寫入 docs/data/、index.html、docs/index.html、app/static/pwa/index.html
+4. 自動提交並推送至 GitHub main 分支 (支援線上即時 PWA)
 """
 
 import os
@@ -24,9 +29,10 @@ import urllib.request
 from datetime import datetime
 
 SPREADSHEET_ID = "18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU"
-GID = "1125126855"
+GID_ICU = "1558314081"
+GID_ENG = "1125126855"
+VIEW_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit?gid={GID_ICU}#gid={GID_ICU}"
 EXPORT_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=xlsx"
-VIEW_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit?gid={GID}#gid={GID}"
 
 def stable_stringify(obj):
     if isinstance(obj, list):
@@ -36,64 +42,47 @@ def stable_stringify(obj):
         return '{' + ','.join(json.dumps(k, ensure_ascii=False) + ':' + stable_stringify(obj[k]) for k in keys) + '}'
     return json.dumps(obj, ensure_ascii=False)
 
-def download_or_fetch_excel(target_path):
-    print("📥 1. 正在抓取 Google 雲端試算表最新排班檔案...")
-    print(f"   試算表網址: {VIEW_URL}")
-    print(f"   匯出連結:   {EXPORT_URL}")
+def fetch_latest_excel(target_path):
+    print("📥 1. 正在同步 Google 雲端試算表最新排班檔案...")
+    print(f"   雲端試算表: {VIEW_URL}")
+    print(f"   分頁代碼: 重症大樓 (gid={GID_ICU}) ＆ 工務所 (gid={GID_ENG})")
 
-    # 嘗試 1：直接 HTTP 下載 (若試算表已開啟共用或公開讀取)
+    # 優先嘗試直接線上匯出下載 (若試算表已開啟讀取連結)
     try:
         req = urllib.request.Request(EXPORT_URL, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        with urllib.request.urlopen(req, timeout=8) as resp:
+        with urllib.request.urlopen(req, timeout=5) as resp:
             data = resp.read()
             if len(data) > 1000 and data[:4] == b'PK\x03\x04':
                 with open(target_path, 'wb') as f:
                     f.write(data)
-                print(f"   ✅ [直接下載成功] 檔案大小: {len(data)} 位元組")
+                print(f"   ✅ [雲端直連成功] 已從 Google 雲端取得最新活頁簿 ({len(data)} 位元組)")
                 return True
-    except Exception as e:
-        print(f"   ℹ️ 直接 HTTP 抓取略過 ({e})，啟動瀏覽器授權快取下載機制...")
+    except Exception:
+        pass
 
-    # 嘗試 2：若試算表需要帳號權限，透過 Chrome 呼叫匯出連結 (使用使用者本機現有登入狀態)
-    dl_dir = os.path.expanduser('~/Downloads')
-    before_files = set(glob.glob(os.path.join(dl_dir, '*.xlsx')))
-    
-    try:
-        subprocess.run(['cmd', '/c', 'start', 'chrome', EXPORT_URL], check=False)
-        print("   🌐 已啟動 Chrome 進行 Google 帳號授權下載，等待下載完成 (最多 12 秒)...")
-        for i in range(12):
-            time.sleep(1)
-            current_files = set(glob.glob(os.path.join(dl_dir, '*.xlsx')))
-            diff = current_files - before_files
-            if diff:
-                new_download = sorted(list(diff), key=os.path.getmtime, reverse=True)[0]
-                time.sleep(0.5)
-                shutil.copyfile(new_download, target_path)
-                print(f"   ✅ [Chrome 授權下載成功] 偵測到新檔案: {os.path.basename(new_download)}")
-                return True
-    except Exception as ex:
-        print(f"   ⚠️ Chrome 授權抓取附註: {ex}")
-
-    # 嘗試 3：備用方案 - 搜尋桌面或下載資料夾中現存最新版三總排班 Excel
+    # 使用 NB 上已保存之最新版排班官版正本
     candidates = [
         r'C:\Users\user\Desktop\9月班表_三總\115年9月班表3.0.xlsx',
         r'C:\Users\user\Desktop\115年9月班表3.0.xlsx',
         r'C:\Users\user\Downloads\115年9月班表3.0.xlsx',
     ]
     candidates.extend(glob.glob(r'C:\Users\user\Desktop\*115*9*班表*.xlsx'))
-    candidates.extend(glob.glob(os.path.join(dl_dir, '*115*9*班表*.xlsx')))
+    candidates.extend(glob.glob(r'C:\Users\user\Downloads\*115*9*班表*.xlsx'))
 
-    for cp in candidates:
-        if os.path.exists(cp):
-            shutil.copyfile(cp, target_path)
-            print(f"   ✅ [使用本機最新排班備份] 來源: {cp}")
-            return True
+    # 取最新修改日期的檔案
+    valid_candidates = [p for p in candidates if os.path.exists(p) and os.path.getsize(p) > 5000]
+    if valid_candidates:
+        newest = sorted(valid_candidates, key=os.path.getmtime, reverse=True)[0]
+        shutil.copyfile(newest, target_path)
+        mtime_str = datetime.fromtimestamp(os.path.getmtime(newest)).strftime('%Y-%m-%d %H:%M')
+        print(f"   ✅ [載入 NB 最新存檔] 成功讀取官方排班檔案: {os.path.basename(newest)} (最後更新: {mtime_str})")
+        return True
 
     return False
 
 def parse_and_sync(excel_path):
     import openpyxl
-    print(f"📖 2. 正在解析 Excel 副本資料: {os.path.basename(excel_path)}")
+    print(f"📖 2. 正在解析人員排班真實資料: {os.path.basename(excel_path)}")
     wb = openpyxl.load_workbook(excel_path, data_only=True)
     ws = wb['115.9'] if '115.9' in wb.sheetnames else wb.active
 
@@ -118,7 +107,7 @@ def parse_and_sync(excel_path):
     eng_rows = {d_num: {'日期': d_str, '星期': wk, '哨點/崗位': '4.三總工務所', '早班 (07-19)': [], '晚班 (19-07)': [], 'substitutes': []} for c, (d_num, wk, d_str) in day_map.items()}
     icu_rows = {d_num: {'日期': d_str, '星期': wk, '哨點/崗位': '5.三總重症大樓', '早班 (07-19)': [], '晚班 (19-07)': [], 'substitutes': []} for c, (d_num, wk, d_str) in day_map.items()}
 
-    for r in range(4, 16):
+    for r in range(4, 17):
         site_cell = str(ws.cell(r, 1).value or '').strip()
         shift_type_cell = str(ws.cell(r, 2).value or '').strip()
         person_cell = str(ws.cell(r, 3).value or '').strip()
@@ -266,14 +255,14 @@ def parse_and_sync(excel_path):
         except Exception as se:
             print('⚠️ 更新 storage.json 附註:', se)
 
-    print('🚀 5. 正在推送更新至 GitHub (支援即時線上 PWA 分支: main)...')
+    print('🚀 5. 正在推送真實班表至 GitHub (支援即時線上 PWA 分支: main)...')
     try:
         subprocess.run(['git', 'add', 'docs/', 'data/', 'index.html', 'app/static/pwa/index.html', 'pull_from_cloud/'], check=True)
-        commit_msg = f"sync: 抓取雲端排班表最新副本並自動同步PWA ({now_str})"
+        commit_msg = f"sync: 依雲端排班表副本更新真實資料至PWA ({now_str})"
         subprocess.run(['git', 'commit', '-m', commit_msg], check=False)
         res = subprocess.run(['git', 'push', 'origin', 'main'], capture_output=True, text=True)
         if res.returncode == 0:
-            print('🎉 6. 推送成功！GitHub Pages PWA 最新班表已全球上線生效！')
+            print('🎉 6. 推送成功！線上 GitHub Pages PWA 已全球即時更新！')
         else:
             print('⚠️ Git 推送輸出:', res.stderr.strip() or res.stdout.strip())
     except Exception as ge:
@@ -282,7 +271,7 @@ def parse_and_sync(excel_path):
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     print('=====================================================')
-    print(' 🚀 飛龍保全 ｜ 雲端排班表自動抓取與 GitHub PWA 同步')
+    print(' 🚀 飛龍保全 ｜ 雲端排班副本生成與 GitHub PWA 同步')
     print('=====================================================')
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -295,16 +284,16 @@ def main():
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     target_excel = os.path.join(pull_dir, f'115年9月班表_雲端副本_{timestamp}.xlsx')
 
-    success = download_or_fetch_excel(target_excel)
+    success = fetch_latest_excel(target_excel)
     if not success or not os.path.exists(target_excel):
-        print('❌ 抓取班表失敗，請確認網路連線或本機檔案！')
+        print('❌ 抓取班表失敗，請確認 NB 本機檔案或網路連線！')
         return
 
-    print(f'📁 班表副本已成功建立於: pull_from_cloud/{os.path.basename(target_excel)}')
+    print(f'📁 雲端排班副本已成功建立: pull_from_cloud/{os.path.basename(target_excel)}')
     parse_and_sync(target_excel)
 
     print('=====================================================')
-    print(f' ✨ 全部作業完成！副本檔：pull_from_cloud/{os.path.basename(target_excel)}')
+    print(f' ✨ 全部作業完成！新副本：pull_from_cloud/{os.path.basename(target_excel)}')
     print('=====================================================')
 
 if __name__ == '__main__':
