@@ -5857,6 +5857,30 @@
 
     // 💣 炸彈引信星光飄落粒子 ＆ 🎆 日本大型煙花玉(七彩變幻6秒) ＆ 倒數重生引擎
     function initBombSparksEngine() {
+      // 🌌 煙火爆炸專屬深邃夜空黑幕 (位於網頁所有元素之上、煙火畫布之下)
+      let skyBackdrop = document.getElementById('hanabiSkyBackdrop');
+      if (!skyBackdrop) {
+        skyBackdrop = document.createElement('div');
+        skyBackdrop.id = 'hanabiSkyBackdrop';
+        skyBackdrop.style.cssText = 'position: fixed; top: -50px; bottom: -50px; left: -50px; right: -50px; pointer-events: none; z-index: 9995; background-color: #000000; opacity: 0; will-change: opacity;';
+        document.body.appendChild(skyBackdrop);
+      }
+
+      // 🌌 控制背景瞬間調暗 80% ＆ 火星落地後逐漸變回原樣
+      window.setHanabiSkyDimming = function(dimmed) {
+        const bg = document.getElementById('hanabiSkyBackdrop');
+        if (!bg) return;
+        if (dimmed) {
+          // 💥 瞬間調暗 80% (60ms 極速切換，電影感黑幕爆破衝擊)
+          bg.style.transition = 'opacity 0.06s ease-out';
+          bg.style.opacity = '0.80';
+        } else {
+          // 🌟 火星落地：逐漸變回原樣 (2.2 秒平滑溫柔淡出復原)
+          bg.style.transition = 'opacity 2.2s cubic-bezier(0.25, 1, 0.5, 1)';
+          bg.style.opacity = '0';
+        }
+      };
+
       let canvas = document.getElementById('bombSparksCanvas');
       if (!canvas) {
         canvas = document.createElement('canvas');
@@ -5957,6 +5981,7 @@
         },
 
         respawn() {
+          if (typeof window.setHanabiSkyDimming === 'function') window.setHanabiSkyDimming(false);
           const wrapper = document.querySelector('.bomb-badge-wrapper');
           if (wrapper) {
             const wobbleEl = wrapper.querySelector('.bomb-wobble-bounce');
@@ -6320,6 +6345,23 @@ const USAGI_PALETTE = ["#f59e0b", "#fde047", "#fef9c3", "#ffffff", "#facc15", "#
 
       // 💥 高空綻放：日本傳統割物菊 ＆ 烏薩奇型物花火 (由數百個金粉星光點組成，非純圖片)
       function detonateJapaneseHanabi(apexX, apexY, onLandingComplete) {
+        // 🌌 煙火爆炸瞬間：背景瞬間調暗 80%！
+        if (typeof window.setHanabiSkyDimming === 'function') window.setHanabiSkyDimming(true);
+
+        let landingHandled = false;
+        const triggerLandingOnce = () => {
+          if (landingHandled) return;
+          landingHandled = true;
+          // 🌟 煙火火星落地：背景才逐漸變回原樣！
+          if (typeof window.setHanabiSkyDimming === 'function') window.setHanabiSkyDimming(false);
+          if (typeof onLandingComplete === 'function') {
+            onLandingComplete();
+          }
+        };
+
+        // 🛡️ 安全保護：最遲 7.2 秒內必會平順觸發落地淡出
+        const safetyTimer = setTimeout(triggerLandingOnce, 7200);
+
         // 🐰 1. 引爆並綻放「烏薩奇型物花火」(由數百顆金粉星光點組成，非純圖片)
         spawnUsagiKatamonoHanabi(apexX, apexY);
         // 📢 播放烏薩奇招牌「呀哈～！」原聲尖叫
@@ -6354,7 +6396,7 @@ const USAGI_PALETTE = ["#f59e0b", "#fde047", "#fef9c3", "#ffffff", "#facc15", "#
           lineWidth: 3
         });
 
-        // 🌟 6. 背景割物菊花瓣 160 顆 (順暢 60 FPS)
+        // 🌟 6. 背景割物菊花瓣 320 顆 (錦冠菊柳流金火雨)
         const totalStars = 320;
         let activeStarsCount = totalStars;
 
@@ -6372,29 +6414,29 @@ const USAGI_PALETTE = ["#f59e0b", "#fde047", "#fef9c3", "#ffffff", "#facc15", "#
 
           let baseSpeed;
           let friction = 0.978;
-          let gravity = 0.038;
+          let gravity = 0.065;
           let trailMax = 10;
 
           if (tier === 'core') {
             baseSpeed = (Math.random() * 1.5 + 0.25) * rSpread;
             trailMax = 6;
-            friction = 0.958;
-            gravity = 0.016;
+            friction = 0.965;
+            gravity = 0.038;
           } else if (tier === 'middle') {
             baseSpeed = (Math.random() * 2.2 + 2.2) * rSpread;
             trailMax = 8;
-            friction = 0.971;
-            gravity = 0.030;
+            friction = 0.972;
+            gravity = 0.052;
           } else if (tier === 'glitter') {
             baseSpeed = (Math.random() * 3.2 + 3.2) * rSpread;
             trailMax = 6;
-            friction = 0.974;
-            gravity = 0.038;
+            friction = 0.975;
+            gravity = 0.062;
           } else {
             baseSpeed = (Math.random() * 3.8 + 5.2) * rSpread;
             trailMax = 11;
-            friction = 0.980;
-            gravity = 0.042;
+            friction = 0.978;
+            gravity = 0.072;
           }
 
           hanabiStars.push({
@@ -6409,12 +6451,13 @@ const USAGI_PALETTE = ["#f59e0b", "#fde047", "#fef9c3", "#ffffff", "#facc15", "#
             colorOffset: Math.floor(Math.random() * 7),
             tier: tier,
             life: 0,
-            maxLife: 360,
+            maxLife: Math.floor(Math.random() * 30 + 175), // 30 FPS 下約 5.8 ~ 6.8 秒火星持續飄灑落地
             alpha: 1,
             onStarDeath() {
               activeStarsCount--;
-              if (activeStarsCount <= 0 && typeof onLandingComplete === 'function') {
-                onLandingComplete();
+              if (activeStarsCount <= 0) {
+                clearTimeout(safetyTimer);
+                triggerLandingOnce();
               }
             }
           });
