@@ -1,0 +1,56 @@
+[
+  {
+    "id": "usagi_screaming",
+    "name": "烏薩奇高分貝狂躁尖叫 (The Screaming of Usagi)",
+    "page": "https://tuna.voicemod.net/sound/e990d66a-5706-437e-987a-4ec628962bce",
+    "desc": "烏薩奇最招牌的失控抓狂高分貝尖叫，魔性洗腦超震撼！",
+    "file": "sounds/usagi_screaming.mp3",
+    "url": "https://us-tuna-sounds-files.voicemod.net/e990d66a-5706-437e-987a-4ec628962bce-1722445031223.mp3",
+    "size": 13824
+  },
+  {
+    "id": "usagi_yahaa",
+    "name": "烏薩奇招牌「呀哈！」(YAHAAA!!)",
+    "page": "https://tuna.voicemod.net/sound/c225f5b3-575a-41fd-9a84-c6b302b5fcd8",
+    "desc": "最經典元祖登場歡呼「呀哈～！」，穿透力十足，元氣爆棚！",
+    "file": "sounds/usagi_yahaa.mp3",
+    "url": "https://us-tuna-sounds-files.voicemod.net/c225f5b3-575a-41fd-9a84-c6b302b5fcd8-1740713393441.mp3",
+    "size": 29184
+  },
+  {
+    "id": "usagi_masterpiece",
+    "name": "烏薩奇名台詞連發 (Usagi Masterpiece)",
+    "page": "https://tuna.voicemod.net/sound/300087a5-5549-402e-b490-dbbcf0dd4c32",
+    "desc": "集合「唔啦！呀哈！嚕嚕嚕」多段式連擊，招牌情緒全收錄！",
+    "file": "sounds/usagi_masterpiece.mp3",
+    "url": "https://us-tuna-sounds-files.voicemod.net/300087a5-5549-402e-b490-dbbcf0dd4c32-1746313679824.mp3",
+    "size": 402539
+  },
+  {
+    "id": "usagi_huh",
+    "name": "烏薩奇挑釁「蛤？！」(Huh? / 哈？！)",
+    "page": "https://tuna.voicemod.net/sound/b59dfd76-1914-4a7b-a440-4f34df0797e1",
+    "desc": "歪頭蔑視經典音效「哈？！」，自帶強大嘲諷與搞笑氣場！",
+    "file": "sounds/usagi_huh.mp3",
+    "url": "https://us-tuna-sounds-files.voicemod.net/d2b17f19-2d7f-4f16-9f58-49351e6f9538-1781382626366.mp3",
+    "size": 13869
+  },
+  {
+    "id": "usagi_ula",
+    "name": "烏薩奇戰鬥咆哮「烏拉烏拉！」(Ula Ula Ula)",
+    "page": "https://tuna.voicemod.net/sound/bf083726-ed37-4b3d-ad45-f2d3c550c73d",
+    "desc": "揮舞討伐棒時的戰鬥怒吼「烏拉～烏拉烏拉！」，氣勢非凡！",
+    "file": "sounds/usagi_ula.mp3",
+    "url": "https://us-tuna-sounds-files.voicemod.net/bf083726-ed37-4b3d-ad45-f2d3c550c73d-1744626584245.mp3",
+    "size": 12672
+  },
+  {
+    "id": "usagi_pululu",
+    "name": "烏薩奇快速拍肚「普嚕嚕嚕嚕」(Pulululu)",
+    "page": "https://tuna.voicemod.net/sound/1ab91762-eaa8-451f-b380-70dc888a1c63",
+    "desc": "狂拍肚皮或舌頭彈動的極速「普嚕嚕嚕嚕嚕嚕」，搞笑度拉滿！",
+    "file": "sounds/usagi_pululu.mp3",
+    "url": "https://us-tuna-sounds-files.voicemod.net/1ab91762-eaa8-451f-b380-70dc888a1c63-1744626508729.mp3",
+    "size": 118272
+  }
+]

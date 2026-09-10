@@ -5963,6 +5963,7 @@
       const hanabiEmbers = [];
       const corePlasmaOrbs = []; // 💥 爆心高能熾熱光球與旋轉星芒 (徹底解決中心空洞)
       const centerCrackles = [];  // ✨ 爆心連續劈啪千輪微閃星
+      const usagiHanabiStars = []; // 🐰 由數百個金粉星光點組成的烏薩奇型物花火 (非純圖片)
 
       // 日本花火七彩星色盤 (白金 -> 錦冠金 -> 烈焰真紅 -> 櫻花洋紅 -> 桔梗紫羅蘭 -> 電光天藍 -> 若竹翡翠綠)
       const rainbowColorPhases = [
@@ -6088,21 +6089,21 @@
         };
       }
 
-      // 🎆 觸發日本大型煙花玉：向上射出花火玉並於高空炸開
+      // 🎆 觸發日本大型煙花玉：向上射出花火玉並於畫面的中間上面一點點爆開 (不被頂端切除)
       window.launchJapaneseHanabi = function(originX, originY, onLandingComplete) {
-        // 向上發射高度：畫面高空 18% ~ 26% 處
-        const targetApexY = Math.max(80, Math.min(originY - 300, height * 0.22));
+        // 向上發射高度：升空沒多久，在「畫面的中間上面一點點」(約 40% ~ 44% 處) 爆開，確保視野極佳不被頂端切除
+        const targetApexY = Math.min(originY - 160, Math.max(140, height * 0.42));
 
         // 地面衝擊波與發射瞬態光暈
-        triggerAmbientBloom(originX, originY, 130);
+        triggerAmbientBloom(originX, originY, 100);
         shockwaves.push({
           x: originX,
           y: originY,
           radius: 8,
-          maxRadius: 75,
+          maxRadius: 65,
           color: '#f59e0b',
           alpha: 1,
-          lineWidth: 5
+          lineWidth: 4
         });
 
         hanabiRockets.push({
@@ -6112,107 +6113,209 @@
           startY: originY,
           targetY: targetApexY,
           progress: 0,
-          speed: 0.034, // 約 0.48 秒抵達高空頂點
+          speed: 0.046, // 升空沒多久 (約 0.35 秒) 抵達中間偏上立即爆開！
           trail: [],
           onLandingComplete: onLandingComplete
         });
       };
 
-      // 🐰 烏薩奇（Usagi）生氣紅通通臉浮現效果 (爆炸瞬間生於上方)
-      function showUsagiAngryFace(apexX, apexY) {
-        const oldUsagi = document.getElementById('usagiAngryFaceEl');
-        if (oldUsagi) oldUsagi.remove();
-
-        const usagiEl = document.createElement('div');
-        usagiEl.id = 'usagiAngryFaceEl';
-        usagiEl.className = 'usagi-angry-popup flex flex-col items-center select-none';
-
-        // 浮現於煙花爆炸點正上方 (apexY 上方約 90px，並確保不超出螢幕頂端)
-        const posX = Math.max(70, Math.min(window.innerWidth - 70, apexX));
-        const posY = Math.max(65, apexY - 95);
-        usagiEl.style.left = `${posX}px`;
-        usagiEl.style.top = `${posY}px`;
-
-        usagiEl.innerHTML = `
-          <div class="relative flex flex-col items-center">
-            <!-- 烏薩奇生氣紅通通向量圖 -->
-            <svg width="120" height="120" viewBox="0 0 120 120" style="filter: drop-shadow(0 4px 14px rgba(239, 68, 68, 0.65));">
-              <defs>
-                <!-- 烏薩奇氣到漲紅的漸層色 (紅通通) -->
-                <radialGradient id="usagiAngryFlushGrad" cx="50%" cy="65%" r="60%">
-                  <stop offset="0%" stop-color="#fff59d" />
-                  <stop offset="35%" stop-color="#fca5a5" />
-                  <stop offset="70%" stop-color="#ef4444" />
-                  <stop offset="100%" stop-color="#b91c1c" />
-                </radialGradient>
-              </defs>
-              <!-- 雙側氣憤冒煙 (Angry Steam Puffs) -->
-              <g opacity="0.85">
-                <path d="M14 42 Q6 32 16 22 Q22 32 14 42 Z" fill="#ffffff" />
-                <circle cx="10" cy="22" r="3" fill="#ffffff" />
-                <path d="M106 42 Q114 32 104 22 Q98 32 106 42 Z" fill="#ffffff" />
-                <circle cx="110" cy="22" r="3" fill="#ffffff" />
-              </g>
-              <!-- 左長兔耳 -->
-              <path d="M40 50 C34 6, 48 -4, 54 42 Z" fill="#fff59d" stroke="#d97706" stroke-width="2.5" />
-              <path d="M43 40 C40 14, 48 6, 52 36 Z" fill="#fda4af" />
-              <!-- 右長兔耳 (暴怒微後傾) -->
-              <path d="M66 42 C72 -4, 86 6, 80 50 Z" fill="#fff59d" stroke="#d97706" stroke-width="2.5" />
-              <path d="M68 36 C72 6, 80 14, 77 40 Z" fill="#fda4af" />
-              <!-- 圓潤頭部與氣到漲紅的大臉 (紅通通) -->
-              <ellipse cx="60" cy="72" rx="37" ry="31" fill="url(#usagiAngryFlushGrad)" stroke="#b91c1c" stroke-width="2.5" />
-              <!-- 兩側極度生氣的紅通通大腮紅 -->
-              <ellipse cx="35" cy="76" rx="8.5" ry="6" fill="#991b1b" opacity="0.85" />
-              <ellipse cx="85" cy="76" rx="8.5" ry="6" fill="#991b1b" opacity="0.85" />
-              <!-- 怒目豎眉 (\  /) -->
-              <path d="M37 57 L52 64" stroke="#450a0a" stroke-width="3.5" stroke-linecap="round" />
-              <path d="M83 57 L68 64" stroke="#450a0a" stroke-width="3.5" stroke-linecap="round" />
-              <!-- 瞪大黑眼球帶怒火反光 -->
-              <ellipse cx="45" cy="68" rx="4.5" ry="6" fill="#09090b" />
-              <circle cx="43.5" cy="66" r="1.8" fill="#ffffff" />
-              <ellipse cx="75" cy="68" rx="4.5" ry="6" fill="#09090b" />
-              <circle cx="73.5" cy="66" r="1.8" fill="#ffffff" />
-              <!-- 小鼻子 -->
-              <polygon points="60,72 58,74.5 62,74.5" fill="#78350f" />
-              <!-- 經典生氣怒吼張口 (YAHA / 怒吼齒) -->
-              <path d="M52 76 Q60 73 68 76 Q60 89 52 76 Z" fill="#7f1d1d" stroke="#450a0a" stroke-width="2" />
-              <!-- 招牌粉嫩舌頭 -->
-              <ellipse cx="60" cy="83" rx="4.5" ry="3.5" fill="#fb7185" />
-              <!-- 單顆小兔牙 -->
-              <rect x="58" y="75" width="4" height="3" fill="#ffffff" rx="1" />
-              <!-- 額頭爆出紅色十字青筋 (💢) -->
-              <g transform="translate(86, 28) scale(0.95)">
-                <path d="M2 7 L16 7 M9 0 L9 14 M4 3 L14 11 M14 3 L4 11" stroke="#dc2626" stroke-width="3" stroke-linecap="round" />
-              </g>
-            </svg>
-            <!-- 氣噗噗對話框 -->
-            <div class="px-2.5 py-0.5 mt-0.5 rounded-full bg-red-600 text-white font-black text-[11px] shadow-lg border border-red-300 tracking-wider whitespace-nowrap">
-              💢 烏薩奇：ウララララッ！！
-            </div>
-          </div>
-        `;
-
-        document.body.appendChild(usagiEl);
-
-        setTimeout(() => {
-          if (usagiEl && usagiEl.parentNode) {
-            usagiEl.remove();
-          }
-        }, 4300);
+// 🎵 播放烏薩奇招牌「呀哈～！」(YAHAAA!!) 音效
+      function playUsagiHanabiSound() {
+        try {
+          const audio = new Audio('https://us-tuna-sounds-files.voicemod.net/c225f5b3-575a-41fd-9a84-c6b302b5fcd8-1740713393441.mp3');
+          audio.volume = 0.92;
+          audio.play().catch(() => {
+            // 本地 fallback
+            const localAudio = new Audio('sounds/usagi_yahaa.mp3');
+            localAudio.volume = 0.92;
+            localAudio.play().catch(e => console.log('Audio autoplay restricted:', e));
+          });
+        } catch (e) {
+          console.warn('Play Usagi sound error:', e);
+        }
       }
 
-      // 💥 高空綻放：日本傳統割物菊・芯入錦冠柳花火玉 (維持 6 秒，七彩變幻，適度光暈零延遲＋爆心充盈＋震動2秒＋烏薩奇生氣臉)
+      // 🐰 核心：依據照片 1:1 精準佈局之「烏薩奇型物花火」(由數百顆金粉星光點組成，非純圖片)
+      function spawnUsagiKatamonoHanabi(apexX, apexY) {
+        usagiHanabiStars.length = 0;
+        const centerTargetX = apexX;
+        // 位於爆炸點中間上方，保留充裕頭頂空間避免被螢幕邊緣切除
+        const centerTargetY = apexY - 20;
+        const scale = Math.min(1.22, Math.max(0.85, width / 740));
+
+        const pts = [];
+        const tilt = -0.19; // 招牌 11~12 度歪頭萌感
+        const cosT = Math.cos(tilt);
+        const sinT = Math.sin(tilt);
+
+        function rot(x, y) {
+          return {
+            rx: x * cosT - y * sinT,
+            ry: x * sinT + y * cosT
+          };
+        }
+
+        // 1. 雙長兔耳 (左耳微斜 -25度，右耳微斜 +15度，粉紅內耳星 + 金粉外緣)
+        // 左耳
+        for (let ly = -118; ly <= -58; ly += 5.2) {
+          const frac = (ly - (-118)) / 60;
+          const wSpan = Math.sin(frac * Math.PI) * 11.5 + 2.5;
+          for (let lx = -wSpan; lx <= wSpan; lx += 5.2) {
+            const earLocalX = -27 + lx * 0.95 - (ly + 80) * 0.18;
+            const earLocalY = ly;
+            const isInner = Math.abs(lx) < wSpan * 0.52 && frac > 0.15 && frac < 0.85;
+            const r = rot(earLocalX, earLocalY);
+            pts.push({
+              dx: r.rx, dy: r.ry,
+              col: isInner ? '#f472b6' : '#fef08a',
+              size: isInner ? 2.1 : 2.3,
+              isGlint: false
+            });
+          }
+        }
+
+        // 右耳
+        for (let ry = -118; ry <= -58; ry += 5.2) {
+          const frac = (ry - (-118)) / 60;
+          const wSpan = Math.sin(frac * Math.PI) * 11.5 + 2.5;
+          for (let rx = -wSpan; rx <= wSpan; rx += 5.2) {
+            const earLocalX = 19 + rx * 0.95 + (ry + 80) * 0.12;
+            const earLocalY = ry;
+            const isInner = Math.abs(rx) < wSpan * 0.52 && frac > 0.15 && frac < 0.85;
+            const r = rot(earLocalX, earLocalY);
+            pts.push({
+              dx: r.rx, dy: r.ry,
+              col: isInner ? '#f472b6' : '#fef08a',
+              size: isInner ? 2.1 : 2.3,
+              isGlint: false
+            });
+          }
+        }
+
+        // 2. 圓滾滾頭部與圓潤臉頰金粉繁星 (避開黑瞳孔、高拱眉與貓貓嘴留空)
+        const headRadiusX = 66;
+        const headRadiusY = 58;
+        for (let y = -64; y <= 58; y += 4.6) {
+          for (let x = -75; x <= 75; x += 4.6) {
+            const normHead = (x / headRadiusX) ** 2 + ((y + 4) / headRadiusY) ** 2;
+            const isCheekBulge = ((x + 50)**2 + (y - 10)**2 < 28**2) || ((x - 50)**2 + (y - 10)**2 < 28**2);
+            if (normHead > 1.05 && !isCheekBulge) continue;
+
+            // 避開左眼窩與右眼窩 (留出深邃黑色瞳孔空間)
+            const distLeye = Math.hypot(x - (-29), y - 4);
+            const distReye = Math.hypot(x - 29, y - 4);
+            if (distLeye < 14.5 || distReye < 14.5) continue;
+
+            // 避開挑眉弧線
+            if (x >= -50 && x <= -10) {
+              const arcY = -26 + ((x + 30) / 17)**2 * 6.5;
+              if (Math.abs(y - arcY) < 3.4) continue;
+            }
+            if (x >= 10 && x <= 50) {
+              const arcY = -26 + ((x - 30) / 17)**2 * 6.5;
+              if (Math.abs(y - arcY) < 3.4) continue;
+            }
+
+            // 避開 W 貓貓嘴
+            if (Math.abs(x) <= 16 && y >= 14 && y <= 25) {
+              const lobeX = x < 0 ? x + 7.8 : x - 7.8;
+              if (Math.abs(Math.hypot(lobeX, y - 16) - 7.8) < 3.0) continue;
+            }
+
+            // 避開小鼻
+            if (Math.hypot(x, y - 10) < 2.5) continue;
+
+            const r = rot(x, y);
+            const rand = Math.random();
+            const col = rand < 0.65 ? '#fef08a' : (rand < 0.88 ? '#fde047' : '#ffffff');
+            pts.push({
+              dx: r.rx, dy: r.ry,
+              col: col,
+              size: rand < 0.25 ? 2.4 : 1.9,
+              isGlint: false
+            });
+          }
+        }
+
+        // 3. 招牌兩側垂直腮紅火花 (|||| 兩側各 4 條粉紅垂直星點)
+        const blushCols = ['#ff3366', '#fb7185', '#f43f5e'];
+        for (const side of [-1, 1]) {
+          for (let colIdx = 0; colIdx < 4; colIdx++) {
+            const bx = side * (38 + colIdx * 6);
+            for (let by = 7; by <= 23; by += 4) {
+              const r = rot(bx, by);
+              pts.push({
+                dx: r.rx, dy: r.ry,
+                col: blushCols[colIdx % blushCols.length],
+                size: 2.6,
+                isGlint: false
+              });
+            }
+          }
+        }
+
+        // 4. 圓滾滾大黑瞳孔內的「雙白鑽十字高光星芒」(左上一大、右下一小)
+        const eyeGlintOffsets = [
+          { dx: -3.8, dy: -3.8, s: 3.5 },
+          { dx: 3.2, dy: 3.2, s: 2.3 }
+        ];
+        for (const side of [-1, 1]) {
+          const eyeBaseX = side * 29;
+          const eyeBaseY = 4;
+          for (const eg of eyeGlintOffsets) {
+            const r = rot(eyeBaseX + eg.dx, eyeBaseY + eg.dy);
+            pts.push({
+              dx: r.rx, dy: r.ry,
+              col: '#ffffff',
+              size: eg.s,
+              isGlint: true
+            });
+          }
+        }
+
+        // 轉化為爆炸星子向量隊列
+        for (const pt of pts) {
+          const targetX = centerTargetX + pt.dx * scale;
+          const targetY = centerTargetY + pt.dy * scale;
+
+          // 綻放速度向量：從爆炸點 apex 炸向目標隊形座標
+          const launchFrames = 18; // 0.3 秒精準飛向隊形
+          const vx = (targetX - apexX) / launchFrames;
+          const vy = (targetY - apexY) / launchFrames;
+
+          usagiHanabiStars.push({
+            x: apexX,
+            y: apexY,
+            vx: vx,
+            vy: vy,
+            targetX: targetX,
+            targetY: targetY,
+            inFormation: false,
+            color: pt.col,
+            size: pt.size * (scale > 1 ? 1.15 : 1.05),
+            isGlint: !!pt.isGlint,
+            flickerOffset: Math.random() * Math.PI * 2,
+            life: 0,
+            maxLife: 280, // 約 4.6 秒完整呈現
+            alpha: 1
+          });
+        }
+      }
+
+      // 💥 高空綻放：日本傳統割物菊 ＆ 烏薩奇型物花火 (由數百個金粉星光點組成，非純圖片)
       function detonateJapaneseHanabi(apexX, apexY, onLandingComplete) {
-        // 🐰 1. 上方浮現生氣紅通通烏薩奇（Usagi）
-        showUsagiAngryFace(apexX, apexY);
+        // 🐰 1. 引爆並綻放「烏薩奇型物花火」(由數百顆金粉星光點組成，非純圖片)
+        spawnUsagiKatamonoHanabi(apexX, apexY);
+        // 📢 播放烏薩奇招牌「呀哈～！」原聲尖叫
+        playUsagiHanabiSound();
 
         // 🌋 2. 爆炸瞬間畫面震動 2 秒
-        triggerExaggeratedScreenShake(2000, 24);
+        triggerExaggeratedScreenShake(2000, 22);
 
-        // 🌟 3. 爆心熾熱光球 (適度光暈，無中心空洞)
+        // 🌟 3. 爆心熾熱光球
         triggerCorePlasma(apexX, apexY);
 
-        // 🌟 4. 天際瞬態適度光暈 (降低一半，避免 lag)
+        // 🌟 4. 天際瞬態光暈 (適度不 lag)
         triggerAmbientBloom(apexX, apexY, Math.min(width, height) * 0.42);
 
         // 🌟 5. 雙重高空光環衝擊波 (降低一半尺寸與開銷)
@@ -6235,18 +6338,17 @@
           lineWidth: 3
         });
 
-        // 🌟 6. 總星子數調降一半至 180 顆 (順暢 60 FPS，且中心維持充盈)
-        const totalStars = 180;
+        // 🌟 6. 背景割物菊花瓣 160 顆 (順暢 60 FPS)
+        const totalStars = 160;
         let activeStarsCount = totalStars;
 
         for (let i = 0; i < totalStars; i++) {
           let tier = 'outer';
-          if (i < 45) tier = 'core';              // 爆心金蕊星雲 (低速密集滯留，充盈中心)
-          else if (i < 120) tier = 'middle';     // 中層牡丹花瓣
-          else if (i % 6 === 0) tier = 'glitter'; // 千輪銀蜂閃光星
-          else tier = 'outer';                   // 外層錦冠菊花瓣
+          if (i < 40) tier = 'core';
+          else if (i < 100) tier = 'middle';
+          else if (i % 6 === 0) tier = 'glitter';
+          else tier = 'outer';
 
-          // 3D 斐波那契球面投射分佈
           const phi = Math.acos(1 - 2 * (i + 0.5) / totalStars);
           const theta = Math.PI * (1 + Math.sqrt(5)) * i;
           const angle = Math.atan2(Math.sin(phi) * Math.sin(theta), Math.cos(phi)) + (Math.random() * 0.08 - 0.04);
@@ -6291,7 +6393,7 @@
             colorOffset: Math.floor(Math.random() * 7),
             tier: tier,
             life: 0,
-            maxLife: 360, // 6.0 秒
+            maxLife: 360,
             alpha: 1,
             onStarDeath() {
               activeStarsCount--;
@@ -6395,6 +6497,58 @@
             continue;
           }
           drawStar(ctx, ck.x, ck.y, 4, ck.size * (1 + ckProg * 0.4), ck.size * 0.25, ck.color, a);
+        }
+
+        // --- 0.3 繪製並更新烏薩奇（Usagi）型物花火光點陣列 (由數百個金粉星光點組成，非純圖片) ---
+        for (let i = usagiHanabiStars.length - 1; i >= 0; i--) {
+          const u = usagiHanabiStars[i];
+          u.life++;
+
+          if (!u.inFormation) {
+            u.x += u.vx;
+            u.y += u.vy;
+            if (u.life >= 20) {
+              u.inFormation = true;
+              u.x = u.targetX;
+              u.y = u.targetY;
+            }
+          } else {
+            // 定位後：微幅呼吸懸浮與重力微垂感
+            u.x += (Math.random() - 0.5) * 0.35;
+            u.y += 0.02 + Math.sin(u.life * 0.08 + u.flickerOffset) * 0.15;
+          }
+
+          const prog = u.life / u.maxLife;
+
+          // 自然淡出
+          if (prog > 0.75) {
+            u.alpha = Math.max(0, (1 - prog) / 0.25);
+          }
+
+          if (u.life >= u.maxLife || u.alpha <= 0) {
+            usagiHanabiStars.splice(i, 1);
+            continue;
+          }
+
+          const flicker = 0.78 + 0.22 * Math.sin(u.life * 0.3 + u.flickerOffset);
+          const drawAlpha = u.alpha * flicker;
+
+          ctx.beginPath();
+          ctx.arc(u.x, u.y, u.isGlint ? u.size * 1.35 : u.size, 0, Math.PI * 2);
+          ctx.fillStyle = (u.isGlint && Math.sin(u.life * 0.4) > 0.1) ? '#ffffff' : u.color;
+          ctx.globalAlpha = drawAlpha;
+          ctx.fill();
+
+          // 眼睛白鑽星點加繪微十字星芒
+          if (u.isGlint) {
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = drawAlpha * 0.8;
+            ctx.beginPath();
+            ctx.moveTo(u.x - 3.5, u.y); ctx.lineTo(u.x + 3.5, u.y);
+            ctx.moveTo(u.x, u.y - 3.5); ctx.lineTo(u.x, u.y + 3.5);
+            ctx.stroke();
+          }
         }
 
         // --- 1. 繪製並更新衝擊波光環 (零 shadowBlur，超順暢) ---
