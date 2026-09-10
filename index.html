@@ -5305,7 +5305,33 @@
           ? 'right-0 left-auto translate-x-0' 
           : 'left-1/2 -translate-x-1/2';
 
-        const heroTag = isLegendary ? '<span class="text-amber-300 font-extrabold flex items-center gap-1">💣 不要挖坑給我跳..</span>' : '';
+        // 💣 被炸彈選中的：浮動文字完全不顯示姓名、電話！
+        let tooltipContentHtml = '';
+        let slotTitle = '';
+
+        if (isLegendary) {
+          // 被炸彈選中：僅顯示炸彈幽默台詞，隱藏個資姓名與電話
+          tooltipContentHtml = '<span class="text-amber-300 font-extrabold flex items-center gap-1">💣 不要挖坑給我跳.. (觸摸引爆)</span>';
+          slotTitle = '💣 不要挖坑給我跳.. (觸摸引爆)';
+        } else {
+          // 正常人名卡片：依身分顯示姓名與電話
+          if (isUnlocked) {
+            slotTitle = `${cleanName} ${phone} ｜ 點擊改班/暫代`;
+            tooltipContentHtml = `
+              <span class="font-bold">${cleanName}</span>
+              ${phone ? `<a href="${telHref}" class="text-amber-400 font-bold underline">${phone}</a>` : ''}
+            `;
+          } else if (phone) {
+            slotTitle = `${cleanName} ｜ 點擊撥打 ${phone}`;
+            tooltipContentHtml = `
+              <span class="font-bold">${cleanName}</span>
+              <span class="text-amber-400 font-bold">${phone}</span>
+            `;
+          } else {
+            slotTitle = cleanName;
+            tooltipContentHtml = `<span class="font-bold">${cleanName}</span>`;
+          }
+        }
 
         // 🌟 0. 管理員登入模式：點擊色塊開啟手動改班視窗
         if (isUnlocked) {
@@ -5315,57 +5341,53 @@
               <button 
                 type="button" 
                 onclick="event.stopPropagation(); openShiftOverrideModal('${targetDate}', '${targetShift}', '${targetTab}')"
-                title="${cleanName} ${phone} ｜ 點擊改班/暫代"
+                title="${slotTitle}"
                 style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
                 class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center font-black text-sm sm:text-base shadow-sm transition transform active:scale-90 cursor-pointer ${badgeEffect}"
               >
                 ${shortChar}
               </button>
               <div class="invisible group-hover:visible group-focus-within:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 absolute bottom-full ${tooltipPositionClass} mb-1.5 z-50 px-2.5 py-1 bg-slate-950 border border-slate-700 text-white text-[11px] font-mono rounded-lg shadow-2xl whitespace-nowrap flex items-center gap-1.5 pointer-events-auto">
-                ${heroTag}
-                <span class="font-bold">${cleanName}</span>
-                ${phone ? `<a href="${telHref}" class="text-amber-400 font-bold underline">${phone}</a>` : ''}
+                ${tooltipContentHtml}
               </div>
             </div>
           `;
         }
 
-        // 🌟 1. 訪客模式 (具備電話號碼)：點擊色塊即可直接撥打
-        if (phone) {
+        // 🌟 1. 訪客模式 (具備電話號碼)：點擊色塊即可直接撥打 (若被炸彈選中則點擊直接觸摸引爆)
+        if (phone && !isLegendary) {
           return `
             <div class="relative group inline-flex items-center justify-center">
               ${crownHtml}
               <a 
                 href="${telHref}"
-                title="${cleanName} ｜ 點擊撥打 ${phone}"
+                title="${slotTitle}"
                 style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
                 class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center font-black text-sm sm:text-base shadow-sm transition transform hover:scale-105 active:scale-90 cursor-pointer ${badgeEffect}"
               >
                 ${shortChar}
               </a>
               <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute bottom-full ${tooltipPositionClass} mb-1.5 z-50 px-2.5 py-1 bg-slate-950 border border-slate-700 text-white text-[11px] font-mono rounded-lg shadow-2xl whitespace-nowrap flex items-center gap-1.5 pointer-events-none">
-                ${heroTag}
-                <span class="font-bold">${cleanName}</span>
-                <span class="text-amber-400 font-bold">${phone}</span>
+                ${tooltipContentHtml}
               </div>
             </div>
           `;
         }
 
-        // 🌟 2. 純色塊無電話
+        // 🌟 2. 純色塊無電話 或 被炸彈選中
         return `
           <div class="relative group inline-flex items-center justify-center">
             ${crownHtml}
             <span 
-              title="${cleanName}"
+              title="${slotTitle}"
+              onclick="${isLegendary ? 'event.stopPropagation(); window.bombController && window.bombController.handleTouch(event);' : ''}"
               style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
-              class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center font-black text-sm sm:text-base shadow-sm ${badgeEffect}"
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center font-black text-sm sm:text-base shadow-sm ${badgeEffect} ${isLegendary ? 'cursor-pointer' : ''}"
             >
               ${shortChar}
             </span>
             <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute bottom-full ${tooltipPositionClass} mb-1.5 z-50 px-2.5 py-1 bg-slate-950 border border-slate-700 text-white text-[11px] font-mono rounded-lg shadow-2xl whitespace-nowrap flex items-center gap-1.5 pointer-events-none">
-              ${heroTag}
-              <span class="font-bold">${cleanName}</span>
+              ${tooltipContentHtml}
             </div>
           </div>
         `;
