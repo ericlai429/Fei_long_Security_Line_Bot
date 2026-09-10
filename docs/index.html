@@ -6200,24 +6200,22 @@
             usagiAudioCtx.resume().catch(() => {});
           }
 
-          // 播放 0.001 秒無聲脈衝強制開通 iOS 揚聲器管道
+          // 播放 1 個 sample 的純靜音緩衝區，100% 絕對純靜音開通 iOS/Android 揚聲器通道 (絕無半點聲音偷跑)
           try {
-            const osc = usagiAudioCtx.createOscillator();
-            const gain = usagiAudioCtx.createGain();
-            gain.gain.value = 0.0001; // 不使用 muted，使用微音量激活
-            osc.connect(gain);
-            gain.connect(usagiAudioCtx.destination);
-            osc.start(0);
-            osc.stop(usagiAudioCtx.currentTime + 0.005);
+            const silentBuf = usagiAudioCtx.createBuffer(1, 1, 22050);
+            const src = usagiAudioCtx.createBufferSource();
+            src.buffer = silentBuf;
+            src.connect(usagiAudioCtx.destination);
+            src.start(0);
           } catch (e) {}
 
-          // 在已啟動的 Context 下解碼 MP3，15ms 內完成解碼
+          // 在已啟動的 Context 下同步解碼 MP3 數據至記憶體，以便在高空爆炸瞬間秒播
           if (!usagiDecodedBuffer) {
             try {
               const arrBuf = b64ToBuffer(USAGI_B64_DATA);
               usagiAudioCtx.decodeAudioData(arrBuf, function(decoded) {
                 usagiDecodedBuffer = decoded;
-                console.log('✅ 烏薩奇音訊已成功在手機端解碼！');
+                console.log('✅ 烏薩奇音訊已成功在手機端解碼準備就緒！');
               }, function(err) {
                 console.warn('decodeAudioData failed:', err);
               });
@@ -6227,23 +6225,12 @@
           }
         }
 
-        // 3. 同步解鎖 HTML5 Audio 標籤作為備援 (不可設 muted=true，播放微音量後暫停)
+        // 3. 預載 HTML5 Audio 標籤作為備援 (僅執行 load() 預載，點擊炸彈時絕不呼叫 play()，完全靜音！)
         if (!usagiAudioEl) {
           usagiAudioEl = new Audio('sounds/usagi_yahaa.mp3');
           usagiAudioEl.preload = 'auto';
-        }
-        if (usagiAudioEl && !isAudioWarmedUp) {
-          isAudioWarmedUp = true;
           try {
-            usagiAudioEl.volume = 0.01;
-            const p = usagiAudioEl.play();
-            if (p !== undefined) {
-              p.then(() => {
-                usagiAudioEl.pause();
-                usagiAudioEl.currentTime = 0;
-                usagiAudioEl.volume = 1.0;
-              }).catch(() => {});
-            }
+            usagiAudioEl.load();
           } catch (e) {}
         }
       }
