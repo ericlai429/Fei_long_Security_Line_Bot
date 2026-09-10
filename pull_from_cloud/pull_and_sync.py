@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 飛龍保全 ｜ 雲端排班表自動抓取與 GitHub PWA 同步腳本
 路徑：pull_from_cloud/pull_and_sync.py
@@ -34,6 +34,9 @@ GID_ENG = "1125126855"
 VIEW_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit?gid={GID_ICU}#gid={GID_ICU}"
 EXPORT_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=xlsx"
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '..'))
+
 def stable_stringify(obj):
     if isinstance(obj, list):
         return '[' + ','.join(stable_stringify(x) for x in obj) + ']'
@@ -47,37 +50,48 @@ def fetch_latest_excel(target_path):
     print(f"   雲端試算表: {VIEW_URL}")
     print(f"   分頁代碼: 重症大樓 (gid={GID_ICU}) ＆ 工務所 (gid={GID_ENG})")
 
-    # 優先嘗試直接線上匯出下載 (若試算表已開啟讀取連結)
+    # 載入 .env 環境變數
+    from dotenv import load_dotenv
+    env_path = os.path.join(ROOT_DIR, '.env')
+    load_dotenv(env_path)
+
+    oauth_token = os.getenv('GOOGLE_OAUTH_TOKEN', '').strip()
+    google_cookie = os.getenv('GOOGLE_COOKIE', '').strip()
+    sa_file = os.getenv('GOOGLE_SERVICE_ACCOUNT_FILE', '').strip()
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    if oauth_token:
+        headers['Authorization'] = f'Bearer {oauth_token}'
+        print("   🔒 [資安授權] 已自 .env 載入 Google OAuth Token")
+    elif google_cookie:
+        headers['Cookie'] = google_cookie
+        print("   🔒 [資安授權] 已自 .env 載入 Google Session Cookie")
+
+    # 1. 嘗試直接線上匯出下載
     try:
-        req = urllib.request.Request(EXPORT_URL, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        req = urllib.request.Request(EXPORT_URL, headers=headers)
+        with urllib.request.urlopen(req, timeout=10) as resp:
             data = resp.read()
             if len(data) > 1000 and data[:4] == b'PK\x03\x04':
                 with open(target_path, 'wb') as f:
                     f.write(data)
-                print(f"   ✅ [雲端直連成功] 已從 Google 雲端取得最新活頁簿 ({len(data)} 位元組)")
+                print(f"   ✅ [雲端直連成功] 已從 Google 雲端取得最新官方活頁簿 ({len(data)} 位元組)")
                 return True
-    except Exception:
-        pass
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            print("   ❌ [權限不足 401] 雲端試算表目前設定為限制存取（非公開）。")
+            print("      請在 .env 中填入 GOOGLE_COOKIE 或 GOOGLE_OAUTH_TOKEN，")
+            print("      或在試算表右上角「共用」改為「知道連結的任何人均可檢視」。")
+        else:
+            print(f"   ❌ [雲端下載失敗] HTTP {e.code}: {e.reason}")
+    except Exception as e:
+        print(f"   ❌ [連線異常] {e}")
 
-    # 使用 NB 上已保存之最新版排班官版正本
-    candidates = [
-        r'C:\Users\user\Desktop\9月班表_三總\115年9月班表3.0.xlsx',
-        r'C:\Users\user\Desktop\115年9月班表3.0.xlsx',
-        r'C:\Users\user\Downloads\115年9月班表3.0.xlsx',
-    ]
-    candidates.extend(glob.glob(r'C:\Users\user\Desktop\*115*9*班表*.xlsx'))
-    candidates.extend(glob.glob(r'C:\Users\user\Downloads\*115*9*班表*.xlsx'))
-
-    # 取最新修改日期的檔案
-    valid_candidates = [p for p in candidates if os.path.exists(p) and os.path.getsize(p) > 5000]
-    if valid_candidates:
-        newest = sorted(valid_candidates, key=os.path.getmtime, reverse=True)[0]
-        shutil.copyfile(newest, target_path)
-        mtime_str = datetime.fromtimestamp(os.path.getmtime(newest)).strftime('%Y-%m-%d %H:%M')
-        print(f"   ✅ [載入 NB 最新存檔] 成功讀取官方排班檔案: {os.path.basename(newest)} (最後更新: {mtime_str})")
-        return True
-
+    # 嚴格真實性保護：抓不到就直接終止，絕不擅自拿過期舊檔充數塞給使用者！
+    print("   🚫【嚴格真實性安全中斷】無法取得雲端最新官方檔案，已立即中止同步！")
+    print("   🚫 絕不使用舊檔或塞入任何未核可資料，確保 PWA 班表 100% 真實精確。")
     return False
 
 def parse_and_sync(excel_path):
