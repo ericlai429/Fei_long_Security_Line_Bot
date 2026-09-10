@@ -1,20 +1,20 @@
 {
   "year": 2026,
   "month": 9,
-  "version": "v2026.09.10-2245",
-  "updated_at": "2026-09-10 22:45",
+  "version": "v2026.09.10-2247",
+  "updated_at": "2026-09-10 22:47",
   "tabs": {
     "4.三總工務所": {
       "file": "schedule_4_tsgh_eng.json",
-      "version_hash": "2b5459dc3019094d38a7fa32aa2cf5b8",
-      "row_count": 2,
-      "updated_at": "2026-09-10 22:45"
+      "version_hash": "0406cebcaab2276447915d1495b3892a",
+      "row_count": 30,
+      "updated_at": "2026-09-10 22:47"
     },
     "5.三總重症大樓": {
       "file": "schedule_5_tsgh_icu.json",
-      "version_hash": "d03d38a59f10592f8415f496817c92f4",
-      "row_count": 2,
-      "updated_at": "2026-09-10 22:45"
+      "version_hash": "17e65b179f3df6feddb3b744b0fccf48",
+      "row_count": 30,
+      "updated_at": "2026-09-10 22:47"
     }
   }
 }
