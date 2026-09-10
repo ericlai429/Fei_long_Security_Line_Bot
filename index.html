@@ -6210,8 +6210,6 @@
 
       // 💥 爆炸瞬間秒播「呀哈！」(多通道秒播)
       function playUsagiHanabiSound() {
-        showToast('🐰 烏薩奇：呀哈～！(YAHAAA!!)', 'success');
-
         // 通道 1：Web Audio API (最抗定時器延遲，音質最高)
         if (usagiAudioCtx && usagiDecodedBuffer) {
           try {
