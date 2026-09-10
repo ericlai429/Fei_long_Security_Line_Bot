@@ -28,7 +28,8 @@ import subprocess
 import urllib.request
 from datetime import datetime
 
-SPREADSHEET_ID = "18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU"
+# 雲端試算表來源：優先讀取已建立之雲端公開副本 (包含重症大樓 gid=1558314081 與 工務所 gid=1125126855)
+SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID', '1oL4MWWiqKycGVKcvuZQCFBnGpK7QZn65NHm3BY_Ospw').strip()
 GID_ICU = "1558314081"
 GID_ENG = "1125126855"
 VIEW_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit?gid={GID_ICU}#gid={GID_ICU}"
