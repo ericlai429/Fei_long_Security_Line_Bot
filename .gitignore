@@ -19,6 +19,7 @@ scratch/
 generated_pdfs/*.pdf
 !generated_pdfs/.gitkeep
 pull_from_cloud/*.xlsx
+pull_from_cloud/*.csv
 *.tmp
 *.log
 
