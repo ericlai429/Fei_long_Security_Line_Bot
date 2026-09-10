@@ -813,6 +813,61 @@
 
 
 
+    <!-- 👑 雲端母檔與副本同步控制中心 ｜ 永青母檔 ⇄ 雲端副本即時連動 PWA -->
+    <div class="bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 border border-purple-800/60 rounded-2xl p-3 sm:p-4 shadow-xl mb-3">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black flex items-center gap-1">
+              <i class="fa-solid fa-crown text-amber-400"></i>
+              <span>雲端母檔 ⇄ 副本即時同步</span>
+            </span>
+            <span class="flex items-center gap-1 bg-emerald-950/80 border border-emerald-700 text-emerald-300 px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>1小時心跳自動排程：常駐運行中</span>
+            </span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            公司母檔（<code class="text-sky-300 font-mono">18TFnTI...</code>）覆蓋連動個人雲端副本（<code class="text-emerald-300 font-mono">1oL4MWW...</code>），確保 <b>4.工務所</b> 與 <b>5.重症大樓</b> 人員排班 100% 永久保持最新！
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0 flex-wrap">
+          <button 
+            type="button" 
+            onclick="triggerCloudSyncToPwa()" 
+            id="cloudSyncPwaBtn"
+            class="h-10 px-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-white text-xs font-black rounded-xl shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <i class="fa-solid fa-rotate text-sm"></i>
+            <span>立即從母檔/副本覆蓋更新 PWA</span>
+          </button>
+          <a 
+            href="https://docs.google.com/spreadsheets/d/1oL4MWWiqKycGVKcvuZQCFBnGpK7QZn65NHm3BY_Ospw/edit?gid=1558314081#gid=1558314081" 
+            target="_blank" 
+            class="h-10 px-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-emerald-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1"
+            title="在瀏覽器中開啟雲端副本試算表"
+          >
+            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            <span>開啟副本</span>
+          </a>
+          <button 
+            type="button" 
+            onclick="copyImportRangeFormula()" 
+            class="h-10 px-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-sky-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+            title="複製跨表自動連動公式 =IMPORTRANGE(...)"
+          >
+            <i class="fa-solid fa-link text-xs"></i>
+            <span>連動公式</span>
+          </button>
+        </div>
+      </div>
+      <div id="cloudSyncStatusBanner" class="hidden mt-2.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+        <span id="cloudSyncStatusMsg"></span>
+        <span id="cloudSyncStatusTime" class="font-mono text-slate-500"></span>
+      </div>
+    </div>
+
     <!-- Main Grid: Form (5 cols) & Groups List (7 cols) - Ultra Compact & Dense -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-3 items-start">
 
@@ -3262,6 +3317,70 @@
       setTimeout(() => {
         checkAdminAuth();
       }, 400);
+    }
+
+    function copyImportRangeFormula() {
+      const formula = '=IMPORTRANGE("18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU", "5.三總重症大樓!A1:AM40")';
+      navigator.clipboard.writeText(formula).then(() => {
+        showToast('已複製跨表連動公式！請在雲端副本 A1 儲存格貼上並點擊「允許存取」', 'success');
+      }).catch(() => {
+        prompt('請手動複製跨表連動公式：', formula);
+      });
+    }
+
+    async function triggerCloudSyncToPwa() {
+      const btn = document.getElementById('cloudSyncPwaBtn');
+      const banner = document.getElementById('cloudSyncStatusBanner');
+      const msg = document.getElementById('cloudSyncStatusMsg');
+      const time = document.getElementById('cloudSyncStatusTime');
+
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-70', 'cursor-not-allowed');
+        btn.innerHTML = '<i class="fa-solid fa-rotate fa-spin text-sm"></i><span>正在從母檔/副本下載並覆蓋更新...</span>';
+      }
+
+      if (banner && msg && time) {
+        banner.classList.remove('hidden');
+        msg.innerHTML = '<span class="text-amber-400 font-bold"><i class="fa-solid fa-spinner fa-spin mr-1"></i> 連線 Google 雲端試算表中，下載最新 Excel 並解析更新...</span>';
+        time.textContent = new Date().toLocaleTimeString();
+      }
+
+      try {
+        const response = await fetch('/api/admin/schedule/sync-cloud-to-pwa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          showToast(`✅ 同步成功！已自「${result.source || '雲端試算表'}」下載並覆蓋最新班表！`, 'success');
+          if (msg) {
+            msg.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> 成功同步 (${result.source})：</span>` +
+              `<span class="text-slate-300">工務所 ${result.details?.['4_tsgh_eng']?.days || 0} 天、重症 ${result.details?.['5_tsgh_icu']?.days || 0} 天，本地快照與 docs/ 皆已覆蓋更新！</span>`;
+          }
+          if (time) time.textContent = new Date().toLocaleTimeString();
+        } else {
+          showToast(`❌ 同步失敗: ${result.message || result.error || '未知錯誤'}`, 'error');
+          if (msg) {
+            msg.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 同步失敗：</span>` +
+              `<span class="text-slate-300">${result.message || result.error || '連線錯誤'}</span>`;
+          }
+        }
+      } catch (err) {
+        console.error('Sync request failed:', err);
+        showToast('❌ 無法連線至伺服器同步 API', 'error');
+        if (msg) {
+          msg.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 網路錯誤：</span>` +
+            `<span class="text-slate-300">${err.message}</span>`;
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-70', 'cursor-not-allowed');
+          btn.innerHTML = '<i class="fa-solid fa-rotate text-sm"></i><span>立即從母檔/副本覆蓋更新 PWA</span>';
+        }
+      }
     }
 
     // Ping heartbeat every 30 seconds

@@ -50,6 +50,14 @@ class SchedulerService:
         current_year = now.year
         current_month = 9 if (now.year == 2026 and now.month in [8, 9]) else now.month
 
+        # 0. 執行雲端排班母檔/副本與 PWA 自動同步核心 (每小時自動維持最新版)
+        try:
+            from pull_from_cloud.pull_and_sync import run_sync_task
+            sync_res = run_sync_task()
+            logger.info(f"🚀 [Hourly Heartbeat] Cloud sync to PWA result: {sync_res.get('success')} - {sync_res.get('message')}")
+        except Exception as se:
+            logger.warning(f"⚠️ [Hourly Heartbeat] Cloud sync to PWA note: {se}")
+
         # 1. 嘗試刷新 Google User OAuth 授權權杖並自動掃描雲端硬碟最新月份試算表
         try:
             from app.services.google_auth_service import get_or_refresh_google_user_credentials, auto_scan_drive_monthly_spreadsheets, TOKEN_PATH

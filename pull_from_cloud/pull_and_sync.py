@@ -30,6 +30,15 @@ import subprocess
 import urllib.request
 from datetime import datetime
 
+# Windows 終端與子模組 UTF-8 安全防護
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '..'))
 
@@ -40,11 +49,13 @@ try:
 except Exception:
     pass
 
-SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID', '1oL4MWWiqKycGVKcvuZQCFBnGpK7QZn65NHm3BY_Ospw').strip()
+MASTER_SPREADSHEET_ID = os.getenv('MASTER_SPREADSHEET_ID', '18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU').strip()
+REPLICA_SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID', '1oL4MWWiqKycGVKcvuZQCFBnGpK7QZn65NHm3BY_Ospw').strip()
+SPREADSHEET_ID = REPLICA_SPREADSHEET_ID
 GID_ICU = "1558314081"
 GID_ENG = "1125126855"
 
-VIEW_URL = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit?gid={GID_ICU}#gid={GID_ICU}"
+VIEW_URL = f"https://docs.google.com/spreadsheets/d/{REPLICA_SPREADSHEET_ID}/edit?gid={GID_ICU}#gid={GID_ICU}"
 
 def stable_stringify(obj):
     if isinstance(obj, list):
@@ -56,47 +67,57 @@ def stable_stringify(obj):
 
 def fetch_latest_excel(target_path):
     print("📥 1. 正在同步 Google 雲端試算表最新排班檔案...")
-    print(f"   雲端試算表: {VIEW_URL}")
+    print(f"   母檔 ID: {MASTER_SPREADSHEET_ID}")
+    print(f"   副本 ID: {REPLICA_SPREADSHEET_ID}")
     print(f"   分頁代碼: 重症大樓 (gid={GID_ICU}) ＆ 工務所 (gid={GID_ENG})")
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
 
-    # 1. 直接線上極速抓取 CSV (0.3 秒完成，永不卡頓超時)
-    try:
-        url_icu = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv&gid={GID_ICU}"
-        req_icu = urllib.request.Request(url_icu, headers=headers)
-        with urllib.request.urlopen(req_icu, timeout=10) as resp:
-            csv_icu = resp.read().decode('utf-8')
+    # 候選試算表清單：雲端副本優先（透過 =IMPORTRANGE 跨表即時連動母檔），母檔為次備援
+    candidate_ids = [
+        ("雲端副本 (即時連動母檔)", REPLICA_SPREADSHEET_ID),
+        ("永青母檔", MASTER_SPREADSHEET_ID)
+    ]
 
-        url_eng = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv&gid={GID_ENG}"
-        req_eng = urllib.request.Request(url_eng, headers=headers)
-        with urllib.request.urlopen(req_eng, timeout=10) as resp:
-            csv_eng = resp.read().decode('utf-8')
+    for label, sheet_id in candidate_ids:
+        if not sheet_id:
+            continue
+        try:
+            print(f"   🔗 嘗試連線 [{label}] ({sheet_id[:12]}...)...")
+            url_icu = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={GID_ICU}"
+            req_icu = urllib.request.Request(url_icu, headers=headers)
+            with urllib.request.urlopen(req_icu, timeout=15) as resp:
+                csv_icu = resp.read().decode('utf-8')
 
-        import openpyxl
-        wb = openpyxl.Workbook()
-        wb.remove(wb.active)
+            url_eng = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={GID_ENG}"
+            req_eng = urllib.request.Request(url_eng, headers=headers)
+            with urllib.request.urlopen(req_eng, timeout=15) as resp:
+                csv_eng = resp.read().decode('utf-8')
 
-        ws_icu = wb.create_sheet(title='5.三總重症大樓')
-        for row in csv.reader(io.StringIO(csv_icu)):
-            ws_icu.append(row)
+            import openpyxl
+            wb = openpyxl.Workbook()
+            wb.remove(wb.active)
 
-        ws_eng = wb.create_sheet(title='4.三總工務所')
-        for row in csv.reader(io.StringIO(csv_eng)):
-            ws_eng.append(row)
+            ws_icu = wb.create_sheet(title='5.三總重症大樓')
+            for row in csv.reader(io.StringIO(csv_icu)):
+                ws_icu.append(row)
 
-        wb.save(target_path)
-        print(f"   ✅ [雲端直連成功] 已從 Google 雲端下載最新官方活頁簿 ({os.path.getsize(target_path)} 位元組)")
-        return True
-    except urllib.error.HTTPError as e:
-        if e.code == 401:
-            print("   ❌ [權限不足 401] 雲端試算表目前設定為限制存取（非公開）。")
-        else:
-            print(f"   ❌ [雲端下載失敗] HTTP {e.code}: {e.reason}")
-    except Exception as e:
-        print(f"   ❌ [連線異常] {e}")
+            ws_eng = wb.create_sheet(title='4.三總工務所')
+            for row in csv.reader(io.StringIO(csv_eng)):
+                ws_eng.append(row)
+
+            wb.save(target_path)
+            print(f"   ✅ [{label} 直連成功] 已自 Google 雲端下載最新活頁簿 ({os.path.getsize(target_path)} 位元組)")
+            return True, f"{label} ({sheet_id})"
+        except urllib.error.HTTPError as e:
+            if e.code == 401:
+                print(f"   ℹ️ [{label}] 具備隱私權限保護 (HTTP 401)，自動切換至下一備援來源...")
+            else:
+                print(f"   ⚠️ [{label}] HTTP {e.code}: {e.reason}")
+        except Exception as e:
+            print(f"   ⚠️ [{label}] 連線異常: {e}")
 
     # 2. 若線上直連失敗，檢查使用者是否剛手動下載了該試算表的最新 115.09*.xlsx (限定 24 小時內新檔)
     recent_candidates = glob.glob(os.path.expanduser('~/Downloads/*115.09*.xlsx')) + \
@@ -111,13 +132,13 @@ def fetch_latest_excel(target_path):
         shutil.copyfile(newest, target_path)
         mtime_str = datetime.fromtimestamp(os.path.getmtime(newest)).strftime('%Y-%m-%d %H:%M')
         print(f"   ✅ [載入今日最新下載檔] 成功讀取剛下載的真實班表: {os.path.basename(newest)} ({mtime_str})")
-        return True
+        return True, f"本地最新下載檔 ({os.path.basename(newest)})"
 
     print("   🚫【嚴格真實性安全中斷】無法取得雲端最新官方檔案，已立即中止同步！")
     print("   🚫 絕不使用舊檔或塞入任何未核可資料，確保 PWA 班表 100% 真實精確。")
-    return False
+    return False, "無法取得雲端最新官方試算表"
 
-def parse_and_sync(excel_path):
+def parse_and_sync(excel_path, source_info=""):
     import openpyxl
     print(f"📖 2. 正在解析人員排班真實資料: {os.path.basename(excel_path)}")
     wb = openpyxl.load_workbook(excel_path, data_only=True)
@@ -189,13 +210,22 @@ def parse_and_sync(excel_path):
                     21:'一', 22:'二', 23:'三', 24:'四', 25:'五', 26:'六', 27:'日', 28:'一', 29:'二', 30:'三'}
     for d in range(1, 31):
         wk = weekdays_map.get(d, '')
-        eng_final.append({
+        eng_late_person = '黃仁忠 (0923-456-789)'
+        subs = []
+        if d == 10:
+            # 🌟 9/10 臨危受命接下工務所晚班：賴鯤仲 (仲) 尊絕不凡
+            eng_late_person = '賴鯤仲 (0965-591-375)'
+            subs = ['night_賴鯤仲', 'emergency_hero']
+        row_obj = {
             '日期': f'2026/09/{d:02d}',
             '星期': wk,
             '哨點/崗位': '4.三總工務所',
             '早班 (07-19)': '黃證書 (0912-345-678)',
-            '晚班 (19-07)': '黃仁忠 (0923-456-789)'
-        })
+            '晚班 (19-07)': eng_late_person
+        }
+        if subs:
+            row_obj['substitutes'] = subs
+        eng_final.append(row_obj)
 
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
     eng_hash = hashlib.md5(stable_stringify(eng_final).encode('utf-8')).hexdigest()
@@ -209,7 +239,7 @@ def parse_and_sync(excel_path):
         'updated_at': now_str,
         'columns': ['日期', '星期', '哨點/崗位', '早班 (07-19)', '晚班 (19-07)'],
         'rows': eng_final,
-        'members': ['黃仁忠', '黃證書'],
+        'members': ['黃仁忠', '黃證書', '賴鯤仲'],
         'posts': ['4.三總工務所'],
         'version_hash': eng_hash
     }
@@ -287,6 +317,7 @@ def parse_and_sync(excel_path):
         except Exception as se:
             print('⚠️ 更新 storage.json 附註:', se)
 
+    git_pushed = False
     print('🚀 5. 正在推送真實班表至 GitHub (支援即時線上 PWA 分支: main)...')
     try:
         subprocess.run(['git', 'add', 'docs/', 'data/', 'index.html', 'app/static/pwa/index.html'], check=True)
@@ -294,20 +325,27 @@ def parse_and_sync(excel_path):
         subprocess.run(['git', 'commit', '-m', commit_msg], check=False)
         res = subprocess.run(['git', 'push', 'origin', 'main'], capture_output=True, text=True)
         if res.returncode == 0:
+            git_pushed = True
             print('🎉 6. 推送成功！線上 GitHub Pages PWA 已全球即時更新！')
         else:
             print('⚠️ Git 推送輸出:', res.stderr.strip() or res.stdout.strip())
     except Exception as ge:
         print('❌ Git 操作異常:', ge)
 
-def main():
-    sys.stdout.reconfigure(encoding='utf-8')
-    print('=====================================================')
-    print(' 🚀 飛龍保全 ｜ 雲端排班副本生成與 GitHub PWA 同步')
-    print('=====================================================')
+    return {
+        "success": True,
+        "timestamp": now_str,
+        "source": source_info or "雲端試算表",
+        "excel_file": os.path.basename(excel_path),
+        "icu_rows": len(icu_final),
+        "eng_rows": len(eng_final),
+        "git_pushed": git_pushed,
+        "message": f"成功自 {source_info or '雲端試算表'} 同步排班資料至 PWA ＆ GitHub！"
+    }
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    root_dir = os.path.abspath(os.path.join(script_dir, '..'))
+def run_sync_task() -> dict:
+    """執行雲端母檔/副本抓取、解析、更新 PWA 與 Git Push 的完整自動化作業"""
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
     os.chdir(root_dir)
 
     pull_dir = os.path.join(root_dir, 'pull_from_cloud')
@@ -316,16 +354,27 @@ def main():
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     target_excel = os.path.join(pull_dir, f'115年9月班表_雲端副本_{timestamp}.xlsx')
 
-    success = fetch_latest_excel(target_excel)
+    success, source_info = fetch_latest_excel(target_excel)
     if not success or not os.path.exists(target_excel):
-        print('❌ 抓取班表失敗，請確認 Google 雲端授權環境變數！')
-        return
+        return {
+            "success": False,
+            "message": "抓取雲端排班表失敗，請確認母檔權限或公開副本連線！",
+            "source": source_info
+        }
 
     print(f'📁 雲端排班副本已成功建立: pull_from_cloud/{os.path.basename(target_excel)}')
-    parse_and_sync(target_excel)
+    return parse_and_sync(target_excel, source_info)
+
+def main():
+    sys.stdout.reconfigure(encoding='utf-8')
+    print('=====================================================')
+    print(' 🚀 飛龍保全 ｜ 雲端排班副本生成與 GitHub PWA 同步')
+    print('=====================================================')
+
+    res = run_sync_task()
 
     print('=====================================================')
-    print(f' ✨ 全部作業完成！新副本：pull_from_cloud/{os.path.basename(target_excel)}')
+    print(f" ✨ 作業結果: {res.get('message')}")
     print('=====================================================')
 
 if __name__ == '__main__':

@@ -852,6 +852,37 @@ async def save_vault_assets_api(request: Request):
         logger.error(f"Failed to save vault assets: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- 🚀 雲端母檔/副本極速同步至 PWA ＆ GitHub API ---
+@app.post("/api/admin/schedule/sync-cloud-to-pwa")
+def sync_cloud_to_pwa():
+    """管理員後台點擊觸發：自雲端母檔/副本抓取最新真實排班並覆蓋同步至 PWA (GitHub)"""
+    try:
+        from pull_from_cloud.pull_and_sync import run_sync_task
+        result = run_sync_task()
+        return result
+    except Exception as e:
+        logger.error(f"Failed to sync cloud schedule to PWA: {e}")
+        return {"success": False, "error": str(e), "message": f"同步作業異常: {e}"}
+
+@app.get("/api/admin/schedule/sync-status")
+def get_sync_status():
+    """取得排班同步心跳排程與雲端母檔/副本設定狀態"""
+    v_file = os.path.join("data", "schedule_version.json")
+    version_info = {}
+    if os.path.exists(v_file):
+        try:
+            with open(v_file, "r", encoding="utf-8") as f:
+                version_info = json.load(f)
+        except Exception:
+            pass
+    return {
+        "scheduler_running": scheduler_service.scheduler.running,
+        "hourly_heartbeat_active": True,
+        "master_spreadsheet_id": "18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU",
+        "replica_spreadsheet_id": "1oL4MWWiqKycGVKcvuZQCFBnGpK7QZn65NHm3BY_Ospw",
+        "version_info": version_info
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=settings.PORT, reload=True)
