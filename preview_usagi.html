@@ -757,6 +757,7 @@
     // 發射按鈕監聽
     // 📱 手機解鎖
     function unlockMobileAudio() {
+      if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch(e){} }
       if (window.AudioContext || window.webkitAudioContext) {
         if (!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
