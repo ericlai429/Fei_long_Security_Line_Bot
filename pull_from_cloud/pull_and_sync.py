@@ -289,7 +289,7 @@ def parse_and_sync(excel_path):
 
     print('🚀 5. 正在推送真實班表至 GitHub (支援即時線上 PWA 分支: main)...')
     try:
-        subprocess.run(['git', 'add', 'docs/', 'data/', 'index.html', 'app/static/pwa/index.html', 'pull_from_cloud/'], check=True)
+        subprocess.run(['git', 'add', 'docs/', 'data/', 'index.html', 'app/static/pwa/index.html'], check=True)
         commit_msg = f"sync: 依雲端排班表副本更新真實資料至PWA ({now_str})"
         subprocess.run(['git', 'commit', '-m', commit_msg], check=False)
         res = subprocess.run(['git', 'push', 'origin', 'main'], capture_output=True, text=True)

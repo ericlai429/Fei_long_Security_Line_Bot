@@ -9,7 +9,7 @@
       "pin_updated_at": "2026-08-19T19:52:33.169138",
       "is_unlocked": false,
       "unlocked_with_pin": "",
-      "leader_email": "ericlai429@gmail.com",
+      "leader_email": "demoadmin429@gmail.com",
       "is_email_verified": false,
       "verified_leader_user_id": ""
     },
@@ -18,7 +18,7 @@
       "group_name": "急診第一小隊",
       "expected_group_name": "急診第一小隊",
       "sheet_tab": "急診與中控小隊",
-      "leader_email": "ericlai429@gmail.com",
+      "leader_email": "demoadmin429@gmail.com",
       "is_email_verified": false,
       "verified_leader_user_id": "",
       "pin_code": "8821",
@@ -660,5 +660,5 @@
     }
   ],
   "master_pin_hash": "ff7a0d27304ad4ab2a800c1c2a153ac75408e5529cd6fbe22f3d885de75ba865",
-  "master_pin_admin_email": "ericlai429@gmail.com"
+  "master_pin_admin_email": "admin@feilong-security.com"
 }

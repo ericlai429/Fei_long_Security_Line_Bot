@@ -20,12 +20,12 @@ admin_service.set_scheduler_service(scheduler_service)
 class TestTSGHSecuritySystem(unittest.TestCase):
 
     def test_00_email_normalization_and_fullwidth_fix(self):
-        norm1, valid1, had1 = normalize_and_validate_email("EricLai429@gmail.com")
-        self.assertEqual(norm1, "ericlai429@gmail.com")
+        norm1, valid1, had1 = normalize_and_validate_email("DemoAdmin429@gmail.com")
+        self.assertEqual(norm1, "demoadmin429@gmail.com")
         self.assertTrue(valid1)
 
-        norm2, valid2, had2 = normalize_and_validate_email("EricLai429＠gmail。com")
-        self.assertEqual(norm2, "ericlai429@gmail.com")
+        norm2, valid2, had2 = normalize_and_validate_email("DemoAdmin429＠gmail。com")
+        self.assertEqual(norm2, "demoadmin429@gmail.com")
         self.assertTrue(valid2)
         self.assertTrue(had2)
 
@@ -35,12 +35,12 @@ class TestTSGHSecuritySystem(unittest.TestCase):
             group_id,
             group_name="急診第一小隊",
             sheet_tab="急診與中控小隊",
-            leader_email="EricLai429＠gmail。com",
+            leader_email="DemoAdmin429＠gmail。com",
             pin_code="8821"
         )
 
         group = db.get_group(group_id)
-        self.assertEqual(group["leader_email"], "ericlai429@gmail.com")
+        self.assertEqual(group["leader_email"], "demoadmin429@gmail.com")
 
         verified_err = db.verify_and_unlock(group_id, "0000")
         self.assertFalse(verified_err)
@@ -93,9 +93,9 @@ class TestTSGHSecuritySystem(unittest.TestCase):
         resp_id = admin_service.handle_admin_command("test_user_chen", "/我的ID")
         self.assertIn("test_user_chen", resp_id)
 
-        resp_email = admin_service.handle_admin_command("test_user_chen", "/管理 設定信箱 tsgh_internal EricLai429＠gmail。com")
+        resp_email = admin_service.handle_admin_command("test_user_chen", "/管理 設定信箱 tsgh_internal DemoAdmin429＠gmail。com")
         self.assertIn("小隊長 Email 白名單已更新", resp_email)
-        self.assertEqual(db.get_group("tsgh_internal")["leader_email"], "ericlai429@gmail.com")
+        self.assertEqual(db.get_group("tsgh_internal")["leader_email"], "demoadmin429@gmail.com")
 
     def test_06_group_name_mismatch_alert(self):
         db.upsert_group("mismatch_group_123", group_name="外部惡搞群", expected_group_name="三總保全內部群")

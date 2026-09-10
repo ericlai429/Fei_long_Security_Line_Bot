@@ -20,6 +20,7 @@ from app.services.scheduler_service import scheduler_service
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("TSGH_Security_Bot")
+DEFAULT_ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@feilong-security.com")
 
 scheduler_service.set_line_service(line_service)
 admin_service.set_scheduler_service(scheduler_service)
@@ -298,7 +299,7 @@ def set_google_api_key(payload: GoogleApiKeyPayload):
 class GoogleOAuthPayload(BaseModel):
     token: Optional[str] = ""
     refresh_token: Optional[str] = ""
-    user_email: Optional[str] = "ericlai429@gmail.com"
+    user_email: Optional[str] = DEFAULT_ADMIN_EMAIL
 
 @app.post("/api/admin/google/oauth-token")
 def set_google_user_oauth(payload: GoogleOAuthPayload):
@@ -318,7 +319,7 @@ def set_google_user_oauth(payload: GoogleOAuthPayload):
         if creds and creds.token:
             token = creds.token
 
-    success, msg = sheets_service.set_user_oauth_token(token, payload.user_email or "ericlai429@gmail.com")
+    success, msg = sheets_service.set_user_oauth_token(token, payload.user_email or DEFAULT_ADMIN_EMAIL)
     return {
         "status": "success",
         "message": "✅ 成功儲存 Google 永久 Refresh Token！系統已啟動自動換票連線！",
@@ -414,7 +415,7 @@ def inspect_schedule_alignment(payload: ScheduleInspectPayload):
 class LiveSyncPayload(BaseModel):
     tab_name: str
     rows: List[List[str]]
-    user_email: Optional[str] = "ericlai429@gmail.com"
+    user_email: Optional[str] = DEFAULT_ADMIN_EMAIL
 
 @app.post("/api/admin/schedule/sync-live-data")
 def sync_admin_live_data(payload: LiveSyncPayload):
@@ -551,7 +552,7 @@ def get_schedule_change_logs(tab_name: Optional[str] = None, query: Optional[str
     }
 
 class HeartbeatPayload(BaseModel):
-    email: Optional[str] = "ericlai429@gmail.com"
+    email: Optional[str] = DEFAULT_ADMIN_EMAIL
 
 @app.post("/api/admin/heartbeat")
 def admin_heartbeat(payload: HeartbeatPayload):
@@ -559,7 +560,7 @@ def admin_heartbeat(payload: HeartbeatPayload):
     return {
         "status": "alive",
         "role": "admin",
-        "email": payload.email or "ericlai429@gmail.com",
+        "email": payload.email or DEFAULT_ADMIN_EMAIL,
         "server_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "keep_login": True
     }
@@ -727,7 +728,7 @@ async def set_monthly_sheet_id(request: Request):
 def get_master_pin_status():
     return {
         "is_initialized": db.is_master_pin_initialized(),
-        "admin_email": db.data.get("master_pin_admin_email", "ericlai429@gmail.com"),
+        "admin_email": db.data.get("master_pin_admin_email", DEFAULT_ADMIN_EMAIL),
         "updated_at": db.data.get("master_pin_updated_at")
     }
 
@@ -736,7 +737,7 @@ async def setup_master_pin(request: Request):
     body = await request.json()
     new_pin = str(body.get("new_pin", "")).strip()
     old_pin = str(body.get("old_pin", "")).strip()
-    admin_email = str(body.get("admin_email", "ericlai429@gmail.com")).strip()
+    admin_email = str(body.get("admin_email", DEFAULT_ADMIN_EMAIL)).strip()
     if not new_pin or len(new_pin) < 3:
         raise HTTPException(status_code=400, detail="新 PIN 碼長度至少需 3 位數！")
     

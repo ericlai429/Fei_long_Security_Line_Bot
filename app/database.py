@@ -38,7 +38,7 @@ class Database:
                             "group_name": "三總測試群",
                             "expected_group_name": "三總測試群",
                             "sheet_tab": "三總保全內部群",
-                            "leader_email": "ericlai429@gmail.com",
+                            "leader_email": os.getenv("ADMIN_EMAIL", "admin@feilong-security.com"),
                             "is_email_verified": True,
                             "verified_leader_user_id": "",
                             "pin_code": settings.DEFAULT_PIN,
@@ -51,7 +51,7 @@ class Database:
                             "group_name": "三總保全內部群",
                             "expected_group_name": "三總保全內部群",
                             "sheet_tab": "三總保全內部群",
-                            "leader_email": "ericlai429@gmail.com",
+                            "leader_email": os.getenv("ADMIN_EMAIL", "admin@feilong-security.com"),
                             "is_email_verified": True,
                             "verified_leader_user_id": "",
                             "pin_code": settings.DEFAULT_PIN,
@@ -430,7 +430,9 @@ class Database:
             })
             self._save_unsafe()
 
-    def set_master_pin(self, new_pin: str, admin_email: str = "ericlai429@gmail.com") -> bool:
+    def set_master_pin(self, new_pin: str, admin_email: str = "") -> bool:
+        if not admin_email:
+            admin_email = os.getenv("ADMIN_EMAIL", "admin@feilong-security.com")
         with _lock:
             if not new_pin or len(new_pin.strip()) < 3:
                 return False

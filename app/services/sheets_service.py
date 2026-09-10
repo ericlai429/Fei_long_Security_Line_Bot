@@ -21,7 +21,7 @@ class SheetsService:
         self.client = None
         self.active_spreadsheet_id = settings.GOOGLE_SPREADSHEET_ID or "1HTZPjBilY4f584mO7s37IuoPlq-syvKFeaghxXlAO-s"
         self.service_account_email = ""
-        self.connected_user_email = "ericlai429@gmail.com"
+        self.connected_user_email = os.getenv("ADMIN_EMAIL", "admin@feilong-security.com")
         self.user_access_token = ""
         self.custom_sheet_data: Dict[str, List[List[str]]] = {}
         self._init_client()
@@ -76,8 +76,10 @@ class SheetsService:
         if not sa_loaded and not self.service_account_email:
             self.service_account_email = "feilong-bot@feilong-security.iam.gserviceaccount.com"
 
-    def set_user_oauth_token(self, token: str, user_email: str = "ericlai429@gmail.com") -> Tuple[bool, str]:
+    def set_user_oauth_token(self, token: str, user_email: str = "") -> Tuple[bool, str]:
         """Sets Google User OAuth Access Token to fetch private sheets shared with the user."""
+        if not user_email:
+            user_email = os.getenv("ADMIN_EMAIL", "admin@feilong-security.com")
         self.user_access_token = token.strip()
         self.connected_user_email = user_email.strip().lower()
         try:
@@ -138,7 +140,7 @@ class SheetsService:
                 {
                     "file_id": self.active_spreadsheet_id,
                     "title": "三總保全排班總表 (官方最新版)",
-                    "owner": "排班組長 (共用給 ericlai429@gmail.com)",
+                    "owner": "排班組長 (授權管理員)",
                     "is_current": True,
                     "tabs": tabs
                 }
@@ -337,7 +339,7 @@ class SheetsService:
             except Exception as ex:
                 logger.debug(f"Target file load note: {ex}")
 
-        # 🌟 讀取 Admin (ericlai429@gmail.com) keep loaded 的即時雲端試算表快照
+        # 🌟 讀取 Admin keep loaded 的即時雲端試算表快照
         from app.database import db
         snapshot = db.get_schedule_snapshot(tab_name)
         if snapshot and len(snapshot) > 0:

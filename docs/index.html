@@ -69,6 +69,14 @@
       animation: rainbowGlowLoop 3.2s linear infinite;
     }
 
+    /* 🌈 明日執勤人員色塊：與管理者金庫按鈕一致之七色彩虹呼吸炫光圈 */
+    .rainbow-glow-badge {
+      border: 2px solid #ff0055 !important;
+      animation: rainbowGlowLoop 3.2s linear infinite !important;
+      position: relative;
+      z-index: 10;
+    }
+
     /* 🪙 金幣 3D 原地旋轉動畫 */
     @keyframes coinSpin3D {
       0% { transform: rotateY(0deg); }
@@ -5020,7 +5028,7 @@
     }
 
     // 🔤 人員名稱格式化：畫面緊湊縮字色塊 (全月份結構100%一致，消除垂直折線對齊偏差)
-    function formatName(nameStr, isHistorical = false, hidePhone = false, isUpcomingSubstitute = false, isManualOverride = false, targetDate = '', targetShift = '', targetTab = '', isLastCol = false) {
+    function formatName(nameStr, isHistorical = false, hidePhone = false, isUpcomingSubstitute = false, isManualOverride = false, targetDate = '', targetShift = '', targetTab = '', isLastCol = false, isTomorrow = false) {
       if (!nameStr || nameStr === '-' || nameStr === '—' || nameStr.trim() === '') {
         return '<span class="inline-block text-slate-600 font-bold text-xs">—</span>';
       }
@@ -5047,6 +5055,11 @@
         if (isManualOverride) {
           badgeEffect = 'ring-2 ring-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.7)] animate-pulse';
         }
+        if (isTomorrow) {
+          badgeEffect += (badgeEffect ? ' ' : '') + 'rainbow-glow-badge';
+        }
+
+        const borderStyle = isTomorrow ? '' : `border-color: ${borderColor};`;
 
         const telHref = phone ? `tel:${phone.replace(/[-\s]/g, '')}` : '';
 
@@ -5063,7 +5076,7 @@
                 type="button" 
                 onclick="event.stopPropagation(); openShiftOverrideModal('${targetDate}', '${targetShift}', '${targetTab}')"
                 title="${cleanName} ${phone} ｜ 點擊改班/暫代"
-                style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};"
+                style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
                 class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition transform active:scale-90 cursor-pointer ${badgeEffect}"
               >
                 ${shortChar}
@@ -5083,7 +5096,7 @@
               <a 
                 href="${telHref}"
                 title="${cleanName} ｜ 點擊撥打 ${phone}"
-                style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};"
+                style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
                 class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition transform hover:scale-105 active:scale-90 cursor-pointer ${badgeEffect}"
               >
                 ${shortChar}
@@ -5101,7 +5114,7 @@
           <div class="relative group inline-flex items-center justify-center">
             <span 
               title="${cleanName}"
-              style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};"
+              style="background-color: ${bgColor}; color: ${textColor}; ${borderStyle}"
               class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center font-black text-xs sm:text-sm shadow-xs ${badgeEffect}"
             >
               ${shortChar}
@@ -5382,6 +5395,11 @@
       const todayShort = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
       const todayFull = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
 
+      // 🌈 明日執勤人員判定 (七色彩虹呼吸炫光圈)
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const tomorrowShort = `${String(tomorrow.getMonth() + 1).padStart(2, '0')}/${String(tomorrow.getDate()).padStart(2, '0')}`;
+      const tomorrowFull = `${tomorrow.getFullYear()}/${String(tomorrow.getMonth() + 1).padStart(2, '0')}/${String(tomorrow.getDate()).padStart(2, '0')}`;
+
       for (let i = 0; i < daysCount; i++) {
         const rEng = engRows[i] || {};
         const rIcu = icuRows[i] || {};
@@ -5432,6 +5450,9 @@
         const isToday = (selectedYear === now.getFullYear() && selectedMonth === (now.getMonth() + 1)) &&
                         (dateStr === todayShort || rawDate === todayFull || rawDate.includes(todayShort));
 
+        const isTomorrow = (selectedYear === tomorrow.getFullYear() && selectedMonth === (tomorrow.getMonth() + 1)) &&
+                           (dateStr === tomorrowShort || rawDate === tomorrowFull || rawDate.includes(tomorrowShort));
+
         let weekBadgeClass = 'bg-slate-800/90 text-slate-300 border-slate-700';
         let rowClass = 'hover:bg-slate-800/40 border-b border-slate-800/80';
         let dateDisplayHtml = `<span class="inline-block w-11 sm:w-12 text-center font-mono font-extrabold text-slate-200">${dateStr}</span>`;
@@ -5459,23 +5480,23 @@
         const dayCellAttr = isUnlocked ? `onclick="openShiftOverrideModal('${fullDateStr}', '早班', '4.三總工務所')"` : '';
         const weekCellAttr = isUnlocked ? `onclick="openShiftOverrideModal('${fullDateStr}', '早班', '4.三總工務所')"` : '';
 
-        const todayRowId = isToday ? 'id="todayScheduleRow"' : '';
+        const todayRowId = isToday ? 'id="todayScheduleRow"' : (isTomorrow ? 'id="tomorrowScheduleRow"' : '');
 
         html += `
           <tr ${todayRowId} class="${rowClass} transition text-center align-middle">
             <td ${dayCellAttr} class="w-[14%] py-2 px-0.5 whitespace-nowrap text-center align-middle text-xs sm:text-sm font-mono">${dateDisplayHtml}</td>
             <td ${weekCellAttr} class="w-[10%] py-2 px-0.5 whitespace-nowrap text-center align-middle">${weekDisplayHtml}</td>
             <td class="w-[19%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium">
-              ${formatName(engEarly, isHistorical, false, isEngDaySub, isEngDayManual, fullDateStr, '早班', '4.三總工務所', false)}
+              ${formatName(engEarly, isHistorical, false, isEngDaySub, isEngDayManual, fullDateStr, '早班', '4.三總工務所', false, isTomorrow)}
             </td>
             <td class="w-[19%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium border-r-2 border-slate-700/80">
-              ${formatName(engLate, isHistorical, false, isEngNightSub, isEngNightManual, fullDateStr, '晚班', '4.三總工務所', false)}
+              ${formatName(engLate, isHistorical, false, isEngNightSub, isEngNightManual, fullDateStr, '晚班', '4.三總工務所', false, isTomorrow)}
             </td>
             <td class="w-[19%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium">
-              ${formatName(icuEarly, isHistorical, false, isIcuDaySub, isIcuDayManual, fullDateStr, '早班', '5.三總重症大樓', false)}
+              ${formatName(icuEarly, isHistorical, false, isIcuDaySub, isIcuDayManual, fullDateStr, '早班', '5.三總重症大樓', false, isTomorrow)}
             </td>
             <td class="w-[19%] py-1.5 px-0.5 whitespace-nowrap text-center align-middle font-medium">
-              ${formatName(icuLate, isHistorical, false, isIcuNightSub, isIcuNightManual, fullDateStr, '晚班', '5.三總重症大樓', true)}
+              ${formatName(icuLate, isHistorical, false, isIcuNightSub, isIcuNightManual, fullDateStr, '晚班', '5.三總重症大樓', true, isTomorrow)}
             </td>
           </tr>
         `;

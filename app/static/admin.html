@@ -180,8 +180,8 @@
             <input 
               type="text" 
               id="whitelistEmailInput" 
-              value="ericlai429@gmail.com"
-              placeholder="如：ericlai429@gmail.com" 
+              value=""
+              placeholder="如：leader@feilong-security.com" 
               required
               oninput="handleEmailInputWithAutoFix(this, 'whitelistEmailWarn'); onLeaderEmailChange(this.value);"
               class="w-full h-11 bg-slate-950 border border-emerald-700/80 rounded-xl px-3 text-sm text-emerald-300 font-bold placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition font-mono"
@@ -1605,7 +1605,7 @@
 
     function loadLeaderAssignedTabs() {
       const emailInput = document.getElementById('whitelistEmailInput');
-      const email = emailInput ? emailInput.value.trim() : 'ericlai429@gmail.com';
+      const email = emailInput ? emailInput.value.trim() : '';
       const storedTabs = localStorage.getItem(`leader_assigned_tabs_${email}`) || "4, 5";
       
       const tabsInput = document.getElementById('whitelistAssignedTabsInput');
@@ -1742,7 +1742,7 @@
       if (!container) return;
 
       const emailInput = document.getElementById('whitelistEmailInput');
-      const email = emailInput ? emailInput.value.trim() : 'ericlai429@gmail.com';
+      const email = emailInput ? emailInput.value.trim() : '';
       const assigned = localStorage.getItem(`leader_assigned_tabs_${email}`) || "4, 5";
       const parts = assigned.split(/[,，\s]+/).filter(x => x.trim()).map(x => parseInt(x, 10)).filter(x => !isNaN(x));
 
@@ -2624,7 +2624,7 @@
               group_id: "tsgh_internal",
               group_name: "三總保全內部群",
               sheet_tab: "三總保全內部群",
-              leader_email: "ericlai429@gmail.com",
+              leader_email: "leader@feilong-security.com",
               pin_code: "8888",
               is_email_verified: true
             }
@@ -2637,7 +2637,7 @@
         renderGroupsTable(currentGroups);
       } catch (err) {
         // GitHub 靜態展示預設群組 ＋ 讀取本地持久儲存之隊長 Email
-        const storedLeaderEmail = localStorage.getItem('saved_leader_email_tsgh_internal') || 'ericlai429@gmail.com';
+        const storedLeaderEmail = localStorage.getItem('saved_leader_email_tsgh_internal') || 'leader@feilong-security.com';
         currentGroups = [
           {
             group_id: "tsgh_internal",

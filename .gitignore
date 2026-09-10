@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -10,12 +10,15 @@ ENV/
 
 # Environment variables & secrets
 .env
-credentials/*.json
+credentials/
+credentials/*
 !credentials/.gitkeep
+scratch/
 
-# Generated PDFs & temporary files
+# Generated PDFs, Excels & temporary files
 generated_pdfs/*.pdf
 !generated_pdfs/.gitkeep
+pull_from_cloud/*.xlsx
 *.tmp
 *.log
 
