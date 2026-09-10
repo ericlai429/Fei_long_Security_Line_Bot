@@ -6051,34 +6051,27 @@
         });
       }
 
-      // 🌋 爆炸瞬間畫面極度誇張震動 2 秒 (Exaggerated Screen Camera Shake)
+      // 🌋 爆炸瞬間畫面震動 (純位移震顫，絕不縮放 body 避免造成畫布上移臭蟲)
       let shakeAnimationId = null;
-      function triggerExaggeratedScreenShake(durationMs = 2000, maxIntensity = 32) {
+      function triggerExaggeratedScreenShake(durationMs = 800, maxIntensity = 18) {
         if (shakeAnimationId) cancelAnimationFrame(shakeAnimationId);
         const startTime = performance.now();
-        document.documentElement.style.overflowX = 'hidden';
-        document.body.style.overflowX = 'hidden';
 
         function shakeStep(currentTime) {
           const elapsed = currentTime - startTime;
           if (elapsed < durationMs) {
             const progress = elapsed / durationMs;
-            // 衰減曲線：前 0.6 秒極度劇烈狂暴震顫，隨後平滑衰退至靜止
-            const decay = Math.pow(1 - progress, 1.45);
+            const decay = Math.pow(1 - progress, 1.5);
             const currentIntensity = maxIntensity * decay;
 
-            // X、Y 狂暴震顫位移，伴隨輕微角度傾斜與鏡頭爆裂震波縮放
+            // 純 X、Y 水平與垂直震顫，不含 scale 與 rotate，絕不改變視口中心與定點
             const offsetX = (Math.random() * 2 - 1) * currentIntensity;
             const offsetY = (Math.random() * 2 - 1) * currentIntensity;
-            const rot = (Math.random() * 2 - 1) * (currentIntensity * 0.07);
-            const scale = 1 + (Math.random() * 0.035 * decay);
 
-            document.body.style.transform = `translate(${offsetX.toFixed(1)}px, ${offsetY.toFixed(1)}px) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
-            document.body.style.transformOrigin = 'center center';
+            document.body.style.transform = `translate(${offsetX.toFixed(1)}px, ${offsetY.toFixed(1)}px)`;
             shakeAnimationId = requestAnimationFrame(shakeStep);
           } else {
             document.body.style.transform = '';
-            document.body.style.transformOrigin = '';
             shakeAnimationId = null;
           }
         }
@@ -6319,16 +6312,11 @@ const USAGI_PALETTE = ["#f59e0b", "#fde047", "#fef9c3", "#ffffff", "#facc15", "#
           const size = pt[3];
           const isGlint = pt[4] === 1;
 
-          // 綻放速度向量：從爆炸點 apex 炸向目標隊形座標 (30 FPS 下 15 幀約 0.5 秒)
-          const launchFrames = 15;
-          const vx = (targetX - apexX) / launchFrames;
-          const vy = (targetY - apexY) / launchFrames;
-
           usagiHanabiStars.push({
+            startX: apexX,
+            startY: apexY,
             x: apexX,
             y: apexY,
-            vx: vx,
-            vy: vy,
             targetX: targetX,
             targetY: targetY,
             inFormation: false,
@@ -6337,7 +6325,8 @@ const USAGI_PALETTE = ["#f59e0b", "#fde047", "#fef9c3", "#ffffff", "#facc15", "#
             isGlint: isGlint,
             flickerOffset: Math.random() * Math.PI * 2,
             life: 0,
-            maxLife: 150, // 30 FPS 下 150 幀 = 5.0 秒完整呈現
+            expansionFrames: 16, // 30 FPS 下約 0.5 秒優雅滑順綻放定位
+            maxLife: 150,        // 30 FPS 下 150 幀 = 5.0 秒完整呈現
             alpha: 1
           });
         }
@@ -6368,7 +6357,7 @@ const USAGI_PALETTE = ["#f59e0b", "#fde047", "#fef9c3", "#ffffff", "#facc15", "#
         playUsagiHanabiSound();
 
         // 🌋 2. 爆炸瞬間畫面震動 2 秒
-        triggerExaggeratedScreenShake(2000, 22);
+        triggerExaggeratedScreenShake(800, 18);
 
         // 🌟 3. 爆心熾熱光球
         triggerCorePlasma(apexX, apexY);
@@ -6575,17 +6564,20 @@ const USAGI_PALETTE = ["#f59e0b", "#fde047", "#fef9c3", "#ffffff", "#facc15", "#
           u.life++;
 
           if (!u.inFormation) {
-            u.x += u.vx;
-            u.y += u.vy;
-            if (u.life >= 20) {
+            // 🌟 煙花綻放：採用經典三次方減速緩動 (Cubic Ease-Out)，絲滑無突兀衝刺、零越位跳回
+            const t = Math.min(1, u.life / u.expansionFrames);
+            const ease = 1 - Math.pow(1 - t, 3);
+            u.x = u.startX + (u.targetX - u.startX) * ease;
+            u.y = u.startY + (u.targetY - u.startY) * ease;
+            if (t >= 1) {
               u.inFormation = true;
-              u.x = u.targetX;
-              u.y = u.targetY;
             }
           } else {
-            // 定位後：微幅呼吸懸浮與重力微垂感
-            u.x += (Math.random() - 0.5) * 0.35;
-            u.y += 0.02 + Math.sin(u.life * 0.08 + u.flickerOffset) * 0.15;
+            // 🌟 定位後：完美維持原位，僅有溫柔星光閃爍微幅呼吸 (絕不累積位移、絕不上移漂移)
+            const floatX = Math.cos(u.life * 0.06 + u.flickerOffset) * 0.35;
+            const floatY = Math.sin(u.life * 0.08 + u.flickerOffset) * 0.45;
+            u.x = u.targetX + floatX;
+            u.y = u.targetY + floatY;
           }
 
           const prog = u.life / u.maxLife;
