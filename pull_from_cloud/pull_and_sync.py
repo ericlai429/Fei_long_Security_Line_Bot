@@ -89,6 +89,21 @@ def fetch_latest_excel(target_path):
     except Exception as e:
         print(f"   ❌ [連線異常] {e}")
 
+    # 2. 若線上直連失敗，檢查使用者是否剛手動下載了該試算表的最新 115.09*.xlsx (嚴格限定 24 小時內新檔，絕不吃舊檔)
+    recent_candidates = glob.glob(os.path.expanduser('~/Downloads/*115.09*.xlsx')) + \
+                        glob.glob(os.path.expanduser('~/Desktop/*115.09*.xlsx'))
+    recent_valid = []
+    now_ts = time.time()
+    for p in recent_candidates:
+        if os.path.exists(p) and (now_ts - os.path.getmtime(p)) < 86400 and os.path.getsize(p) > 5000:
+            recent_valid.append(p)
+    if recent_valid:
+        newest = sorted(recent_valid, key=os.path.getmtime, reverse=True)[0]
+        shutil.copyfile(newest, target_path)
+        mtime_str = datetime.fromtimestamp(os.path.getmtime(newest)).strftime('%Y-%m-%d %H:%M')
+        print(f"   ✅ [載入今日最新下載檔] 成功讀取剛下載的真實班表: {os.path.basename(newest)} ({mtime_str})")
+        return True
+
     # 嚴格真實性保護：抓不到就直接終止，絕不擅自拿過期舊檔充數塞給使用者！
     print("   🚫【嚴格真實性安全中斷】無法取得雲端最新官方檔案，已立即中止同步！")
     print("   🚫 絕不使用舊檔或塞入任何未核可資料，確保 PWA 班表 100% 真實精確。")
