@@ -56,7 +56,7 @@ def fetch_latest_excel(target_path):
     load_dotenv(env_path)
 
     oauth_token = os.getenv('GOOGLE_OAUTH_TOKEN', '').strip()
-    google_cookie = os.getenv('GOOGLE_COOKIE', '').strip()
+    google_cookie = os.getenv('GOOGLE_COOKIE', '').strip().strip('"').strip("'")
     sa_file = os.getenv('GOOGLE_SERVICE_ACCOUNT_FILE', '').strip()
 
     headers = {
