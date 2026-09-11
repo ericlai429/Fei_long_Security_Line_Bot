@@ -1350,9 +1350,11 @@
       }
     }
 
-    // 🔄 雲端試算表對齊與版本燈號狀態管理
-    // status: 'synced' (綠燈: 已對齊最新版) | 'modified' (紅燈: 雲端已被修改/待對齊) | 'syncing' (橘黃燈: 握手核對/對齊中) | 'error' (紅燈)
-    let currentDataVersionHash = '';
+    // 🔄 雲端試算表各哨點對齊與版本燈號狀態管理 (雙哨分別獨立比對版本 Hash，精準防誤報)
+    let currentTabVersionHashes = {
+      '4.三總工務所': '4b9471a509d91d5b87f1e09587efc9eb',
+      '5.三總重症大樓': '17e65b179f3df6feddb3b744b0fccf48'
+    };
     let cloudSyncState = 'synced';
     let cloudHandshakeTimer = null;
 
@@ -1386,7 +1388,7 @@
       }
     }
 
-    // ⚡ 每分鐘握手核對雲端試算表版本 (嚴格保證不讀取手機暫存檔)
+    // ⚡ 每分鐘握手核對雲端試算表版本 (嚴格保證不讀取手機暫存檔，雙哨精準比對)
     async function checkCloudVersionHandshake(silent = true) {
       if (selectedMonth !== 9) return; // 專注核對 9 月
 
@@ -1418,38 +1420,43 @@
 
           if (res.ok) {
             const data = await res.json();
-            let remoteHash = '';
-            let hasFile = true;
+            let isModified = false;
+            let modifiedTab = '';
+            let latestHash = '';
 
-            if (data.version_hash) {
-              remoteHash = data.version_hash;
-              hasFile = data.has_file !== false;
-            } else if (data.tabs && data.tabs[currentTabName]) {
-              remoteHash = data.tabs[currentTabName].version_hash;
-              hasFile = true;
-            }
-
-            if (!hasFile) {
-              setCloudSyncStatus('modified', '待對齊', `⚠️ 雲端試算表尚未找到「${currentTabName}」9月對應檔案`);
-              return;
-            }
-
-            if (remoteHash) {
-              if (!currentDataVersionHash) {
-                currentDataVersionHash = remoteHash;
-                setCloudSyncStatus('synced', '對齊', '雲端試算表版本一致 (最新版)');
-              } else if (remoteHash !== currentDataVersionHash) {
-                // 🔴 雲端資料已被修改！亮紅燈！直到對齊才恢復綠燈
-                setCloudSyncStatus('modified', '待對齊', `⚠️ 雲端試算表已被修改 (最新版本: ${remoteHash.slice(0, 6)})！請點擊立即對齊`);
-                if (!silent) {
-                  showToast(`⚠️ 偵測到「${currentTabName}」雲端排班表有最新異動！請點擊「待對齊」按鈕！`, 'warning');
+            if (data.tabs) {
+              // 雙哨多標籤分別比對
+              for (const [tName, tInfo] of Object.entries(data.tabs)) {
+                const rHash = tInfo.version_hash;
+                const lHash = currentTabVersionHashes[tName];
+                if (rHash && lHash && rHash !== lHash) {
+                  isModified = true;
+                  modifiedTab = tName;
+                  latestHash = rHash;
+                  break;
                 }
-              } else {
-                // 🟢 與雲端最新版本一致
-                setCloudSyncStatus('synced', '對齊', '雲端試算表版本一致 (最新版)');
               }
-              return;
+            } else if (data.version_hash) {
+              const tName = data.tab_name || currentTabName;
+              const lHash = currentTabVersionHashes[tName];
+              if (lHash && data.version_hash !== lHash) {
+                isModified = true;
+                modifiedTab = tName;
+                latestHash = data.version_hash;
+              }
             }
+
+            if (isModified) {
+              // 🔴 雲端資料確有最新修改！亮紅燈！
+              setCloudSyncStatus('modified', '待對齊', `⚠️ 雲端試算表「${modifiedTab}」已被修改 (最新版本: ${latestHash.slice(0, 6)})！請點擊立即對齊`);
+              if (!silent) {
+                showToast(`⚠️ 偵測到「${modifiedTab}」雲端排班表有最新異動！請點擊「待對齊」按鈕！`, 'warning');
+              }
+            } else {
+              // 🟢 與雲端最新版本一致
+              setCloudSyncStatus('synced', '對齊', '雲端試算表版本一致 (最新版)');
+            }
+            return;
           }
         } catch (err) {}
       }
@@ -1465,98 +1472,87 @@
       }, 60000);
     }
 
-    // 🔄 對齊按鈕：檢查是否有抓取到對應檔案，抓取最新版雲端試算表 (完全繞過手機暫存)
+    // 🔄 對齊按鈕：雙哨合一同步抓取最新版雲端試算表 (完全繞過手機暫存)
     async function triggerCloudDataAlign(isManual = true) {
       setCloudSyncStatus('syncing', '對齊中...', '正在連線雲端試算表並檢查對應檔案...');
       setConnectionStatus('connecting', '雲端對齊中...');
 
-      const isEng = (currentTabName.includes('4.') || currentTabName.includes('工務所'));
-      const currentTabKey = isEng ? '4.三總工務所' : '5.三總重症大樓';
-      const targetFileName = isEng ? 'schedule_4_tsgh_eng.json' : 'schedule_5_tsgh_icu.json';
+      async function fetchSingleTab(tabKey, targetFileName) {
+        const antiCache = `_t=${Date.now()}&_nonce=${Math.random().toString(36).substring(2, 7)}`;
+        const zeroCacheHeaders = {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        };
 
-      const antiCache = `_t=${Date.now()}&_nonce=${Math.random().toString(36).substring(2, 7)}`;
-      const zeroCacheHeaders = {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      };
+        const candidates = [];
+        if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '8000' || window.location.port === '')) {
+          candidates.push(`/api/schedule/live?group_id=tsgh_internal&tab=${encodeURIComponent(tabKey)}&year=${selectedYear}&month=${selectedMonth}&${antiCache}`);
+        }
+        candidates.push(`./data/${targetFileName}?${antiCache}`);
+        candidates.push(`./docs/data/${targetFileName}?${antiCache}`);
+        candidates.push(`https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/data/${targetFileName}?${antiCache}`);
 
-      const candidates = [];
-      if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '8000' || window.location.port === '')) {
-        candidates.push({
-          url: `/api/schedule/live?group_id=${encodeURIComponent(currentGroupId)}&tab=${encodeURIComponent(currentTabName)}&year=${selectedYear}&month=${selectedMonth}&${antiCache}`,
-          desc: '本地後端 API'
-        });
-      }
-      candidates.push({
-        url: `./data/${targetFileName}?${antiCache}`,
-        desc: `靜態資料通道 (${targetFileName})`
-      });
-      candidates.push({
-        url: `./docs/data/${targetFileName}?${antiCache}`,
-        desc: `文檔資料通道 (${targetFileName})`
-      });
-      candidates.push({
-        url: `https://raw.githubusercontent.com/ericlai429/Fei_long_Security_Line_Bot/main/docs/data/${targetFileName}?${antiCache}`,
-        desc: 'GitHub 雲端直連通道'
-      });
+        for (const url of candidates) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
+            const res = await fetch(url, {
+              signal: controller.signal,
+              cache: 'no-store',
+              headers: zeroCacheHeaders
+            });
+            clearTimeout(timeoutId);
 
-      let fetchedData = null;
-      let matchedSource = '';
-
-      for (const item of candidates) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2500);
-          const res = await fetch(item.url, {
-            signal: controller.signal,
-            cache: 'no-store',
-            headers: zeroCacheHeaders
-          });
-          clearTimeout(timeoutId);
-
-          if (res.ok) {
-            const data = await res.json();
-            // 檢查是否有抓取到對應檔案 且 包含有效 9 月 30 天排班列
-            if (data && data.rows && Array.isArray(data.rows) && data.rows.length > 0) {
-              fetchedData = data;
-              matchedSource = item.desc;
-              break;
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.rows && Array.isArray(data.rows) && data.rows.length > 0) {
+                return data;
+              }
             }
-          }
-        } catch (e) {}
+          } catch (e) {}
+        }
+        if (typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined' && EMBEDDED_SCHEDULE_DATA_9[tabKey]) {
+          return EMBEDDED_SCHEDULE_DATA_9[tabKey];
+        }
+        return null;
       }
 
-      // 若網路通道皆暫不可用，以同步快照保底驗證
-      if (!fetchedData && typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined' && EMBEDDED_SCHEDULE_DATA_9[currentTabKey]) {
-        fetchedData = EMBEDDED_SCHEDULE_DATA_9[currentTabKey];
-        matchedSource = '即時同步快照';
-      }
+      const [engData, icuData] = await Promise.all([
+        fetchSingleTab('4.三總工務所', 'schedule_4_tsgh_eng.json'),
+        fetchSingleTab('5.三總重症大樓', 'schedule_5_tsgh_icu.json')
+      ]);
 
-      // 檢查核對結果
-      if (fetchedData && fetchedData.rows && fetchedData.rows.length > 0) {
-        rawScheduleData = fetchedData;
-        renderFullScheduleTable(rawScheduleData);
+      if (engData && icuData && engData.rows && icuData.rows) {
+        currentTabVersionHashes['4.三總工務所'] = engData.version_hash || computeRowsHash(engData.rows);
+        currentTabVersionHashes['5.三總重症大樓'] = icuData.version_hash || computeRowsHash(icuData.rows);
 
-        // 更新最新版本 Hash
-        const newHash = fetchedData.version_hash || computeRowsHash(fetchedData.rows);
-        if (newHash) currentDataVersionHash = newHash;
+        renderFullScheduleTable(engData, icuData);
 
-        // 🟢 對齊成功：亮綠燈！
-        setCloudSyncStatus('synced', '對齊', `已成功對齊最新雲端試算表 (${matchedSource})`);
+        setCloudSyncStatus('synced', '對齊', '已成功對齊最新雲端試算表 (雙哨合一)');
         setConnectionStatus('connected', '連線');
 
         if (isManual) {
-          showToast(`🎉 成功抓取對應檔案！「${currentTabName}」9月排班已對齊最新版 (共 ${rawScheduleData.rows.length} 天)`, 'success');
+          showToast('🎉 成功對齊！「4.三總工務所」與「5.三總重症大樓」9月排班皆已對齊最新版', 'success');
         }
         return true;
       } else {
-        // 🔴 未能抓取到對應檔案：亮紅燈！
-        setCloudSyncStatus('modified', '待對齊', `⚠️ 未能抓取到 9月「${currentTabName}」對應檔案！`);
+        const fallbackEng = engData || (typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined' ? EMBEDDED_SCHEDULE_DATA_9['4.三總工務所'] : null);
+        const fallbackIcu = icuData || (typeof EMBEDDED_SCHEDULE_DATA_9 !== 'undefined' ? EMBEDDED_SCHEDULE_DATA_9['5.三總重症大樓'] : null);
+        if (fallbackEng || fallbackIcu) {
+          if (fallbackEng) currentTabVersionHashes['4.三總工務所'] = fallbackEng.version_hash || computeRowsHash(fallbackEng.rows);
+          if (fallbackIcu) currentTabVersionHashes['5.三總重症大樓'] = fallbackIcu.version_hash || computeRowsHash(fallbackIcu.rows);
+          renderFullScheduleTable(fallbackEng, fallbackIcu);
+          setCloudSyncStatus('synced', '對齊', '已載入可用排班資料');
+          setConnectionStatus('connected', '連線');
+          return true;
+        }
+
+        setCloudSyncStatus('modified', '待對齊', '⚠️ 未能抓取到 9月排班對應檔案！');
         setConnectionStatus('failed', '讀取失敗');
 
         if (isManual) {
-          showToast(`⚠️ 未能抓取到 9月「${currentTabName}」對應檔案！請確認雲端試算表是否已發布`, 'error');
+          showToast('⚠️ 未能抓取到 9月排班對應檔案！請確認雲端試算表是否已發布', 'error');
         }
         return false;
       }
@@ -1580,7 +1576,6 @@
         btnEng.className = 'flex-1 h-10 sm:h-11 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800';
       }
 
-      currentDataVersionHash = '';
       fetchFullSchedule(true);
       checkCloudVersionHandshake(true);
     }
@@ -5410,7 +5405,8 @@
           const icuData = EMBEDDED_SCHEDULE_DATA_9['5.三總重症大樓'];
           if (engData || icuData) {
             rawScheduleData = engData || icuData;
-            currentDataVersionHash = computeRowsHash((engData?.rows || []).concat(icuData?.rows || []));
+            if (engData) currentTabVersionHashes['4.三總工務所'] = engData.version_hash || computeRowsHash(engData.rows);
+            if (icuData) currentTabVersionHashes['5.三總重症大樓'] = icuData.version_hash || computeRowsHash(icuData.rows);
             setConnectionStatus('connected', '連線');
             setCloudSyncStatus('synced', '對齊', '已成功載入 9 月雙哨排班 (即時同步快照)');
             renderFullScheduleTable(engData, icuData);
