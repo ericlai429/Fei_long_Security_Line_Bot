@@ -90,22 +90,22 @@ class TestAPIEndpoints(unittest.TestCase):
 
     def test_schedule_version_handshake_and_alignment(self):
         for tab_name in ["4.三總工務所", "5.三總重症大樓"]:
-            # 1. 握手端點
-            r_hs = self.client.get(f"/api/schedule/handshake?tab={tab_name}&year=2026&month=9")
+            # 1. 握手端點 (測試當前 10 月 31 天排班)
+            r_hs = self.client.get(f"/api/schedule/handshake?tab={tab_name}&year=2026&month=10")
             self.assertEqual(r_hs.status_code, 200)
             self.assertIn("no-store", r_hs.headers.get("Cache-Control", ""))
             hs_data = r_hs.json()
             self.assertEqual(hs_data["status"], "connected")
             self.assertTrue(hs_data["has_file"])
-            self.assertEqual(hs_data["row_count"], 30)
+            self.assertEqual(hs_data["row_count"], 31)
             self.assertTrue(len(hs_data["version_hash"]) > 0)
 
             # 2. 即時排班端點
-            r_live = self.client.get(f"/api/schedule/live?tab={tab_name}&year=2026&month=9")
+            r_live = self.client.get(f"/api/schedule/live?tab={tab_name}&year=2026&month=10")
             self.assertEqual(r_live.status_code, 200)
             self.assertIn("no-store", r_live.headers.get("Cache-Control", ""))
             live_data = r_live.json()
-            self.assertEqual(len(live_data["rows"]), 30)
+            self.assertEqual(len(live_data["rows"]), 31)
             self.assertEqual(live_data["version_hash"], hs_data["version_hash"])
 
     def test_pdf_generate_and_download(self):

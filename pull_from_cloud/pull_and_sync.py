@@ -50,10 +50,10 @@ except Exception:
     pass
 
 MASTER_SPREADSHEET_ID = os.getenv('MASTER_SPREADSHEET_ID', '18TFnTI-RCjVBnW8vA7L5K0QClhXsguWL8RPUK8gVQsU').strip()
-REPLICA_SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID', '1oL4MWWiqKycGVKcvuZQCFBnGpK7QZn65NHm3BY_Ospw').strip()
+REPLICA_SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID', '13UYtQujV1jVVYei2HkLSMAcAS1nZizeZ81RK1toUbmI').strip()
 SPREADSHEET_ID = REPLICA_SPREADSHEET_ID
 GID_ICU = "1558314081"
-GID_ENG = "1125126855"
+GID_ENG = "134667978"
 
 VIEW_URL = f"https://docs.google.com/spreadsheets/d/{REPLICA_SPREADSHEET_ID}/edit?gid={GID_ICU}#gid={GID_ICU}"
 
@@ -260,30 +260,11 @@ def parse_and_sync(excel_path, source_info=""):
     print(f"📊 3. 解析完成！工務所: {len(eng_final)} 天, 重症大樓: {len(icu_final)} 天")
 
     os.makedirs('docs/data', exist_ok=True)
-    with open('docs/data/schedule_4_tsgh_eng.json', 'w', encoding='utf-8') as f:
+    # 🌟 9月份存檔專用檔案，嚴禁覆蓋當前10月份線上排班檔案
+    with open('docs/data/schedule_4_tsgh_eng_sept.json', 'w', encoding='utf-8') as f:
         json.dump(result_eng, f, ensure_ascii=False, indent=2)
-    with open('docs/data/schedule_5_tsgh_icu.json', 'w', encoding='utf-8') as f:
+    with open('docs/data/schedule_5_tsgh_icu_sept.json', 'w', encoding='utf-8') as f:
         json.dump(result_icu, f, ensure_ascii=False, indent=2)
-
-    all_data = {'4.三總工務所': result_eng, '5.三總重症大樓': result_icu}
-    with open('docs/data/schedule_live.json', 'w', encoding='utf-8') as f:
-        json.dump(all_data, f, ensure_ascii=False, indent=2)
-
-    version_doc = {
-        'year': 2026,
-        'month': 9,
-        'version': f'v{datetime.now().strftime("%Y.%m.%d-%H%M")}',
-        'updated_at': now_str,
-        'tabs': {
-            '4.三總工務所': {'file': 'schedule_4_tsgh_eng.json', 'version_hash': eng_hash, 'row_count': len(eng_final), 'updated_at': now_str},
-            '5.三總重症大樓': {'file': 'schedule_5_tsgh_icu.json', 'version_hash': icu_hash, 'row_count': len(icu_final), 'updated_at': now_str}
-        }
-    }
-    with open('docs/data/schedule_version.json', 'w', encoding='utf-8') as f:
-        json.dump(version_doc, f, ensure_ascii=False, indent=2)
-    if os.path.exists('data'):
-        with open('data/schedule_version.json', 'w', encoding='utf-8') as f:
-            json.dump(version_doc, f, ensure_ascii=False, indent=2)
 
     if os.path.exists('index.html'):
         with open('index.html', 'r', encoding='utf-8') as f:

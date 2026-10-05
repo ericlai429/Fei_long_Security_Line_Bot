@@ -614,7 +614,7 @@ def get_live_schedule(
 
     rows = schedule.get("rows", [])
     rows_str = json.dumps(rows, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
-    version_hash = hashlib.md5(rows_str.encode("utf-8")).hexdigest()
+    version_hash = schedule.get("version_hash") or hashlib.md5(rows_str.encode("utf-8")).hexdigest()
 
     return JSONResponse(
         content={
@@ -623,7 +623,7 @@ def get_live_schedule(
             "tab_name": target_tab,
             "year": schedule.get("year", 2026),
             "month": schedule.get("month", req_month),
-            "is_current_month": (req_year == 2026 and req_month == 9),
+            "is_current_month": (req_year == 2026 and req_month == 10),
             "updated_at": schedule.get("updated_at"),
             "columns": schedule.get("columns", []),
             "rows": rows,
@@ -653,7 +653,7 @@ def handshake_schedule_version(
     - 嚴格設置 no-store 標頭，禁止手機暫存檔快取
     """
     base_year = 2026
-    base_month = 9
+    base_month = 10
     req_year = year or base_year
     req_month = month or base_month
 
@@ -664,7 +664,7 @@ def handshake_schedule_version(
 
     # 計算資料版本 Hash (MD5, 嚴格對齊標準 JSON 格式)
     rows_str = json.dumps(rows, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
-    version_hash = hashlib.md5(rows_str.encode("utf-8")).hexdigest()
+    version_hash = schedule.get("version_hash") or hashlib.md5(rows_str.encode("utf-8")).hexdigest()
     spreadsheet_id = sheets_service.get_spreadsheet_id_for_month(req_year, req_month)
 
     return JSONResponse(

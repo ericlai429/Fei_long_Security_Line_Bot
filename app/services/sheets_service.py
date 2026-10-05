@@ -285,29 +285,41 @@ class SheetsService:
                 logger.error(f"Failed to fetch sheet data via gspread for {tab_name}: {e}")
 
         # 3. Direct CSV fetch with optional user OAuth token
-        if self.active_spreadsheet_id:
+        active_sheet_id = target_spreadsheet_id or self.active_spreadsheet_id
+        if active_sheet_id:
             import urllib.request
+            import urllib.parse
             import csv
             import io
-            try:
-                encoded_tab = urllib.parse.quote(tab_name)
-                csv_url = f"https://docs.google.com/spreadsheets/d/{self.active_spreadsheet_id}/gviz/tq?tqx=out:csv&sheet={encoded_tab}"
-                headers = {'User-Agent': 'Mozilla/5.0'}
-                if self.user_access_token:
-                    headers['Authorization'] = f'Bearer {self.user_access_token}'
-                
-                req = urllib.request.Request(csv_url, headers=headers)
-                with urllib.request.urlopen(req, timeout=4) as resp:
-                    content = resp.read().decode('utf-8')
-                    reader = csv.reader(io.StringIO(content))
-                    rows = [row for row in reader if any(cell.strip() for cell in row)]
-                    if rows and len(rows) > 0:
-                        first_cell = rows[0][0].lower() if rows[0] else ""
-                        if not ("<html" in first_cell or "<!doctype" in first_cell or "unauthorized" in first_cell):
-                            logger.info(f"Successfully fetched {len(rows)} live rows from Google Sheets for [{tab_name}]")
-                            return rows
-            except Exception as ex:
-                logger.debug(f"Direct CSV fetch failed: {ex}")
+            gid_map = {
+                "4.三總工務所": "134667978",
+                "5.三總重症大樓": "1558314081"
+            }
+            gid = gid_map.get(tab_name.strip())
+            csv_urls = []
+            if gid:
+                csv_urls.append(f"https://docs.google.com/spreadsheets/d/{active_sheet_id}/export?format=csv&gid={gid}")
+            encoded_tab = urllib.parse.quote(tab_name)
+            csv_urls.append(f"https://docs.google.com/spreadsheets/d/{active_sheet_id}/gviz/tq?tqx=out:csv&sheet={encoded_tab}")
+
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            if self.user_access_token:
+                headers['Authorization'] = f'Bearer {self.user_access_token}'
+
+            for csv_url in csv_urls:
+                try:
+                    req = urllib.request.Request(csv_url, headers=headers)
+                    with urllib.request.urlopen(req, timeout=5) as resp:
+                        content = resp.read().decode('utf-8')
+                        reader = csv.reader(io.StringIO(content))
+                        rows = [row for row in reader if any(cell.strip() for cell in row)]
+                        if rows and len(rows) > 0:
+                            first_cell = rows[0][0].lower() if rows[0] else ""
+                            if not ("<html" in first_cell or "<!doctype" in first_cell or "unauthorized" in first_cell):
+                                logger.info(f"Successfully fetched {len(rows)} live rows from Google Sheets for [{tab_name}]")
+                                return rows
+                except Exception as ex:
+                    logger.debug(f"Direct CSV fetch failed ({csv_url}): {ex}")
         # 4. Direct Google Apps Script Web App Bridge (100% unrestricted live data)
         gas_url = getattr(self, "apps_script_url", "") or os.getenv("GOOGLE_APPS_SCRIPT_URL", "")
         if gas_url:
@@ -324,7 +336,7 @@ class SheetsService:
             except Exception as ex:
                 logger.debug(f"GAS Bridge fetch failed: {ex}")
 
-        # 🌟 讀取 docs/data 最新排班檔案保底
+        # 🌟 讀取 docs/data 最新排班檔案保底 (需月份相符)
         target_file = None
         if "工務所" in tab_name or "4." in tab_name:
             target_file = os.path.join("docs", "data", "schedule_4_tsgh_eng.json")
@@ -335,23 +347,46 @@ class SheetsService:
                 with open(target_file, "r", encoding="utf-8") as f:
                     file_data = json.load(f)
                     if file_data and "rows" in file_data and len(file_data["rows"]) > 0:
-                        return file_data["rows"]
+                        if file_data.get("month") == month:
+                            return file_data["rows"]
             except Exception as ex:
                 logger.debug(f"Target file load note: {ex}")
 
-        # 🌟 讀取 Admin keep loaded 的即時雲端試算表快照
+        # 🌟 讀取 Admin keep loaded 的即時雲端試算表快照 (需月份相符)
         from app.database import db
         snapshot = db.get_schedule_snapshot(tab_name)
         if snapshot and len(snapshot) > 0:
-            logger.info(f"Loaded {len(snapshot)} live rows from Admin keep-loaded snapshot for [{tab_name}]")
-            return snapshot
+            first_row_date = snapshot[0].get('日期', '') if isinstance(snapshot[0], dict) else ''
+            if not first_row_date or f'/{month:02d}/' in first_row_date or f'-{month:02d}-' in first_row_date:
+                logger.info(f"Loaded {len(snapshot)} live rows from Admin keep-loaded snapshot for [{tab_name}]")
+                return snapshot
 
         return []
 
     def get_parsed_schedule(self, tab_name: str, year: int = None, month: int = None) -> Dict[str, Any]:
         today = date.today()
         target_year = year or today.year
-        target_month = month or 9  # 預設排班月份為 9月 (115年9月份)
+        target_month = month or 10  # 預設排班月份為 10月 (115年10月份)
+
+        # 🌟 優先讀取 docs/data 或 data 中標準排班檔案保底 (需月份相符)
+        target_file = None
+        if "工務所" in tab_name or "4." in tab_name:
+            target_file = os.path.join("docs", "data", "schedule_4_tsgh_eng.json")
+            if not os.path.exists(target_file):
+                target_file = os.path.join("data", "schedule_4_tsgh_eng.json")
+        elif "重症" in tab_name or "5." in tab_name:
+            target_file = os.path.join("docs", "data", "schedule_5_tsgh_icu.json")
+            if not os.path.exists(target_file):
+                target_file = os.path.join("data", "schedule_5_tsgh_icu.json")
+        if target_file and os.path.exists(target_file):
+            try:
+                with open(target_file, "r", encoding="utf-8") as f:
+                    file_data = json.load(f)
+                    if file_data and "rows" in file_data and len(file_data["rows"]) > 0:
+                        if file_data.get("month") == target_month and file_data.get("year", target_year) == target_year:
+                            return file_data
+            except Exception as ex:
+                logger.debug(f"Target file load note: {ex}")
 
         raw_data = self.get_raw_sheet_data(tab_name, year=target_year, month=target_month)
         if not raw_data:
@@ -359,7 +394,7 @@ class SheetsService:
                 "tab_name": tab_name,
                 "year": target_year,
                 "month": target_month,
-                "is_current_month": (target_year == today.year and target_month == 9),
+                "is_current_month": (target_year == today.year and target_month == 10),
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "columns": [],
                 "rows": [],
@@ -381,7 +416,7 @@ class SheetsService:
                 "tab_name": tab_name,
                 "year": target_year,
                 "month": target_month,
-                "is_current_month": (target_year == today.year and target_month == 9),
+                "is_current_month": (target_year == today.year and target_month == 10),
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "columns": list(raw_data[0].keys()),
                 "rows": raw_data,
@@ -389,7 +424,7 @@ class SheetsService:
                 "posts": [tab_name]
             }
 
-        # 智能從試算表頂部 Header 偵測實際民國/西元年份與月份 (如 115年9月份)
+        # 智能從試算表頂部 Header 偵測實際民國/西元年份與月份 (如 115年10月份)
         for h_row in raw_data[:5]:
             h_text = "".join(str(c) for c in h_row)
             m_match = re.search(r'(\d{2,3})年(\d{1,2})月', h_text)
@@ -400,7 +435,7 @@ class SheetsService:
                 target_year = (roc_y + 1911) if roc_y < 1900 else roc_y
                 break
 
-        is_current = (target_year == today.year and target_month == 9)
+        is_current = (target_year == today.year and target_month == 10)
 
         # 🌟 1. 檢查是否為「矩陣式月曆排班表」(人員在 Y 軸，日期 1~31 在 X 軸)
         date_row_idx = None
